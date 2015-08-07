@@ -12,8 +12,6 @@ LIBS = $(LIBPATH) -lpthread -lrt
 
 BOOSTTHREAD = $(TMP)/sysprebuild.o  $(TMP)/tprebuild.o
 
-
-
 all: init TARGET
 
 init:

@@ -10,4 +10,3 @@ namespace boost { void tss_cleanup_implemented(void) {} }
 #include <libs/thread/src/pthread/thread.cpp>
 #include <libs/thread/src/pthread/once.cpp>
 #endif
-
