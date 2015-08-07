@@ -3,7 +3,7 @@ TESTDIR = ./test
 all: TestMod
 
 TestMod:
-	cd $(TESTDIR); make -j 
+	cd $(TESTDIR); make 
 	@echo
 	@echo "Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 
