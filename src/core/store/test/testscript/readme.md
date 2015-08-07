@@ -35,14 +35,14 @@
 	2. 消费者线程组的耗时，在输出结果中只会出现一次。但也有时它永远不会出现，见 bug
 * bug (保留): 此bug是用例中的bug, 而非Store中的bug .由于Store::pop的设计需要，仓库为空时，pop操作会阻塞。
 >>在pop测试函数里面:
->><pre><code>
-// ...
-while (true) {
-    if (_arg.is_push_done() && buff.empty()) break;
-    buff.pop(val);
-    // ...
-}
-// ...
+<pre><code>
+ // ...
+ while (true) {
+     if (_arg.is_push_done() && buff.empty()) break;
+     buff.pop(val);
+     // ...
+ }
+ // ...
 </code></pre>
 >>当if 表达式 buff.empty() 返回false时, 就不会break.而当 再次执行到 buff.pop() 时，buff 可能已经为空, 进而引发 pop 阻塞. 保留此bug的详细原因，见代码中的注释[file:test.cpp:customer()]
 
@@ -57,42 +57,46 @@ while (true) {
 
 2. 分析 test1.log。 如果下列步骤中有一个不符合预期，就证明Store未能通过测试。
 	1. 分别统计生产的数据[in: val] 个数 和 消费的数据[out: val] 个数
-		><pre>
+		<pre>
 		$ grep -o "in" test1.log | wc -w
 		$ grep -o "out" test1.log | wc -w
 		</pre>
-		> 预期结果都是 70000 （producer_steps X producer_count = 10000 X 7）
+		预期结果都是 70000 （producer_steps X producer_count = 10000 X 7）
+	
 	2. 验证 val
-		> 取出 val
-		><pre>
+	
+		取出 val
+		<pre>
 		$ grep -o "\[in:\s[0-9]\+" test1.log | grep -o "[0-9]\+" | tee in1.tmp
 		$ grep -o "\[out:\s[0-9]\+" test1.log | grep -o "[0-9]\+" | tee out1.tmp
 		</pre>
-		> 分别对in1.tmp 和 out1.tmp 排序
-		> <pre>
+		分别对in1.tmp 和 out1.tmp 排序
+		<pre>
 		$ sort -n in1.tmp | tee in1.log
 		$ sort -n out1.tmp | tee out1.log
 		</pre>
-		> 生成比较文件
-		> <pre>
+		生成比较文件
+		<pre>
 		$ seq -f "%.0f" 0 1 69999 | tee cmp.log 
 		$ #69999 = producer_steps X producer_count - 1 = 10000 X 7 -1
 		</pre>
-		> 分别比对 in1.log 和 cmp.log 以及 out1.log 和 cmp.log
-		> <pre>
+		分别比对 in1.log 和 cmp.log 以及 out1.log 和 cmp.log
+		<pre>
 		$ cmp in1.log  cmp.log
 		$ cmp out1.log cmp.log
 		</pre>
-		> 预期结果是 in1.log / out1.log / cmp.log 3个文件无任何差别.
+		预期结果是 in1.log / out1.log / cmp.log 3个文件无任何差别.
 	3. 检验是形成有效争抢。
-		> 方法是检验是在test1.log中 是否存在 in 和 out 共在同一行的情况
-		> <pre>
+	
+		方法是检验是在test1.log中 是否存在 in 和 out 共在同一行的情况
+		<pre>
 		$ grep -n -m 1 -Po '\[in.{1,50}out.+?\]' test1.log | head -n 1
 		</pre>
-		> 如果没有形成有效争抢，说明给定的参数使得生产任务过于轻松，这样体现不出性能优劣。建议将producer_steps值设置的大一些，或适当减小capacity的值。
+		如果没有形成有效争抢，说明给定的参数使得生产任务过于轻松，这样体现不出性能优劣。建议将producer_steps值设置的大一些，或适当减小capacity的值。
 	4. 统计耗时。
-		> 方法是将每行的前几个单词取出，读取有效行即可
-		> <pre>
+		
+		方法是将每行的前几个单词取出，读取有效行即可
+		<pre>
 		$ awk '{printf("%03d: %s %s %s\n", FNR, $1, $2, $3 $4 $5 $6 $7)}' test1.log
 001: producer_steps = 10000
 002: producer_count = 7
@@ -137,6 +141,7 @@ while (true) {
 041: buff.empty() = true@0x2005d350
 042: thread pop exit@0x2005d350[6TTimerIZ8customerP6PopargE3PopE]共耗时:11.311s...
 		</pre>
+
 		> 分别取出 07行 21行 39行 和 42行。
 		> 
 		> 由此分析可知，生产者线程组完成任务总耗时 9.141s，消费者线程组总耗时 11.311s

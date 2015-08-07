@@ -16,11 +16,11 @@
  *				2. 容量: empty, size
  *				3. 修饰符: push pop
  *		4. 公共方法摘要:
- *				1. void push(const T&);		入仓方法, 内部维护一个 push 锁 和 一个 cond_push 条件变量。
- *				2. void pop(T&);			出仓方法, 内部维护一个 pop  锁 和 一个 cond_pop  条件便量。
- *				3. bool empty const ();		判空估值, 返回值是不可靠的(没有锁保护), 函数返回时可能值已改变。 
- *				//4. size_t size const ();	估算大小, 返回值是不可靠的(没有锁保护), 函数返回时可能值已改变。
- *				//5. bool full() const;		满仓判断。
+ *				1. void push(const T&);     入仓方法
+ *				2. void pop(T&);            出仓方法
+ *				3. bool empty const ();     判空估值, 返回值是不可靠的(没有锁保护), 函数返回时可能值已改变。 
+ *				//4. size_t size const ();  估算大小, 返回值是不可靠的(没有锁保护), 函数返回时可能值已改变。
+ *				//5. bool full() const;     满仓判断。
  *				6. static void reserve(size_t); 重置仓库最大容量, 线程安全的，但可能会阻塞,仓库最大容量默认值为200000 
  *				7. static void reserve_unsafe(size_t); 重置仓库最大容量, 线程不安全的，不会阻塞。
  *				8. 两个重载版本方法: bool push(const T*); 和 bool pop(T*); 仅当传入参数指针为NULL时返回false
@@ -62,21 +62,23 @@
 // 		ma.push(100);
 // 		ma.push(200);
 // 		ma.push(300);
-// 		cout << ma.size() << endl;				// 3
+// 		//cout << ma.size() << endl;			// 3
 // 
 // 		int b; 
 // 		ma.pop(b);
-// 		cout << ca.size() << endl;				// 2
+// 		//cout << ca.size() << endl;			// 2
 // 		cout << b << endl;						// 100
 // 		int c;
 // 		ma.pop(&c);
-// 		cout << ca.size() << endl;				// 1
+// 		//cout << ca.size() << endl;			// 1
 // 		cout << c << endl;						// 200
 // 		ma.pop(c);
-// 		cout << ca.size() << endl;				// 0
+// 		//cout << ca.size() << endl;			// 0
 // 		cout << c << endl;						// 300
 // 		cout << boolalpha << ca.empty() << endl;// ture
 // }
+//
+// 这是老版本的示例，更详细的使用见 ./test/test.cpp
 //
 ////////////////////////////////////////////////////////////////
 
@@ -90,7 +92,7 @@ const size_t _STORECAPACITY = 200000; // default capacity of Store
 
 //
 // class std_priority_queue
-// 重新封装std::priority_queue, 以便适配 Store
+// 对std::priority_queue二次封装, 以便适配 Store
 //
 template <typename T>
 class std_priority_queue : public std::priority_queue<T> {
@@ -169,13 +171,13 @@ class Store : public singleton<Store<T, Container> > {
 		Store(void) {}
 		Store(const Store&) {}
 	private:
-		typedef boost::mutex			mutex_t;
-		Container						_store;
-		mutex_t							_store_lock;
-		boost::condition_variable_any	_cond_full;	    // full condition variable
-		boost::condition_variable_any	_cond_empty;    // empty condition variable
-		static size_t                   _capacity;	    // capacity of Store
-		static mutex_t                  _mutex_cap;	    // for reserve()
+		typedef boost::mutex            mutex_t;
+		Container                       _store;
+		mutex_t                         _store_lock;
+		boost::condition_variable_any   _cond_full;     // full condition variable
+		boost::condition_variable_any   _cond_empty;    // empty condition variable
+		static size_t                   _capacity;      // capacity of Store
+		static mutex_t                  _mutex_cap;     // for reserve()
 };
 template <typename T, typename Container>
 size_t Store<T, Container>::_capacity = _STORECAPACITY;
@@ -191,36 +193,36 @@ template <typename T>
 class Store<T, boost::lockfree::queue<T> > : 
 		public singleton<Store<T, boost::lockfree::queue<T> > >,
 		public boost::lockfree::queue<T> {
-	public:
-		using boost::lockfree::queue<T>::push;
-		using boost::lockfree::queue<T>::pop;
-		bool push(const T* element_ptr) {
-			if (element_ptr) {
-				return push(*element_ptr);
-			}
-			else {
-				return false;
-			}
+public:
+	using boost::lockfree::queue<T>::push;
+	using boost::lockfree::queue<T>::pop;
+	bool push(const T* element_ptr) {
+		if (element_ptr) {
+			return push(*element_ptr);
 		}
-		bool pop(T* element_ptr) {
-			if (element_ptr) {
-				return pop(*element_ptr);
-			}
-			else {
-				return false;
-			}
+		else {
+			return false;
 		}
-		// 继承父类的reserve
-		//void reserve(size_t);
-		//void reserve_unsafe(size_t);
-	protected:
-		Store(size_t _capacity = _STORECAPACITY) :
-			boost::lockfree::queue<T>(_capacity) {}
-		Store(const Store&) {}
-	private:
-		// 屏蔽下面接口
-		size_t size() const { return 0; }  
-		bool full()	  const { return false; }
+	}
+	bool pop(T* element_ptr) {
+		if (element_ptr) {
+			return pop(*element_ptr);
+		}
+		else {
+			return false;
+		}
+	}
+	// 继承父类的reserve
+	//void reserve(size_t);
+	//void reserve_unsafe(size_t);
+protected:
+	Store(size_t _capacity = _STORECAPACITY) :
+		boost::lockfree::queue<T>(_capacity) {}
+	Store(const Store&) {}
+private:
+	// 屏蔽下面接口
+	size_t size() const { return 0; }  
+	bool full()	  const { return false; }
 };
 
 
