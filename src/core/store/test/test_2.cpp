@@ -1,3 +1,4 @@
+// 此示例比较陈旧，更详细的用法, 见test.cpp
 #include <iostream>
 #include "store.h"
 
