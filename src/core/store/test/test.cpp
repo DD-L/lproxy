@@ -70,10 +70,10 @@ void _print(const std::ostringstream& oss) {
 #include <vector>
 // 测试push的线程函数所使用的参数
 struct Pusharg {
-	int		who;    // id
-	int		minNum; // 为对结果统计和分析方便, 使用minNum
-	int		maxNum; // 和maxNum, 以保证每次生产的数据不同
-	bool	done;   // 当前生产者线程是否完成指定的生产任务
+	int     who;    // id
+	int     minNum; // 为对结果统计和分析方便, 使用minNum
+	int     maxNum; // 和maxNum, 以保证每次生产的数据不同
+	bool    done;   // 当前生产者线程是否完成指定的生产任务
 	Pusharg(int me, int min, int max, bool is_done = false) 
 		: who(me), minNum(min), 
 		  maxNum(max), done(is_done) {}
@@ -127,19 +127,20 @@ public:
 		}
 	}
 
-	virtual ~TTimer() { // std::cout - not safe
+	virtual ~TTimer() { // std::cout - not thread-safe
 		std::cout << " [" << typeid(*this).name() 
 			<< "] 共耗时: " << _t->elapsed() << 's';
 	}
 private:
-	TTimer() : _t(new boost::timer()) { // std::cout - not safe
+	TTimer() : _t(new boost::timer()) { // std::cout - not thread-safe
 		std::cout << " [" << typeid(*this).name() << "] 开始计时";
 	}
+	TTimer(const TTimer&) {}
 private:
-	static boost::atomic_int	_count;
-	static boost::mutex			_lock;
-	boost::timer*				_t;
-	static TTimer*				_self;
+	static boost::atomic_int    _count;
+	static boost::mutex         _lock;
+	boost::timer*               _t;
+	static TTimer*              _self;
 };
 template<typename T>
 boost::atomic_int TTimer<T>::_count(0);
@@ -183,7 +184,7 @@ void producer(Pusharg* arg) {
 	}
 	catch (std::exception& e) {
         print("Except: " << e.what() << " @" << _arg.who << '\n');
-    }
+	}
 
 	//pthread_mutex_lock(&g_print_lock);	
 	g_print_lock.lock();
@@ -193,8 +194,8 @@ void producer(Pusharg* arg) {
 	//pthread_mutex_unlock(&g_print_lock);	
 	g_print_lock.unlock();
 
-    _arg.done = true;
-    //return NULL;
+	_arg.done = true;
+	//return NULL;
 }
 
 // test pop
@@ -241,7 +242,7 @@ void customer(Poparg* arg) {
 			if (_arg.is_push_done() && buff.empty()) break;
 			buff.pop(val); // 当buff为空时，阻塞
 			print("[out: " << val << "] ");
-			//	lock_stream.clear();
+			//lock_stream.clear();
 			//}
 		}
 	}
@@ -350,6 +351,6 @@ int main(int argc, char** argv) {
 	getchar();
 	print("\n");
 	// 如果参数为(100, 7, 3, 200001)， 则生产的数据最小值为0, 最大值为 1000 * 7 -1
-    test(producer_steps, producer_count, customer_count, capacity);
+	test(producer_steps, producer_count, customer_count, capacity);
 	return 0;
 }
