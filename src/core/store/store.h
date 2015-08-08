@@ -160,7 +160,7 @@ class Store : public singleton<Store<T, Container> > {
 			_capacity = capacity;
 		}
 	private:
-		// size() not thread-safe
+		// size() - not thread-safe
 		size_t size() const {  
 			return _store.size();
 		}
