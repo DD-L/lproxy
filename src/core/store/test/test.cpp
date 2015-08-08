@@ -84,7 +84,7 @@ struct Pusharg {
 struct Poparg {
 	const std::vector<Pusharg*> pa;
 	bool is_push_done() const {
-		for (auto i : pa) {
+		for (auto& i : pa) {
 			if (! i->done) return false;
 		}
 		return true;
