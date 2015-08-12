@@ -11,8 +11,6 @@
 
 #include <string>
 #include <ctime>
-//#include <chrono>
-//#include "store.h"
 
 
 // log types
@@ -31,7 +29,6 @@ enum LogType {
 	ERROR = 40, FATAL = 50
 };
 
-// struct message
 #include <boost/thread.hpp>
 #define BOOST_DATE_TIME_SOURCE
 //#include <boost/date_time/gregorian/gregorian.hpp>
@@ -71,6 +68,7 @@ namespace log_tools {
 } // namespace log_tools
 
 
+// struct message
 struct LogVal {
 	typedef log_tools::ptime  ptime;
 	typedef log_tools::pid_t  pid_t;
