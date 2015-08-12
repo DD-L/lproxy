@@ -34,7 +34,7 @@ std::vector<LogType> vfactor(f, f + 2);
 
 </pre>
 
-有关 LogType 和 LogVal，请移步[here](./log_types.d)
+有关 LogType 和 LogVal，请移步[here](./log_types.md)
 
 ##log_tools::priority_queue类摘要
 
@@ -174,6 +174,8 @@ public:
 		2015-Aug-12 23:51:39.325037 [INFO ] 1 [pid:0x20000038] [FUNC:test] demo.cpp:38
 		2015-Aug-12 23:51:39.326037 [WARN ] 4 [pid:0x20000038] [FUNC:test] demo.cpp:53
 		</pre>
+
+
 -------------------------------------
 
 ##### ** 关于log_tools::priority_queue底层容器的说明
