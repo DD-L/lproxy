@@ -178,7 +178,8 @@ void producer(Pusharg* arg) {
 
 	try {
         for (int i = _arg.minNum; i <= _arg.maxNum; ++i) {
-			buff.push(i);
+			//buff.push(&i);
+			buff.push(std::move(i));
 			print("[in: " << i << "] ");
 		}
 	}

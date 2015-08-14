@@ -117,9 +117,18 @@ class Store : public singleton<Store<T, Container> > {
 			_store.push(element);
 			_cond_empty.notify_one();
 		}
+		void push(T&& element) {
+			mutex_t::scoped_lock lock(_store_lock);
+			while (full()) {
+				_cond_full.wait(_store_lock);
+			}
+			_store.push(std::move(element));
+			_cond_empty.notify_one();
+		}
 		bool push(const T* element_ptr) {
 			if (element_ptr) {
-				push(*element_ptr);
+				//push(*element_ptr);
+				push(std::move(*element_ptr));
 				return true;
 			}
 			else {
