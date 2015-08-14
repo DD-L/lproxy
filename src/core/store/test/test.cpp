@@ -228,13 +228,14 @@ void customer(Poparg* arg) {
 		// 内置的锁机制，违反了测试 pop 的初衷，故放弃使用原子操作，保留可能
 		// 出现的死锁现象。
 		//
-		//     当死锁发生时, 不影响 push 的所有测试结果，也不会影响到 pop 的数据
-		// 输出样本，只会影响到测试 pop 的计时策略。代价比较小，故保留此测试bug
+		//     当此死锁发生时, 不影响 push 的测试结果，也不会影响到 pop 的数据
+		// 输出样本，只会影响到测试 pop 的计时策略，偶尔也会影响push的计时策略。
+		// 代价比较小，故保留此测试bug
 		//
 		//******************************************************************//
 
 		// 引入原子操作。
-		// 以防止 buff.empty() 判空为true时，阻塞在pop(), 没能及时推出
+		// 以防止 buff.empty() 判空为true时，阻塞在pop(), 没能及时退出
 		//std::atomic_flag lock_stream = ATOMIC_FLAG_INIT;
 		int val = -1;
 		while (true) {
@@ -251,7 +252,6 @@ void customer(Poparg* arg) {
         print("Except: " << e.what() 
 				<< " @" << boost::this_thread::get_id() << '\n');
     }
-
 
 	//pthread_mutex_lock(&g_print_lock);	
 	g_print_lock.lock();
