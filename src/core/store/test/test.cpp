@@ -135,7 +135,7 @@ private:
 	TTimer() : _t(new boost::timer()) { // std::cout - not thread-safe
 		std::cout << " [" << typeid(*this).name() << "] 开始计时";
 	}
-	TTimer(const TTimer&) {}
+	TTimer(const TTimer&) = delete;
 private:
 	static boost::atomic_int    _count;
 	static boost::mutex         _lock;
