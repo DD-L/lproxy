@@ -1,3 +1,7 @@
+log/priority_queue.h
+
+------------------
+
 class template
 #log_tools::priority_queue
 
