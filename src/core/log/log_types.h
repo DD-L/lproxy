@@ -92,22 +92,19 @@ public:
 public:
 	class Extra {
 		public:
-			//virtual const std::string format(void) const = 0;
-			// 为避免boost::lockfree::queue在编译器遇到的一个错误，
-			// 这里使用非常版本的纯虚函数
-			virtual const std::string format(void) = 0;
+			virtual const std::string format(void) const = 0;
 			virtual ~Extra() {}
 			friend std::ostream& operator<< (
 					std::ostream&         os, 
 					const LogVal::Extra&  e) {
-				return os << std::move(const_cast<Extra&>(e).format());
+				return os << std::move(e.format());
 			}
 	};
 private:
 	// 默认附加数据, 并演示自定义附加数据的使用
 	class ExtraNone : public LogVal::Extra {
 	public:
-		virtual const std::string format() {
+		virtual const std::string format() const {
 			return "";
 		}
 	};

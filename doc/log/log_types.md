@@ -69,12 +69,12 @@ private:
 // 接口比较简单
 class LogVal::Extra {
 public:
-	virtual const std::string format(void) = 0;
+	virtual const std::string format(void) const = 0;
 	virtual ~Extra() {}
 	friend std::ostream& operator<< (
 			std::ostream&         os, 
 			const LogVal::Extra&  e) {
-		return os << std::move(const_cast< Extra& >(e).format());
+		return os << std::move(e.format());
 	}
 };
 </pre>
@@ -90,7 +90,7 @@ class LogValExtraExample : public LogVal::Extra {
 		LogValExtraExample(string&& str, const int& i)
 				: _str_test1(std::move(str)), _int_test2(i) {}
 		// @overwrite
-		virtual const string format() {
+		virtual const string format const () {
 			std::ostringstream oss;
 			oss << " {extra_data:" << _str_test1 << ","	<< _int_test2 << "}"; 
 			return  oss.str(); 
@@ -130,7 +130,7 @@ std::cout << log_tools::time2string(val.now)
 // 仅仅是重写了format()而已
 class LogVal::ExtraNone : public LogVal::Extra {
 public:
-	virtual const std::string format() {
+	virtual const std::string format() const {
 		return "";
 	}
 };

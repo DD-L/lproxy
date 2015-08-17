@@ -23,7 +23,7 @@ class LogValExtraExample : public LogVal::Extra {
 		LogValExtraExample(string&& str, const int& i)
 				: _str_test1(std::move(str)), _int_test2(i) {}
 		// @overwrite
-		virtual const string format(void) {
+		virtual const string format(void) const {
 			std::ostringstream oss;
 			oss << " {extra_data:" << _str_test1 << ","	<< _int_test2 << "}"; 
 			return  oss.str(); // 可以返回临时对象而不用担心效率问题
