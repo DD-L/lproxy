@@ -15,7 +15,7 @@
 
 // log types
 /** 
- * TRACE
+ * TRACE  追踪
  * DEBUG  细粒度信息事件
  * INFO   消息在粗粒度级别上突出强调应用程序的运行过程
  * WARN   出现潜在错误的情形。
