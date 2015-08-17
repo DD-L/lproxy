@@ -73,7 +73,8 @@ class LogVal {
 public:
 	typedef log_tools::ptime  ptime;
 	typedef log_tools::pid_t  pid_t;
-	class	Extra; // 附加数据接口类
+	class	Extra;     // 附加数据接口类
+	class   ExtraNone; // Extra抽象类的实现子类
 
 public:
 	ptime                  now;
@@ -100,7 +101,6 @@ public:
 				return os << std::move(e.format());
 			}
 	};
-private:
 	// 默认附加数据, 并演示自定义附加数据的使用
 	class ExtraNone : public LogVal::Extra {
 	public:

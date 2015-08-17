@@ -32,6 +32,7 @@ public:
 	typedef log_tools::ptime  ptime;
 	typedef log_tools::pid_t  pid_t;
 	class Extra; // 扩展数据的抽象类
+	class ExtraNone; // Extra抽象类的实现子类，被用在LogVal的缺省构造函数参数中
 
 	ptime               now;       // 当前时间
 	LogType             log_type;  // 日志类型
@@ -56,8 +57,6 @@ public:
 	LogVal(LogVal&& that);
 	LogVal& operator= (const LogVal& that);
 	LogVal& operator= (LogVal&& that);
-private:
-	class ExtraNone; // Extra抽象类的实现子类，仅被用在LogVal的缺省构造函数中
 };
 </pre>
 如果LogVal字段未能满足需求，扩展的任务尽量交给LogVal::Extra的子类去完成，不推荐直接更改LogVal， 见下面的LogVal::Extra.
