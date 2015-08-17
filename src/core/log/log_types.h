@@ -92,6 +92,9 @@ public:
 public:
 	class Extra {
 		public:
+			//virtual const std::string format(void) const = 0;
+			// 为避免boost::lockfree::queue在编译器遇到的一个错误，
+			// 这里使用非常版本的纯虚函数
 			virtual const std::string format(void) = 0;
 			virtual ~Extra() {}
 			friend std::ostream& operator<< (
