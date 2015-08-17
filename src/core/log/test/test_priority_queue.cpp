@@ -1,7 +1,7 @@
 /*************************************************************************
-	> File Name: test.cpp
+	> File Name: test*.cpp
 	> Author: D_L
-	> Mail: xxx@xxx.com 
+	> Mail: deel@d-l.top 
 	> Created Time: 2015/8/8 8:23:09
  ************************************************************************/
 
@@ -66,7 +66,9 @@ void test() {
 			<< " [" << log_tools::logtype2string(val.log_type) 
 			<< "] " << val.msg << " [p:" 
 			<< val.pid << "] [F:" << val.func_name << "] " 
-			<< val.file_name << ":" << val.line_num << std::endl;
+			<< val.file_name << ":" << val.line_num 
+			// << *(val.extra) // default "", 可以省略
+			<< std::endl;
 	}
 
 }

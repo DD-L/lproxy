@@ -21,8 +21,10 @@ BOOSTTHREAD = $(BOOST_LINK)/sysprebuild.o \
 
 LIBS = $(LIBPATH) -lpthread -lrt
 
-SRC = test_priority_queue.cpp
-TARGET = $(BIN)/test_priority_queue
+#SRC = test_priority_queue.cpp
+TARGET = $(BIN)/test_priority_queue \
+		 $(BIN)/test_logval_extra \
+		 $(BIN)/test_lockfree
 
 all: init $(TARGET)
 
