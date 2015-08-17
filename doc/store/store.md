@@ -10,7 +10,7 @@ store/store.h
 ####原型：
 <pre>
 template < typename T, typename Container = std::queue< T > >
-class Store : public boost::serialization::singleton< Store< T, Container> >;
+class Store : public boost::serialization::singleton< Store< T, Container > >;
 </pre>
 ####类摘要:
 
@@ -82,7 +82,7 @@ template < typename T >
 class std_priority_queue : public std::priority_queue< T > {
 	public:
 		const T& front() const {
-			return std::priority_queue<T>::top();
+			return std::priority_queue< T >::top();
 		}
 };
 </pre>

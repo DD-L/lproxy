@@ -13,7 +13,7 @@ enum LogType {
 };
 </pre>
 
-推荐用法:
+推荐使用方式:
  
  * TRACE  跟踪
  * DEBUG  细粒度信息事件
@@ -51,7 +51,7 @@ public:
 		const std::string& function_name = "UNKNOWN_FUNCTION",
 		const std::string& filename = "UNKNOWN_FILENAME",
 		const unsigned int& line = 0,
-		std::shared_ptr<Extra> extra_data = std::make_shared< ExtraNone >());
+		std::shared_ptr< Extra > extra_data = std::make_shared< ExtraNone >());
 	LogVal(const LogVal& that);
 	LogVal(LogVal&& that);
 	LogVal& operator= (const LogVal& that);
@@ -74,12 +74,12 @@ public:
 	friend std::ostream& operator<< (
 			std::ostream&         os, 
 			const LogVal::Extra&  e) {
-		return os << std::move(const_cast<Extra&>(e).format());
+		return os << std::move(const_cast< Extra& >(e).format());
 	}
 };
 </pre>
 
-若LogVal未能满足需求，那么扩展LogVal::Extra即可：
+若LogVal未能满足需求，那么扩展LogVal::Extra即可，而且任何时候都推荐使用：
 <pre>
 // 扩展样例：
 using std::string;
@@ -94,7 +94,7 @@ class LogValExtraExample : public LogVal::Extra {
 			std::ostringstream oss;
 			oss << " {extra_data:" << _str_test1 << ","	<< _int_test2 << "}"; 
 			return  oss.str(); 
-			// 可以返回临时对象而不用担心效率问题
+			// 可以返回临时对象而不用担心效率问题，原因可以查看父类中调用format()位置的代码
 		}
 	private:
 		string  _str_test1;
@@ -117,10 +117,12 @@ std::cout << log_tools::time2string(val.now)
 	<< val.pid << "] [F:" << val.func_name << "] " 
 	<< val.file_name << ":" << val.line_num 
 	<< *val.extra  // <-- 附加数据, 重写了流输出操作符 
+	// or 
+	// << val.extra->format()
 	<< std::endl;
 </pre>
 
-如果之前初始化时没有给定extra任何值，则val.extra将被赋予默认值(类型为LogVal::ExtraNone)，对*val.extra流输出值为空字符串""。
+如果之前初始化时(push时)没有给定参数extra任何值，则val.extra将被赋予默认值(类型为LogVal::ExtraNone)，对*val.extra流输出值为空字符串""， 即val.extra->format()为""。
 
 附LogVal::ExtraNone的实现：
 
