@@ -81,7 +81,8 @@ void test() {
 			<< "] " << val.msg << " [p:" 
 			<< val.pid << "] [F:" << val.func_name << "] " 
 			<< val.file_name << ":" << val.line_num 
-			<< *val.extra  // <-- 附加数据
+			//<< *val.extra  // <-- 附加数据
+			<< val.extra  // <-- 附加数据
 			<< std::endl;
 	}
 

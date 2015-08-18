@@ -75,6 +75,11 @@ public:
 			const LogVal::Extra&  e) {
 		return os << std::move(e.format());
 	}
+	friend std::ostream& operator<< (
+			std::ostream&                    os, 
+			std::shared_ptr< LogVal::Extra > ep) {
+		return os << (ep->format());
+	}
 };
 </pre>
 
@@ -115,9 +120,11 @@ std::cout << log_tools::time2string(val.now)
 	<< "] " << val.msg << " [p:" 
 	<< val.pid << "] [F:" << val.func_name << "] " 
 	<< val.file_name << ":" << val.line_num 
-	<< *val.extra  // <-- 附加数据, 重写了流输出操作符 
+	<< val.extra  // <-- 附加数据, 重写了流输出操作符 
 	// or 
 	// << val.extra->format()
+	// or
+	// << *val.extra
 	<< std::endl;
 </pre>
 

@@ -67,7 +67,7 @@ void test() {
 			<< "] " << val.msg << " [p:" 
 			<< val.pid << "] [F:" << val.func_name << "] " 
 			<< val.file_name << ":" << val.line_num 
-			// << *(val.extra) // default "", 可以省略
+			// << val.extra // default "", 可以省略
 			<< std::endl;
 	}
 

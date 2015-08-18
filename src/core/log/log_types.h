@@ -100,6 +100,11 @@ public:
 					const LogVal::Extra&  e) {
 				return os << std::move(e.format());
 			}
+			friend std::ostream& operator<< (
+					std::ostream&                  os, 
+					std::shared_ptr<LogVal::Extra> ep) {
+				return os << (ep->format());
+			}
 	};
 	// 默认附加数据, 并演示自定义附加数据的使用
 	class ExtraNone : public LogVal::Extra {
