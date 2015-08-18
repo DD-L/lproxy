@@ -20,7 +20,7 @@ LogType LogVal::* mp = &LogVal::log_type;
 
 优先因子vfactor这样定义:
 LogType f[2] = {FATAL, ERROR}; 
-std::vector< LogType > vfactor(f, f + 2);
+std::set< LogType > vfactor(f, f + 2);
 
 若日志插入顺序是：
 {1, INFO} {2, WARN} {3, ERROR} {4, FATAL} {5, FATAL} {6, ERROR}
@@ -51,7 +51,7 @@ public:
 			// value_type类成员指针
 			PriorityFactor value_type::* __value_mp,
 			// 优先因子(们) 
-			const std::vector< PriorityFactor >& __vfactor 
+			const std::set< PriorityFactor >& __vfactor 
 	) ;
 
 	// push
@@ -91,18 +91,18 @@ public:
 * 初始化优先因子
 	1. 优先因子为空, 输出顺序同输入的顺序，FIFO
 		<pre>
-		std::vector< LogType > vfactor;
+		std::set< LogType > vfactor;
 		//assert(vfactor.empty());
 		</pre>
 	2. 优先因子元素只有一个: FATAL, 即优先输出FATAL
 		<pre>
 		LogType factors[1] = {FATAL};
-		std::vector< LogType > vfactor(factors, factors + 1);
+		std::set< LogType > vfactor(factors, factors + 1);
 		</pre>
 	3. 优先因子元素有2个: FATAL 和 ERROR，且 FATAL的优先级大于ERROR, 即优先输出FATAL，然后再优先输出ERROR
 		<pre>
 		LogType factors[2] = {FATAL, ERROR};
-		std::vector< LogType > vfactor(factors, factors + 2);
+		std::set< LogType > vfactor(factors, factors + 2);
 		</pre>
 	4. ...
 
