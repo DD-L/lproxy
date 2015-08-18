@@ -10,15 +10,15 @@ INCLUDE = -I$(PWD)/../../../contrib/boost_1_57_0/
 #STDLIB = -stdlib=libc++  # win32
 LIBS = $(LIBPATH) -lpthread -lrt
 
-BOOSTTHREAD = $(TMP)/sysprebuild.o  $(TMP)/tprebuild.o \
-			  $(TMP)/dateprebuilt.o
+BOOSTTHREAD = $(TMP)/sysprebuild.o  $(TMP)/tprebuild.o 
+BOOSTDATETIME = $(TMP)/dateprebuilt.o
 
 all: init TARGET
 
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 
-TARGET: $(BOOSTTHREAD)
+TARGET: $(BOOSTTHREAD) $(BOOSTDATETIME)
 
 $(TMP)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
