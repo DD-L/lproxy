@@ -7,7 +7,7 @@ TMP = ./~tmp
 
 PWD = $(shell pwd)/
 BOOST_BUILT = $(PWD)/../../boost_built
-BOOST_LINK = $(BOOST_BUILT)/link
+BOOST_LINK_DIR = $(BOOST_BUILT)/link
 
 
 CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
@@ -16,9 +16,9 @@ INCLUDE = -I$(PWD)/../../../../contrib/boost_1_57_0/ -I$(PWD)../../store/ -I$(PW
 
 LIBS = $(LIBPATH) -lpthread -lrt
 
-BOOSTLINK = $(BOOST_LINK)/sysprebuild.o \
-			  $(BOOST_LINK)/tprebuild.o\
-			  $(BOOST_LINK)/dateprebuilt.o
+BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
+			  $(BOOST_LINK_DIR)/tprebuild.o \
+			  $(BOOST_LINK_DIR)/dateprebuilt.o
 
 TESTQUEUE = $(BIN)/test_priority_queue
 TESTLOGEX = $(BIN)/test_logval_extra
