@@ -14,26 +14,34 @@ CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
 #STDLIB = -stdlib=libc++  # win32
 INCLUDE = -I$(PWD)/../../../../contrib/boost_1_57_0/ -I$(PWD)../../store/ -I$(PWD)../
 
-BOOSTTHREAD = $(BOOST_LINK)/sysprebuild.o \
+LIBS = $(LIBPATH) -lpthread -lrt
+
+BOOSTLINK = $(BOOST_LINK)/sysprebuild.o \
 			  $(BOOST_LINK)/tprebuild.o\
 			  $(BOOST_LINK)/dateprebuilt.o
 
+TESTQUEUE = $(BIN)/test_priority_queue
+TESTLOGEX = $(BIN)/test_logval_extra
+TESTLOCKFREE = $(BIN)/test_lockfree
 
-LIBS = $(LIBPATH) -lpthread -lrt
 
-#SRC = test_priority_queue.cpp
-TARGET = $(BIN)/test_priority_queue \
-		 $(BIN)/test_logval_extra \
-		 $(BIN)/test_lockfree
+TestQueue: init $(TESTQUEUE)
+TestLogEx: init $(TESTLOGEX)
+TestLockfree: init $(TESTLOCKFREE)
+
+TARGET = $(TESTQUEUE) \
+		 $(TESTLOGEX) \
+		 $(TESTLOCKFREE)
 
 all: init $(TARGET)
+
 
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
 	cd $(BOOST_BUILT); make -j
 
-$(BIN)/%: $(TMP)/%.o $(BOOSTTHREAD)
+$(BIN)/%: $(TMP)/%.o $(BOOSTLINK)
 	$(XX) -o $@ $^ $(LIBS)
 
 
