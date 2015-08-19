@@ -15,17 +15,18 @@ void test() {
 	
 	typedef log_tools::priority_queue<LogVal, LogType> LogQueue;
 	// 1 优先因子为空, 输出顺序同输入的顺序，FIFO
-	//std::set<LogType> vfactor;
+	//std::vector<LogType> vfactor;
 	////assert(vfactor.empty());
 	
 	// 2 优先因子元素只有一个: FATAL, 即优先输出FATAL
 	LogType factors[1] = {FATAL};
-	std::set<LogType> vfactor(factors, factors + 1);
+	std::vector<LogType> vfactor(factors, factors + 1);
 
 	// 3 优先因子元素有2个: FATAL 和 ERROR, 
 	// 且 FATAL的优先级大于ERROR, 即优先输出FATAL，然后再优先输出ERROR
 	//LogType factors[2] = {FATAL, ERROR};
-	//std::set<LogType> vfactor(factors, factors + 2);
+	//std::vector<LogType> vfactor(factors, factors + 2);
+	
 	LogQueue::settings(&LogVal::log_type, vfactor);
 
 	typedef Store<LogVal, LogQueue> LogStore;

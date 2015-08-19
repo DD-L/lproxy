@@ -15,7 +15,7 @@
  *		LogType LogVal::* mp = &LogVal::log_type;
  *		优先因子vfactor这样定义:
  *		LogType f[2] = {FATAL, ERROR}; 
- *		set<LogType> vfactor(f, f +2);
+ *		vector<LogType> vfactor(f, f +2);
  *
  *		若日志插入顺序是：
  *		{1, INFO} {2, WARN} {3, ERROR} {4, FATAL} {5, FATAL} {6, ERROR}
@@ -58,7 +58,12 @@ public:
 	// init/settings
 	static void settings(
 			PriorityFactor value_type::* __value_mp, // value_type类成员指针
-			const std::set<PriorityFactor>& __vfactor) {// 优先因子(们)
+			const std::vector<PriorityFactor>& __vfactor) {// 优先因子(们)
+		// 判断__vfactor元素是否唯一
+		std::set<PriorityFactor> vf_test(__vfactor.begin(), __vfactor.end());
+		assert(__vfactor.size() == vf_test.size());
+		// 如果这里断言失败，说明__vfactor元素有重复
+
 		value_type_mp    = __value_mp;
 		vfactor          = __vfactor;
 		is_settings      = true;
@@ -167,7 +172,7 @@ private:
 private:
 	std::list<value_type>                    c;        // 底层容器
 	typename std::list<value_type>::iterator max_value;// 
-	static std::set<PriorityFactor>       vfactor;  // 优先因子
+	static std::vector<PriorityFactor>       vfactor;  // 优先因子
 	// value_type的成员指针
 	static PriorityFactor value_type::*      value_type_mp; 
 	static bool                              is_settings;
@@ -183,7 +188,7 @@ namespace log_tools {
 
 // 优先因子容器，规定优先的因素
 template <typename value_type, typename PriorityFactor>
-typename std::set<PriorityFactor> 
+typename std::vector<PriorityFactor> 
 priority_queue<value_type, PriorityFactor>::vfactor;
 // 成员指针,默认指向value_type的第一个成员
 template <typename value_type, typename PriorityFactor>

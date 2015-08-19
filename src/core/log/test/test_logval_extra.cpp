@@ -40,7 +40,7 @@ void test() {
 	
 	// 优先因子元素只有一个: FATAL, 即优先输出FATAL
 	LogType factors[1] = {FATAL};
-	std::set<LogType> vfactor(factors, factors + 1);
+	std::vector<LogType> vfactor(factors, factors + 1);
 	LogQueue::settings(&LogVal::log_type, vfactor);
 
 	typedef Store<LogVal, LogQueue> LogStore;
