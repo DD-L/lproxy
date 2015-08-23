@@ -44,7 +44,7 @@ MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 
 // 如果未来你想增加几个自定义日志级别，在任何函数域或全局域可以这样写
 MAKE_LOGLEVEL(MyLevel1, 25);
-MAKE_LOGLEVEL(MyLevel2, 25);    // 针对当前的日志级别设计，权重特意被设置成可以重复的值
+MAKE_LOGLEVEL(MyLevel2, 25);    // 针对当前的日志库级别，权重特意被设计成可以重复的值
 //MAKE_LOGLEVEL(MyLevel1, 100); // 错误：
 // 1. 如果出现在不同作用域，则编译器在编译器不会报错。
 //    但在程序运行时会抛出重复定义常量MyLevel1的异常信息，异常信息包含错误定义所在的文件及行号:

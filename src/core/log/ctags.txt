@@ -3,6 +3,8 @@
 # 	lproxy/src/core/boost_built/tprebuild.cpp
 #   lproxy/src/core/boost_built/dateprebuilt.cpp
 
-logtypes.h
+loglevel.hpp
+log_types.h
+priority_queue.h
 Makefile
 test/
