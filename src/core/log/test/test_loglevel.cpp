@@ -2,7 +2,7 @@
 	> File Name: test*.cpp
 	> Author: D_L
 	> Mail: deel@d-l.top 
-	> Created Time: 2015/8/8 8:23:09
+	> Created Time: 2015/8/19 18:10:10
  ************************************************************************/
 
 #include <iostream>
@@ -10,27 +10,31 @@
 #include "log/priority_queue.h"
 #include "store/store.h"
 
-using namespace std;
+using std::string;
+
+
+// 全局域 测试
+MAKE_LOGLEVEL(MyLevel1, 100);
+
+void make() {
+	// 函数域测试
+	MAKE_LOGLEVEL_INSIDE(MyLevel2, 100);
+}
+
 void test() {
+	make();
+	MAKE_LOGLEVEL_INSIDE(MyLevel5, 200);
+	MAKE_LOGLEVEL_INSIDE(MyLevel3, 300);
 	
 	typedef log_tools::priority_queue<LogVal, LogType> LogQueue;
-	// 1 优先因子为空, 输出顺序同输入的顺序，FIFO
-	//std::vector<LogType> vfactor;
-	////assert(vfactor.empty());
 	
-	// 2 优先因子元素只有一个: FATAL, 即优先输出FATAL
-	//LogType factors[1] = {makelevel(FATAL)};
-	//std::vector<LogType> vfactor(factors, factors + 1);
-
-	// 3 优先因子元素有2个: FATAL 和 ERROR, 
-	// 且 FATAL的优先级大于ERROR, 即优先输出FATAL，然后再优先输出ERROR
-	LogType factors[2] = {makelevel(FATAL), makelevel(ERROR)};
+	// 优先因子元素有两个: FATAL, 和MyLevel2 
+	// 即依次优先输出FATAL, MyLevel
+	LogType factors[2] = {makelevel(FATAL), makelevel(MyLevel2)};
 	std::vector<LogType> vfactor(factors, factors + 2);
-	
 	LogQueue::settings(&LogVal::log_type, vfactor);
 
 	typedef Store<LogVal, LogQueue> LogStore;
-	//typedef Store<LogVal, std::queue<LogVal> > LogStore;
 	
 	LogStore& logstore = LogStore::get_mutable_instance();
 	logstore.push({ 
@@ -38,8 +42,8 @@ void test() {
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__ 
 	});
-	logstore.push({
-			log_tools::local_time(), makelevel(ERROR), "2", 
+	logstore.push({ 
+			log_tools::local_time(), makelevel(WARN), "2", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__ 
 	});
@@ -49,26 +53,35 @@ void test() {
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
-			log_tools::local_time(), makelevel(WARN), "4", 
+			log_tools::local_time(), makelevel(MyLevel2), "4", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
-			log_tools::local_time(), makelevel(ERROR), "5", 
+			log_tools::local_time(), makelevel(FATAL), "5", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__ 
 	});
-	
+	logstore.push({ 
+			log_tools::local_time(), makelevel(MyLevel3), "6", 
+			log_tools::get_pid(),
+			__func__, __FILE__, __LINE__ 
+	});
+	logstore.push({ 
+			log_tools::local_time(), makelevel(MyLevel1), "7", 
+			log_tools::get_pid(),
+			__func__, __FILE__, __LINE__ 
+	});
 	// output
 	LogVal val;
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 7; ++i) {
 		logstore.pop(val);
 		std::cout << log_tools::time2string(val.now)
-			<< " [" << val.log_type 
+			<< " [" << val.log_type/*.get_name()*/
 			<< "] " << val.msg << " [p:" 
 			<< val.pid << "] [F:" << val.func_name << "] " 
 			<< val.file_name << ":" << val.line_num 
-			// << val.extra // default "", 可以省略
+			<< val.extra  // <-- 附加数据
 			<< std::endl;
 	}
 

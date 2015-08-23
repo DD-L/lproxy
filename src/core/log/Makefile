@@ -1,7 +1,7 @@
 
 TESTDIR = ./test
 
-all: TestQueue TestLogEx TestLockfree
+all: TestQueue TestLogEx TestLockfree TestLogLevel
 
 TestQueue:
 	@echo "Compiling $@ ..."
@@ -22,6 +22,13 @@ TestLockfree:
 	cd $(TESTDIR); make $@
 	@echo
 	@echo "[test_lockfree] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
+	@echo
+
+TestLogLevel:
+	@echo "Compiling $@ ..."
+	cd $(TESTDIR); make $@
+	@echo
+	@echo "[test_loglevel] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 clean:

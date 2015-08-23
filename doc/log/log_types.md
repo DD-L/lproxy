@@ -6,12 +6,16 @@ log/log_types.h
 
 定义了日志类型(级别)
 <pre>
-enum LogType { 
-	TRACE = 0,  DEBUG = 10, 
-	INFO  = 20,  WARN = 30, 
-	ERROR = 40, FATAL = 50
-};
+// 默认内置 6 种日志级别
+MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
+MAKE_LOGLEVEL(DEBUG, 10); // DEBUG 权重为10
+MAKE_LOGLEVEL(INFO , 20); // INFO  权重为20
+MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
+MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
+MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 </pre>
+(代替了原先enum的定义)
+有关 MAKE_LOGLEVEL 的使用详情，移步这里[here](./loglevel.md)
 
 推荐使用方式:
  
@@ -46,7 +50,7 @@ public:
 	// 缺省构造/拷贝构造/operator=/析构
 	virtual ~LogVal() {}
 	LogVal(const LogVal::ptime& time = log_tools::local_time(), 
-		const LogType& logtype = WARN, 
+		const LogType& logtype = makelevel(WARN), 
 		const std::string& message = "",
 		const LogVal::pid_t& thread_id = log_tools::get_pid(),
 		const std::string& function_name = "UNKNOWN_FUNCTION",
@@ -160,6 +164,4 @@ const std::string time2string(const ptime& time_point);
 // get the current thread id
 const pid_t get_pid();
 
-// logtype to const char*
-const char* logtype2string(const LogType& logtype);
 </pre>

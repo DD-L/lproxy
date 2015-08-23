@@ -6,9 +6,9 @@
  ************************************************************************/
 
 #include <iostream>
-#include "log_types.h"
-#include "priority_queue.h"
-#include "store.h"
+#include "log/log_types.h"
+#include "log/priority_queue.h"
+#include "store/store.h"
 
 using std::string;
 
@@ -40,25 +40,25 @@ void test() {
 	
 	LogStore& logstore = LogStore::get_mutable_instance();
 	logstore.push(new LogVal( 
-			log_tools::local_time(), INFO, "1", 
+			log_tools::local_time(), makelevel(INFO), "1", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test1", 100)
 	));
 	logstore.push(new LogVal( 
-			log_tools::local_time(), WARN, "2", 
+			log_tools::local_time(), makelevel(WARN), "2", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test2", 200)
 	));
 	logstore.push(new LogVal( 
-			log_tools::local_time(), FATAL, "3", 
+			log_tools::local_time(), makelevel(FATAL), "3", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test3", 300)
 	));
 	logstore.push(new LogVal( 
-			log_tools::local_time(), DEBUG, "4", 
+			log_tools::local_time(), makelevel(DEBUG), "4", 
 			log_tools::get_pid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test4", 400)
@@ -68,7 +68,7 @@ void test() {
 		LogVal* val = NULL;
 		logstore.pop(val);
 		std::cout << log_tools::time2string(val->now)
-			<< " [" << log_tools::logtype2string(val->log_type) 
+			<< " [" << val->log_type 
 			<< "] " << val->msg << " [p:" 
 			<< val->pid << "] [F:" << val->func_name << "] " 
 			<< val->file_name << ":" << val->line_num 

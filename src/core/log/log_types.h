@@ -12,6 +12,7 @@
 #include <string>
 #include <ctime>
 #include <memory> // std::shared_ptr
+#include "log/loglevel.hpp"
 
 // log types
 /** 
@@ -22,12 +23,22 @@
  * ERROR  虽然发生错误事件，但仍然不影响系统的继续运行
  * FATAL  严重的错误事件将会导致应用程序的退出
  */
-
+/*
 enum LogType { 
 	TRACE = 0,  DEBUG = 10, 
 	INFO  = 20,  WARN = 30, 
 	ERROR = 40, FATAL = 50
 };
+*/
+
+// 默认内置 6 种日志级别
+MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
+MAKE_LOGLEVEL(DEBUG, 10); // DEBUG 权重为10
+MAKE_LOGLEVEL(INFO , 20); // INFO  权重为20
+MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
+MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
+MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
+
 
 #include <boost/thread.hpp>
 #define BOOST_DATE_TIME_SOURCE
@@ -52,19 +63,6 @@ namespace log_tools {
 	const pid_t get_pid() {
 		return boost::this_thread::get_id();
 	}
-	// logtype to const char*
-	const char* logtype2string(const LogType& logtype) {
-		switch (logtype) {
-			case TRACE: return "TRACE";
-			case DEBUG: return "DEBUG";
-			case INFO:  return "INFO ";
-			case WARN:  return "WARN ";
-			case ERROR: return "ERROR";
-			case FATAL: return "FATAL";
-			default:    return "UNKNOWN_LOGTYPE";
-		
-		}
-	}
 } // namespace log_tools
 
 
@@ -79,6 +77,7 @@ public:
 public:
 	ptime                  now;
 	LogType                log_type;
+	//std::shared<Log_LevelBase> log_type;
 	std::string            msg;
 	pid_t                  pid;
 	std::string            func_name;
@@ -118,7 +117,7 @@ public:
 public:
 	virtual ~LogVal() {};
 	LogVal(const LogVal::ptime& time = log_tools::local_time(), 
-		const LogType& logtype = WARN, 
+		const LogType& logtype = makelevel(WARN), 
 		const std::string& message = "",
 		const LogVal::pid_t& thread_id = log_tools::get_pid(),
 		const std::string& function_name = "UNKNOWN_FUNCTION",
