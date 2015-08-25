@@ -77,7 +77,6 @@ public:
 public:
 	ptime                  now;
 	LogType                log_type;
-	//std::shared<Log_LevelBase> log_type;
 	std::string            msg;
 	pid_t                  pid;
 	std::string            func_name;
