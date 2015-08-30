@@ -1,4 +1,4 @@
-$ # make
+ï»¿$ # make
 $ make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes
 $
 $ # install
@@ -8,80 +8,80 @@ $ cp -a ./htmlreport/cppcheck-htmlreport /opt/cppcheck/
 $ cp -a ./cfg/std.cfg /opt/cppcheck/cfg/
 $ # export PATH=${PATH}:/opt/cppcheck
 
-cppcheck µÄÊ¹ÓÃ£º
+cppcheck çš„ä½¿ç”¨ï¼š
 $ cp /opt/cppcheck/cfg/std.cfg ./
 $ cppcheck --xml --std=c++11 --template=gcc --enable=all -I /usr/lib/gcc/i686-pc-cygwin/4.8.3/include/c++ -j 4 SRC_DIR  2> err.xml 
 $ rm ./std.cfg
 
 
-cppcheck-htmlreportµÄÊ¹ÓÃ
+cppcheck-htmlreportçš„ä½¿ç”¨
 $ #pip install Pygments
 cppcheck-htmlreport --file=err.xml --report-dir=./report --source-dir=SRC_DIR
 
 
 
-1. ¹¤¾ß¼ò½é
+1. å·¥å…·ç®€ä»‹
 
-	1. ÏÂÔØ°²×°£¨Linux£©£º
-		1. ¹Ù·½ÍøÖ·£ºhttp://sourceforge.net/projects/cppcheck/
-		2. °²×°·½Ê½£º½âÑ¹ºó£¬Ö±½Ómake½øĞĞ±àÒë£¬Íê³Éºó£¬make install½øĞĞ°²×°
-		3. ÑéÖ¤°²×°£ºcppcheck -v ²é¿´ÊÇ·ñ°²×°³É¹¦
+	1. ä¸‹è½½å®‰è£…ï¼ˆLinuxï¼‰ï¼š
+		1. å®˜æ–¹ç½‘å€ï¼šhttp://sourceforge.net/projects/cppcheck/
+		2. å®‰è£…æ–¹å¼ï¼šè§£å‹åï¼Œç›´æ¥makeè¿›è¡Œç¼–è¯‘ï¼Œå®Œæˆåï¼Œmake installè¿›è¡Œå®‰è£…
+		3. éªŒè¯å®‰è£…ï¼šcppcheck -v æŸ¥çœ‹æ˜¯å¦å®‰è£…æˆåŠŸ
 
-	2. ÌØµã½éÉÜ
-		1. Ö÷Òª¼ì²é±àÒëÆ÷Í¨³£²»ÄÜ·¢ÏÖµÄÈ±Ïİ¡£
-		2. cppcheckÄÜ¹»·¢ÏÖºÜ¶à´íÎó£¬µ«²»ÄÜ·¢ÏÖËùÓĞµÄ´íÎó¡£
+	2. ç‰¹ç‚¹ä»‹ç»
+		1. ä¸»è¦æ£€æŸ¥ç¼–è¯‘å™¨é€šå¸¸ä¸èƒ½å‘ç°çš„ç¼ºé™·ã€‚
+		2. cppcheckèƒ½å¤Ÿå‘ç°å¾ˆå¤šé”™è¯¯ï¼Œä½†ä¸èƒ½å‘ç°æ‰€æœ‰çš„é”™è¯¯ã€‚
 
-2. »ù±¾Ê¹ÓÃ
-	1. ¼ì²éµ¥¸öÎÄ¼ş£ºcppcheck foo.c
-	2. ¼ì²éÎÄ¼ş¼Ğ£ºcppcheck path
-	3. ÅÅ³ıÒ»¸öÎÄ¼ş»òÕßÒ»¸öÎÄ¼ş¼Ğ£ºcppcheck -isrc/foo.c src
+2. åŸºæœ¬ä½¿ç”¨
+	1. æ£€æŸ¥å•ä¸ªæ–‡ä»¶ï¼šcppcheck foo.c
+	2. æ£€æŸ¥æ–‡ä»¶å¤¹ï¼šcppcheck path
+	3. æ’é™¤ä¸€ä¸ªæ–‡ä»¶æˆ–è€…ä¸€ä¸ªæ–‡ä»¶å¤¹ï¼šcppcheck -isrc/foo.c src
 
-	4. Ê¹ÄÜ¼ì²é¹æÔò£º
-		1. Ä¬ÈÏ£º--enable=error
+	4. ä½¿èƒ½æ£€æŸ¥è§„åˆ™ï¼š
+		1. é»˜è®¤ï¼š--enable=error
 		2. --enable=all 
 		3. --enable=unusedFuntion path
 		4. --enable=style
 
-	5. ¹æÔò¶¨Òå£º
-		error£º³öÏÖµÄ´íÎó
-		warning£ºÎªÁËÔ¤·Àbug·ÀÓùĞÔ±à³Ì½¨ÒéĞÅÏ¢
-		style£º±àÂë¸ñÊ½ÎÊÌâ£¨Ã»ÓĞÊ¹ÓÃµÄº¯Êı¡¢¶àÓàµÄ´úÂëµÈ£©
-		portablity£ºÒÆÖ²ĞÔ¾¯¸æ¡£¸Ã²¿·ÖÈç¹ûÒÆÖ²µ½ÆäËûÆ½Ì¨ÉÏ£¬¿ÉÄÜ³öÏÖ¼æÈİĞÔÎÊÌâ
-		performance£º½¨ÒéÓÅ»¯¸Ã²¿·Ö´úÂëµÄĞÔÄÜ
-		information£ºÒ»Ğ©ÓĞÈ¤µÄĞÅÏ¢£¬¿ÉÒÔºöÂÔ²»¿´µÄ¡£
+	5. è§„åˆ™å®šä¹‰ï¼š
+		errorï¼šå‡ºç°çš„é”™è¯¯
+		warningï¼šä¸ºäº†é¢„é˜²bugé˜²å¾¡æ€§ç¼–ç¨‹å»ºè®®ä¿¡æ¯
+		styleï¼šç¼–ç æ ¼å¼é—®é¢˜ï¼ˆæ²¡æœ‰ä½¿ç”¨çš„å‡½æ•°ã€å¤šä½™çš„ä»£ç ç­‰ï¼‰
+		portablityï¼šç§»æ¤æ€§è­¦å‘Šã€‚è¯¥éƒ¨åˆ†å¦‚æœç§»æ¤åˆ°å…¶ä»–å¹³å°ä¸Šï¼Œå¯èƒ½å‡ºç°å…¼å®¹æ€§é—®é¢˜
+		performanceï¼šå»ºè®®ä¼˜åŒ–è¯¥éƒ¨åˆ†ä»£ç çš„æ€§èƒ½
+		informationï¼šä¸€äº›æœ‰è¶£çš„ä¿¡æ¯ï¼Œå¯ä»¥å¿½ç•¥ä¸çœ‹çš„ã€‚
 
-	6. ±£´æ½á¹ûµ½ÎÄ¼şÖĞ£ºÖØ¶¨Ïò¡°>¡±
-	7. ¶àÏß³Ì¼ì²é´úÂë£¨Ìá¸ß¼ì²éËÙ¶È£¬³ä·ÖÀûÓÃCPU¹¦ÄÜ£©£ºcppcheck -j 4 src
+	6. ä¿å­˜ç»“æœåˆ°æ–‡ä»¶ä¸­ï¼šé‡å®šå‘â€œ>â€
+	7. å¤šçº¿ç¨‹æ£€æŸ¥ä»£ç ï¼ˆæé«˜æ£€æŸ¥é€Ÿåº¦ï¼Œå……åˆ†åˆ©ç”¨CPUåŠŸèƒ½ï¼‰ï¼šcppcheck -j 4 src
 
-3. ¸ß¼¶Ê¹ÓÃ
+3. é«˜çº§ä½¿ç”¨
 
-	1. xml Êä³ö
-		1. Ê¹ÓÃ·½Ê½£ºcppcheck --xml-version=2 foo.cpp
+	1. xml è¾“å‡º
+		1. ä½¿ç”¨æ–¹å¼ï¼šcppcheck --xml-version=2 foo.cpp
 
-		2. errorµÄ×é³ÉÔªËØ
+		2. errorçš„ç»„æˆå…ƒç´ 
 
-				id£ºerrorµÄid
-				severity£ºerrorµÄĞÔÖÊ£¨error¡¢warning......£©
-				msg£ºerrorµÄ¾ßÌåĞÅÏ¢£¨¶Ì¸ñÊ½£©
-				verbose£ºerrorµÄĞÅÏ¢£¨³¤¸ñÊ½£©
-				locationµÄ×é³ÉÔªËØ£º
-				file£ºº¬ÓĞÏà¶Ô»òÕß¾ø¶ÔÂ·¾¶µÄÎÄ¼şÃû
-				line£ºĞĞÊı
-				msg£ºÏûÏ¢ÃèÊö
+				idï¼šerrorçš„id
+				severityï¼šerrorçš„æ€§è´¨ï¼ˆerrorã€warning......ï¼‰
+				msgï¼šerrorçš„å…·ä½“ä¿¡æ¯ï¼ˆçŸ­æ ¼å¼ï¼‰
+				verboseï¼šerrorçš„ä¿¡æ¯ï¼ˆé•¿æ ¼å¼ï¼‰
+				locationçš„ç»„æˆå…ƒç´ ï¼š
+				fileï¼šå«æœ‰ç›¸å¯¹æˆ–è€…ç»å¯¹è·¯å¾„çš„æ–‡ä»¶å
+				lineï¼šè¡Œæ•°
+				msgï¼šæ¶ˆæ¯æè¿°
 
-	2. ¸ÄÁ¼Êä³ö½á¹û
-		cppcheck --template=vs path £¨Visual Studio ¼æÈİÄ£Ê½£©
-		cppcheck --template=gcc path £¨Gcc¼æÈİÄ£Ê½£©
-		cppcheck --template={"{file},{line},{severity},{id},{message}"} £¨×Ô¶¨ÒåÄ£Ê½£©
+	2. æ”¹è‰¯è¾“å‡ºç»“æœ
+		cppcheck --template=vs path ï¼ˆVisual Studio å…¼å®¹æ¨¡å¼ï¼‰
+		cppcheck --template=gcc path ï¼ˆGccå…¼å®¹æ¨¡å¼ï¼‰
+		cppcheck --template={"{file},{line},{severity},{id},{message}"} ï¼ˆè‡ªå®šä¹‰æ¨¡å¼ï¼‰
 
-	3. Êä³ö¹ıÂËÆ÷£¨Ñ¡ÌØ¶¨µÄ´íÎóĞÅÏ¢Êä³ö£©
-		1. ÃüÁîĞĞÄ£Ê½£ºcppcheck --suppress=memleak:src/file1.cpp src/
-		2. Ê¹ÓÃÎÄ¼şÄ£Ê½£¨½«¹ıÂË¹æÔò´æµ½ÎÄ¼şÖĞ£©£ºcppcheck --suppressions suppressions.txt src/
+	3. è¾“å‡ºè¿‡æ»¤å™¨ï¼ˆé€‰ç‰¹å®šçš„é”™è¯¯ä¿¡æ¯è¾“å‡ºï¼‰
+		1. å‘½ä»¤è¡Œæ¨¡å¼ï¼šcppcheck --suppress=memleak:src/file1.cpp src/
+		2. ä½¿ç”¨æ–‡ä»¶æ¨¡å¼ï¼ˆå°†è¿‡æ»¤è§„åˆ™å­˜åˆ°æ–‡ä»¶ä¸­ï¼‰ï¼šcppcheck --suppressions suppressions.txt src/
 
-4. ±¨¸æÃÀ»¯
+4. æŠ¥å‘Šç¾åŒ–
 	1. ./cppcheck test.cpp --xml 2> err.xml
 	2. htmlreport/cppcheck-htmlreport --file=err.xml --report-dir=test1 --source-dir=.
 
-5 GUIÓ¦ÓÃ£¨cppcheckÌá¹©GUIµÄÓÃ»§½Ó¿Ú£¬±È½Ï¼òµ¥£¬ÂÔÈ¥²»Ğ´£©
+5 GUIåº”ç”¨ï¼ˆcppcheckæä¾›GUIçš„ç”¨æˆ·æ¥å£ï¼Œæ¯”è¾ƒç®€å•ï¼Œç•¥å»ä¸å†™ï¼‰
 
-6. ²Î¿¼cppcheckÓÃ»§ÊÖ²á
+6. å‚è€ƒcppcheckç”¨æˆ·æ‰‹å†Œ
