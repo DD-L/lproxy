@@ -5,7 +5,9 @@ RM = rm -rf
 
 
 %:
+	@dos2unix ./cppcheck_report.sh
 	[[ " $(ALL) " =~ " $@ " ]] && sh ./cppcheck_report.sh $@
+
 
 %.clean: 
 	@if [[ " $(ALL) " =~ "$(subst .clean,, $@) " ]]; then echo " Deleting dir -$(subst .clean,, $@)"_report; $(RM) $(subst .clean,, $@)_report;  else echo "cannot find dir -$(subst .clean,, $@)"_report; fi
