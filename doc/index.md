@@ -23,4 +23,5 @@ lproxy
 
 ## static_analysis
 	代码静态检查
-* [static_analysis](./static_analysis/readme.md)
+* [cppcheck](./static_analysis/cppcheck/readme.md)
+* [pclint](./static_analysis/pclint/readme.md)

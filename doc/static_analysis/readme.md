@@ -1,1 +1,0 @@
-go to [here](../../src/core/static_analysis/readme.md).

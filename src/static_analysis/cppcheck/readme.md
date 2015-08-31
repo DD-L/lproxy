@@ -1,4 +1,4 @@
-src/core/static_analysis/readme.md
+src/static_analysis/cppcheck/readme.md
 
 ----------------------------------
 
@@ -31,11 +31,11 @@ static analysis
 	cp -a ./cppcheck /opt/cppcheck/
 	cp -a ./htmlreport/cppcheck-htmlreport /opt/cppcheck/
 	cp -a ./cfg/std.cfg /opt/cppcheck/cfg/
-	# export PATH=${PATH}:/opt/cppcheck # 配置环境变量 （必要）
+	# export PATH=${PATH}:/opt/cppcheck # 配置环境变量 （必要的配置项目，自动化脚本所需）
 	
 ####usage:
 
-	1. cppcheck 使用简单示例
+	1. cppcheck 简单使用示例
 		1. cppcheck
 			cp /opt/cppcheck/cfg/std.cfg ./
 			cppcheck --xml --std=c++11 --template=gcc --enable=all -I /usr/lib/gcc/i686-pc-cygwin/4.8.3/include/c++ -j 4 SRC_DIR  2> err.xml 
@@ -48,12 +48,25 @@ static analysis
 		躶用cppcheck太麻烦，于是自己编写了静态检查自动化脚本 Makefile, cppcheck_report.sh。
 		使用示例如下
 		1. 生成报告
-			make # 或者 make all 
-			会在当前目录生成项目所有源码的静态检查报告，报告在xxx_report目录内
-			make log
-			只会在当前目录生成log模块的静态检查报告，其它项目模块类推
+			1. make # 或者 make all 
+				会在当前目录生成项目所有源码的静态检查报告，报告在xxx/xxx_report目录内
+			
+			2. make 源码目录
+				生成单个报告				
+
+				源码目录是相对 src/ 的相对路径
+
+				比如：make core/log
+				只会在当前目录生成 core/log 目录的静态检查报告:core/log_report，其它项目模块类推
 		2. 清理
-			make all.clean
-			会删除项目所有源码的静态检查报告，并删除./std.cfg
-			make log.clean
-			只会删除log模块的静态检查报告，其它项目模块类推
+			1. make all.clean
+				会删除项目所有源码的静态检查报告，并删除./std.cfg;
+				如果当前路径存在./core或./gui目录，且其为空目录，也会将 ./core 和 ./gui 一并删除
+			
+			2. make 源码目录.clean
+				单个清理
+				
+				源码目录是相对 src/ 的相对路径			
+
+				例如：make core/log.clean
+				只会删除 core/log 模块的静态检查报告，其它项目模块类推
