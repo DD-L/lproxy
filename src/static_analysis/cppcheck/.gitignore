@@ -1,0 +1,8 @@
+#./std.cfg
+#./gcc_include_cpp_path
+
+*
+!.gitignore
+!cppcheck_report.sh
+!Makefile
+!readme.md

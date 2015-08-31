@@ -28,7 +28,7 @@ msg:
 
 all.clean:
 	$(foreach x, $(ALL), make $(x).clean;)
-	$(RM) ./std.cfg
+	$(RM) ./std.cfg ./gcc_include_cpp_path
 	if [ -d ./core ];then if [ x"`ls -A ./core`" = x"" ];then $(RM_EMPTY_DIR) ./core;fi;fi
 	if [ -d ./gui ];then if [ x"`ls -A ./gui`" = x"" ];then $(RM_EMPTY_DIR) ./gui;fi;fi
 
