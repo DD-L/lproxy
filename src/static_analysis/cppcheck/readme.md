@@ -68,12 +68,12 @@ static analysis
 
 	1. cppcheck 简单使用示例
 		1. cppcheck
-			cp /opt/cppcheck/cfg/std.cfg ./
-			cppcheck --xml --std=c++11 --template=gcc --enable=all --force -I /usr/lib/gcc/i686-pc-cygwin/4.8.3/include/c++ -j 4 SRC_DIR  2> err.xml 
+			cp $ROOT/tools/static_analysis_tool/cppcheck/bin/cfg/std.cfg ./
+			$ROOT/tools/static_analysis_tool/cppcheck/bin/cppcheck --xml --std=c++11 --template=gcc --enable=all --force -I /usr/lib/gcc/i686-pc-cygwin/4.8.3/include/c++ -j 4 SRC_DIR  2> err.xml 
 			rm ./std.cfg
 		2. cppcheck-htmlreport (python tool，依赖python运行环境，本机v2.7.x)
 			#pip install Pygments #依赖Pygments模块, 参见 install|手动安装|check
-			cppcheck-htmlreport --file=err.xml --report-dir=./report --source-dir=SRC_DIR
+			$ROOT/tools/static_analysis_tool/cppcheck/bin/cppcheck-htmlreport --file=err.xml --report-dir=./report --source-dir=SRC_DIR
 	
 	2. 自动化脚本 
 		躶用cppcheck太麻烦，于是编写了静态检查自动化脚本 Makefile, cppcheck_report.sh。
@@ -89,10 +89,13 @@ static analysis
 
 			2. 修改cppcheck_report.sh脚本文件中的 INCLUDEFILES 变量.(一般不需修改)
 			
-				如果 cppcheck_report.sh 没有得到正确的$XX编译器的include搜索路径列表，需在此修改；否则没有必要修改INCLUDEFILES.
+				如果 cppcheck_report.sh 没有得到正确的$XX编译器的include搜索路径列表，需在此修改；
+				否则没有必要修改INCLUDEFILES.
 				
 				手动获取编译器include搜索路径列表方法:
-					$ g++ -v ./test.cpp -o a.out; rm a.out
+					$ touch ./test.cpp
+					$ g++ -v ./test.cpp -o a.out
+					$ rm ./test.cpp ./a.out
 					在输出结果中:
 						#include "..."
 						#include <...>
@@ -103,7 +106,7 @@ static analysis
 		2. 使用示例如下：
 			1. 生成报告
 				1. make # 或者 make all 
-					会在当前目录生成项目所有源码的静态检查报告，报告在xxx/xxx_report目录内
+					会在当前目录生成项目所有源码的静态检查报告，报告在xxx_report/xxx_report目录内
 				
 				2. make 源码目录
 					生成单个报告				
