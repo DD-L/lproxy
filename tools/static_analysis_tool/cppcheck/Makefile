@@ -8,7 +8,7 @@
 RM=rm -rf
 PWD=$(shell pwd)
 TOOL_PACKAGE=cppcheck-1.69.tar.bz2
-UNPACK=tar xvf
+UNPACK=tar jxvf
 TOOL_SRC=./cppcheck-1.69/
 MAKE_CMD=make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes
 BIN=./bin/

@@ -26,7 +26,7 @@ static analysis
 	1. 手动安装
 		(1) make
 			cd $ROOT/tools/static_analysis_tool/cppcheck
-			tar xvf cppcheck-1.69.tar.bz2
+			tar jxvf cppcheck-1.69.tar.bz2
 			cd cppcheck-1.69
 			make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes
 		(2) install
