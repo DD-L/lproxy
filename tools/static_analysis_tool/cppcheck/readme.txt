@@ -1,4 +1,4 @@
-﻿$ # make
+$ # make
 $ make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes
 $
 $ # install

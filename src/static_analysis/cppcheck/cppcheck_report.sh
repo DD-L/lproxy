@@ -1,17 +1,74 @@
 #! /bin/bash
 
 #
-# cppcheck_report $src_dir
-#  $src_dir 是相对 $SRCROOT 的路径
+# cppcheck_report [init | $src_dir]
+#	init 初始化cppcheck工具。 
+#		只要不是卸载了工具，初始化一次即可, init 会自动安装工具
+#	$src_dir 是相对 $SRCROOT 的路径
+#  
 #
 
 XX=g++
 THISDOCDIR=$(pwd)
 ROOT=$THISDOCDIR/../../../
 SRCROOT=$ROOT/src/
-
-STD_CFG_FILE='/opt/cppcheck/cfg/std.cfg'
 BOOST_INCLUDE="$ROOT/contrib/boost_1_57_0/"
+
+CPPCHECK_TOOL_DIR=$ROOT/tools/static_analysis_tool/cppcheck/
+STD_CFG_FILE=$CPPCHECK_TOOL_DIR/bin/cfg/std.cfg
+CPPCHECK_CMD=$CPPCHECK_TOOL_DIR/bin/cppcheck
+CPPCHECK_HTMLREPORT_CMD=$CPPCHECK_TOOL_DIR/bin/cppcheck-htmlreport
+
+
+# check parameter
+PARA=$1
+# 参数不可为空
+if [ x"$PARA" = x'' ]
+then
+	echo -e "\nErr: parameter is NULL ($0)\n"
+	echo -e "Usage: $0 [ init | \$src_dir ]"
+	echo -e "\tinit: Initialize tool - 'cppcheck', including compilation, installation, checking"
+	echo -e "\t\$src_dir is the path relative to directory - '$SRCROOT'.\n"
+	exit -1
+else
+	# 参数不可以是绝对路径
+	if [[ $PARA =~ ^/ ]]; then
+		echo -e "\nErr: \$src_dir='$PARA' - parameter is an absolute path."
+		echo -e "     \$src_dir must be a path that relatives to directory - '$SRCROOT'.\n"
+		exit -1
+	fi
+fi
+
+#init tools
+if [ x$PARA = x"init" ];then
+	cd $CPPCHECK_TOOL_DIR
+	make check
+	if [ $? -eq 0 ];then
+		echo -e "\ncppcheck: Initialization has been completed.\n"
+		cd $THISDOCDIR
+		exit 0
+	else # not found tool
+		make 
+		if [ $? -eq 0 ]; then
+			cd $THISDOCDIR
+			echo -e "\ncppcheck: Initialization has been completed.\n"
+			exit 0
+		else
+			cd $THISDOCDIR
+			exit 1
+		fi
+	fi
+fi
+
+#check TOOLS
+cd $CPPCHECK_TOOL_DIR
+make check
+if [ $? -ne 0 ];then
+	cd $THISDOCDIR
+	echo -e "\ncppcheck Err: tools is missing, please run 'make init' to reinstall tools\n"
+	exit 1
+fi
+cd $THISDOCDIR
 
 # setting INCLUDEFILES
 INCLUDEFILES=""
@@ -44,19 +101,14 @@ INCLUDEFILES="$INCLUDEFILES -I $BOOST_INCLUDE -I $SRCROOT"
 #	-I /usr/lib/gcc/i686-pc-cygwin/4.8.3/../../../../include/w32api/ \
 #	-I $BOOST_INCLUDE -I $SRCROOT"
 
-# check parameter
-PARA=$1
-if [ x"$PARA" = x'' ]
-then
-	echo -e "\nErr: parameter is NULL ($0)\n"
-	echo -e "Usage: $0 src_dir"
-	echo -e "\tsrc_dir is the path relative to directory - '$SRCROOT'.\n"
-	exit -1
-fi
+
+
 # config src_dir
 SRC_DIR=$SRCROOT/$PARA
 # config report_dir
-REPORT_DIR=$THISDOCDIR/$PARA"_report"
+NORMPATH=`python -c "import os.path; print(os.path.normpath('$PARA'))"` # 去除点路径
+# 计算出正常路径后，对每一层目录都加上"_report"后缀
+REPORT_DIR=$THISDOCDIR/${NORMPATH//\//_report\/}"_report"
 [ -d $REPORT_DIR ] || mkdir -p $REPORT_DIR
 
 # check std.cfg
@@ -68,10 +120,10 @@ fi
 if [ -d $SRC_DIR ]
 then
 	# run cppcheck
-	cppcheck --xml --std=c++11 --template=gcc --enable=all --force $INCLUDEFILES -j 4 $SRC_DIR  2> $REPORT_DIR/err.xml
+	$CPPCHECK_CMD --xml --std=c++11 --template=gcc --enable=all --force $INCLUDEFILES -j 4 $SRC_DIR  2> $REPORT_DIR/err.xml
 
 	# run cppcheck-htmlreport
-	cppcheck-htmlreport --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR --source-dir=$SRC_DIR
+	$CPPCHECK_HTMLREPORT_CMD --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR --source-dir=$SRC_DIR
 	
 	exit 0
 else # error
