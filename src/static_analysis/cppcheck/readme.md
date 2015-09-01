@@ -102,6 +102,8 @@ static analysis
 					的下面就是g++程序的头文件搜索列表.
 
 			3. 如果想缩短扫描时间，修改cppcheck_report.sh中的 cppcheck 参数即可: 剔除 --force 选项
+			
+			4. 脚本cppcheck_report.sh的执行依赖python运行环境, 如果缺失python, 请先安装python(推荐版本>=v2.7.x)
 
 		2. 使用示例如下：
 			1. 生成报告
@@ -111,7 +113,7 @@ static analysis
 				2. make 源码目录
 					生成单个报告				
 	
-					“源码目录”是相对 src/ 的相对路径
+					“源码目录”是相对 $ROOT/src/ 的相对路径
 	
 					比如：make core/log
 					只会在当前目录生成 core/log 目录的静态检查报告:core_report/log_report，
@@ -131,7 +133,7 @@ static analysis
 				2. make 源码目录.clean
 					单个清理
 					
-					“源码目录”是相对 src/ 的相对路径			
+					“源码目录”是相对 $ROOT/src/ 的相对路径		
 	
 					例如：make core/log.clean
 					只会删除 core/log 模块的静态检查报告，其它项目模块类推
