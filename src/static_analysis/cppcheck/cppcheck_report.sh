@@ -1,10 +1,13 @@
 #! /bin/bash
 
 #
-# cppcheck_report [init | $src_dir]
+# cppcheck_report [init | $src_dir [ $cppcheck_options_ex ] ]
 #	init 初始化cppcheck工具。 
 #		只要不是卸载了工具，初始化一次即可, init 会自动安装工具
 #	$src_dir 是相对 $SRCROOT 的路径
+#	$cppcheck_options_ex 是cppchek的选项，此脚本已经内置了一些
+#		选项: '--xml --std=c++11 --template=gcc --enable=all -I...'
+#		如果想添加其他的选项，设置此参数即可
 #  
 #
 
@@ -141,7 +144,7 @@ then
 
 	# run cppcheck-htmlreport
 	#$CPPCHECK_HTMLREPORT_CMD --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR --source-dir=$SRC_DIR
-	# 由于$SRC_DIR是相对路径, --source-dir 不必给值，如果给也是给当前路径 ./
+	# 由于$SRC_DIR是相对路径, --source-dir 不必给值，如果给也是给当前路径 ./ , 即: --source-dir=.
 	$CPPCHECK_HTMLREPORT_CMD --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR
 	
 	exit 0
