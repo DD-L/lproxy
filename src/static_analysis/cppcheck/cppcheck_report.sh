@@ -26,9 +26,12 @@ PARA=$1
 if [ x"$PARA" = x'' ]
 then
 	echo -e "\nErr: parameter is NULL ($0)\n"
-	echo -e "Usage: $0 [ init | \$src_dir ]"
-	echo -e "\tinit: Initialize tool - 'cppcheck', including compilation, installation, checking"
-	echo -e "\t\$src_dir is the path relative to directory - '$SRCROOT'.\n"
+	echo -e "Usage: $0 [ init | \$src_dir [\$cppcheck_options_ex] ]"
+	echo -e "\t(1) init: Initialize tool - 'cppcheck', including compilation, installation, checking."
+	echo -e "\t(2) \$src_dir is the path relative to directory - '$SRCROOT'."
+	echo -e "\t(3) \$cppcheck_options_ex is the options of the cppcheck, This script has built-in"
+	echo -e "\t   cppcheck parameters: '--xml --std=c++11 --template=gcc --enable=all -I...'"
+	echo -e "\t   you can use '\$cppcheck_options_ex' to configure cppcheck other additional options. "
 	exit -1
 else
 	# 参数不可以是绝对路径
@@ -58,6 +61,15 @@ if [ x$PARA = x"init" ];then
 			exit 1
 		fi
 	fi
+fi
+
+# set $cppcheck_options_ex
+CPPCHECK_OPTIONS_EX=""
+if [ $# -gt 1 ];then
+	for para_c in $(seq 2 $# )
+	do
+		CPPCHECK_OPTIONS_EX="$CPPCHECK_OPTIONS_EX ${!para_c}"
+	done
 fi
 
 #check TOOLS
@@ -104,7 +116,11 @@ INCLUDEFILES="$INCLUDEFILES -I $BOOST_INCLUDE -I $SRCROOT"
 
 
 # config src_dir
-SRC_DIR=$SRCROOT/$PARA
+# SRC_DIR 最好是相对路径, 否则会引起cppcheck 的-i选项会失效，
+# 并且-i参数接收的也只能是相对路径(相对$ROOT/src), 这是cppcheck的一个bug
+SRC_DIR=../../$PARA
+SRC_FULL_PATH=$SRCROOT/$PARA
+
 # config report_dir
 NORMPATH=`python -c "import os.path; print(os.path.normpath('$PARA'))"` # 去除点路径
 # 计算出正常路径后，对每一层目录都加上"_report"后缀
@@ -117,13 +133,16 @@ then
 	cp $STD_CFG_FILE $THISDOCDIR/
 fi
 
+
 if [ -d $SRC_DIR ]
 then
 	# run cppcheck
-	$CPPCHECK_CMD --xml --std=c++11 --template=gcc --enable=all --force $INCLUDEFILES -j 4 $SRC_DIR  2> $REPORT_DIR/err.xml
+	$CPPCHECK_CMD --xml --std=c++11 --template=gcc --enable=all $INCLUDEFILES $CPPCHECK_OPTIONS_EX $SRC_DIR 2> $REPORT_DIR/err.xml
 
 	# run cppcheck-htmlreport
-	$CPPCHECK_HTMLREPORT_CMD --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR --source-dir=$SRC_DIR
+	#$CPPCHECK_HTMLREPORT_CMD --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR --source-dir=$SRC_DIR
+	# 由于$SRC_DIR是相对路径, --source-dir 不必给值，如果给也是给当前路径 ./
+	$CPPCHECK_HTMLREPORT_CMD --file=$REPORT_DIR/err.xml --report-dir=$REPORT_DIR
 	
 	exit 0
 else # error
