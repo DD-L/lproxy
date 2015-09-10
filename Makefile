@@ -14,10 +14,10 @@ check:
 	cd $(CHECK_CPP11_DIR); make
 
 boost:
-	cd contrib; make boost -f $(MAKEFILE)
+	cd contrib/boost; make boost -f $(MAKEFILE)
 boost.force:
-	cd contrib; make boost.force
+	cd contrib/boost; make boost.force
 
 clean:
-	cd contrib; make clean -f $(MAKEFILE)
+	cd contrib/boost; make clean -f $(MAKEFILE)
 
