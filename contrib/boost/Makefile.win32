@@ -1,0 +1,20 @@
+RM = RD /S /Q
+
+BOOST_PACKAGE = boost_1_57_0.7z
+BOOST_SRC = boost_1_57_0
+
+
+
+all: boost
+
+boost:
+	boost_init.bat
+
+clean: boost.clean
+
+boost.clean:
+	$(RM) $(BOOST_SRC)
+
+
+
+
