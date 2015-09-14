@@ -8,7 +8,7 @@
 
 
 THISDOCDIR=`pwd`
-ROOT=$THISDOCDIR/../
+ROOT=$THISDOCDIR/../../
 
 
 BOOST_PACKAGE=boost_1_57_0.7z
