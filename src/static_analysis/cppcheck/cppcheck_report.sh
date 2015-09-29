@@ -15,7 +15,7 @@ XX=g++
 THISDOCDIR=$(pwd)
 ROOT=$THISDOCDIR/../../../
 SRCROOT=$ROOT/src/
-BOOST_INCLUDE="$ROOT/contrib/boost_1_57_0/"
+BOOST_INCLUDE="$ROOT/contrib/boost/boost_1_57_0/"
 
 CPPCHECK_TOOL_DIR=$ROOT/tools/static_analysis_tool/cppcheck/
 STD_CFG_FILE=$CPPCHECK_TOOL_DIR/bin/cfg/std.cfg

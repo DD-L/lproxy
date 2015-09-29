@@ -16,7 +16,7 @@ ROOT = $(PWD)../../
 
 CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
 #STDLIB = -stdlib=libc++  # win32
-INCLUDE = -I$(PWD)/../../../../contrib/boost_1_57_0/ -I$(ROOT) 
+INCLUDE = -I$(PWD)/../../../../contrib/boost/boost_1_57_0/ -I$(ROOT) 
 
 LIBS = $(LIBPATH) -lpthread -lrt
 

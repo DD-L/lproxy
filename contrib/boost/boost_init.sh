@@ -8,7 +8,7 @@
 
 
 THISDOCDIR=`pwd`
-ROOT=$THISDOCDIR/../
+ROOT=$THISDOCDIR/../../
 
 
 BOOST_PACKAGE=boost_1_57_0.7z
@@ -19,7 +19,7 @@ _7ZR_TOOL_DIR=$ROOT/tools/7zip/
 _7ZR_TOOL=$_7ZR_TOOL_DIR/bin/7zr
 
 # show help
-function show_help()
+show_help ()
 {
 	echo -e "Usage:\n\t./boost_init.sh [ option ]\n"
 	echo "option:"
@@ -28,7 +28,7 @@ function show_help()
 }
 
 # check boost
-function check_boost() 
+check_boost () 
 {
 	if [ -f $SUCCESS_FLAG ];then
 		echo "info: checking $SUCCESS_FLAG ... ok"

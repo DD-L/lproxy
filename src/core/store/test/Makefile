@@ -16,7 +16,7 @@ MACRO_3 = -D_BOOST_LOCKFREE_QUEUE
 MACRO_4 = -D_BOOST_LOCKFREE_STACK
 
 CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
-INCLUDE = -I$(PWD)/../../../../contrib/boost_1_57_0/ -I$(PWD)../
+INCLUDE = -I$(PWD)/../../../../contrib/boost/boost_1_57_0/ -I$(PWD)../
 #STDLIB = -stdlib=libc++  # win32
 
 BOOSTTHREAD = $(BOOST_LINK)/sysprebuild.o \

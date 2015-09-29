@@ -157,6 +157,7 @@ static analysis
 					例如：make core/log.clean
 					只会删除 core/log 模块的静态检查报告，其它项目模块类推
 
+
 附 自动化脚本 cppcheck_report.sh的help:
 <pre>
 Usage: ./cppcheck_report.sh [ init | $src_dir [$cppcheck_options_ex] ]
@@ -166,11 +167,79 @@ Usage: ./cppcheck_report.sh [ init | $src_dir [$cppcheck_options_ex] ]
            cppcheck parameters: '--xml --std=c++11 --template=gcc --enable=all -I...'
            you can use '$cppcheck_options_ex' to configure cppcheck other additional options.
 </pre>
-注意，如果$cppcheck_options_ex中有cppcheck的-i选项(ignore)，那么-i接收的参数也必须是一个相对路径（相对./cppcheck_report.sh的路径），这应该是cppcheck的一个bug, 如果给它绝对路径，-i将不起作用。
+注意，如果 $cppcheck_options_ex 中有 cppcheck 的 -i 选项(ignore)，那么-i接收的参数也必须是一个相对路径（相对./cppcheck_report.sh的路径），这应该是 cppcheck 的一个 bug, 如果给它绝对路径，-i 将不起作用。
 
 bug描述：cppcheck 的-i选项仅当 其接收的路径为相对路径，并且$src_dir也是相对路径 的情况下时，-i才会生效
 
 这也是为什么，自动化脚本将$src_dir也限定为相对路径的原因。
+
+####故障汇总
+1. make init 在编译cppcheck时, 可能会遇到make失败。
+	
+	出错日志：pcre.h 文件没有找到。
+	<pre>
+	cd ./cppcheck-1.69/; make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes
+ make[2]: Entering directory '/opt/GIT/lproxy/tools/static_analysis_tool/cppcheck/cppcheck-1.69'
+	make: pcre-config: Command not found
+	g++ -Ilib -Iexternals/tinyxml  -DCFGDIR=\"cfg\" -O2 -include lib/cxx11emu.h  -DNDEBUG -Wall -DHAVE_RULES -DTIXML_USE_STL   -std=c++0x -c -o build/cppcheck.o build/cppcheck.cpp
+	build/cppcheck.cpp:40:18: fatal error: pcre.h: No such file or directory
+	 #include < pcre.h >
+	                  ^
+	compilation terminated.
+	Makefile:367: recipe for target 'build/cppcheck.o' failed
+	make: *** [build/cppcheck.o] Error 1
+	</pre>
+
+	报错原因：操作系统缺失 pcre 开发库.	
+
+	解决办法：
+
+		*  debian/ubuntu:
+			$ #sudo apt-get update
+			$ sudo apt-get install libpcre3 libpcre3-dev
+		*  CentOS:
+			$ sudo yum install pcre-devel
+		*  Mac:
+			$ brew install pcre
+
+	pcre库简介：
+
+		PCRE(Perl Compatible Regular Expressions中文含义：perl语言兼容正则表达式)
+		是一个用C语言编写的正则表达式函数库，PCRE是一个轻量级的函数库，比Boost之类的正
+		则表达式库小得多。PCRE十分易用，同时功能也很强大，性能超过了POSIX正则表达式库
+		和一些经典的正则表达式库。
+		
+
+
+2. make init 在检查 cppcheck-htmlreport 程序时, 可能会失败。
+
+	2.1 cppcheck-htmlreport的执行依赖python执行环境，python版本 >= 2.7 即可。
+
+	2.2 cppcheck-htmlreport的执行依赖 pygments 模块（python中的一个模块）
+	
+		python ./bin/cppcheck-htmlreport
+		Traceback (most recent call last):
+		  File "./bin/cppcheck-htmlreport", line 12, in <module>
+		    from pygments import highlight
+		ImportError: No module named pygments
+		Perhaps it is missing python module - 'pygments', run 'sudo pip install pygments' can install it.
+		it requires pip, pleaes install 'pip' firstly, and then run 'sudo pip install pygments'.
+		make[2]: *** [check] Error 1
+		Makefile:45: recipe for target 'check' failed
+
+	 报错原因：python运行环境缺失 pygments 库.
+
+	 解决办法：
+
+		方式一： $ sudo pip install pygments
+				如果缺失 pip， 请先安装pip
+		方式二： 到 https://pypi.python.org/pypi/Pygments 下载安装
+
+3. ...
+	
+	
+
+	
 
 ---------
 

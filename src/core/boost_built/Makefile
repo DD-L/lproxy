@@ -6,7 +6,7 @@ PWD = $(shell pwd)
 TMP = ./link
 
 CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x # win32: -std=std=c++11
-INCLUDE = -I$(PWD)/../../../contrib/boost_1_57_0/
+INCLUDE = -I$(PWD)/../../../contrib/boost/boost_1_57_0/
 #STDLIB = -stdlib=libc++  # win32
 LIBS = $(LIBPATH) -lpthread -lrt
 

@@ -25,7 +25,7 @@ ALL = core/except core/language core/store core/log
 
 init:
 	@dos2unix ./cppcheck_report.sh > /dev/null 2>&1
-	sh ./cppcheck_report.sh $@
+	bash ./cppcheck_report.sh $@
 	
 
 all: $(ALL) msg
@@ -36,18 +36,18 @@ msg:
 %:
 	@dos2unix ./cppcheck_report.sh > /dev/null 2>&1
 	@echo -e "\n[ $@ ] ..."
-	@if [[ " $(ALL) " =~ " $@ " ]]; then sh ./cppcheck_report.sh $@ $(CPPCHECK_OPT_EX); fi
+	@if [[ " $(ALL) " =~ " $@ " ]]; then bash ./cppcheck_report.sh $@ $(CPPCHECK_OPT_EX); fi
 
 core:
 	@dos2unix ./cppcheck_report.sh > /dev/null 2>&1
 	@echo -e "\n[ core ] ..."
 #	检查$(ROOT)/src/core, 但忽略(-i) $(ROOT)/src/core/boost_built 
 #	-i 参数必须为相对路径（相对当前文件目录）, 这应该是 cppcheck的一个bug
-	sh ./cppcheck_report.sh core $(CPPCHECK_OPT_EX) -i ../../core/boost_built 
+	bash ./cppcheck_report.sh core $(CPPCHECK_OPT_EX) -i ../../core/boost_built 
 gui:
 	@dos2unix ./cppcheck_report.sh > /dev/null 2>&1
 	@echo -e "\n[ $@ ] ..."
-	sh ./cppcheck_report.sh $@ $(CPPCHECK_OPT_EX)
+	bash ./cppcheck_report.sh $@ $(CPPCHECK_OPT_EX)
 
 %.clean: 
 	@if [[ " $(ALL) " =~ "$(subst .clean,, $@) " ]]; then echo " Deleting dir -$(subst /,_report/, $(subst .clean,, $@))"_report; $(RM) $(subst /,_report/, $(subst .clean,, $@))_report;  else echo "cannot find dir -$(subst /,_report/, $(subst .clean,, $@))"_report; fi
