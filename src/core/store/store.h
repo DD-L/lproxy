@@ -17,13 +17,13 @@
  *				3. 修饰符: push pop
  *		4. 公共方法摘要:
  *				1. void push(const T&);     入仓方法
- *				2. T& pop(T&);              出仓方法
+ *				2. void pop(T&); T& pop();  出仓方法
  *				3. bool empty const ();     判空估值, 返回值是不可靠的(没有锁保护), 函数返回时可能值已改变。 
  *				//4. size_t size const ();  估算大小, 返回值是不可靠的(没有锁保护), 函数返回时可能值已改变。
  *				//5. bool full() const;     满仓判断。
  *				6. static void reserve(size_t); 重置仓库最大容量, 线程安全的，但可能会阻塞,仓库最大容量默认值为200000 
  *				7. static void reserve_unsafe(size_t); 重置仓库最大容量, 线程不安全的，不会阻塞。
- *				8. 两个重载版本方法: bool push(const T*); 和 T& pop(T*);
+ *				8. 两个重载版本方法: bool push(const T*); 和 bool pop(T*); 仅当传入参数指针为NULL时返回false
  *				9. 对boost::lockfree::queue 和 boost::lockfree::stack 的特化版本中的pop, 返回值为bool
  *		5. 特别的, empty() 底层实现是判定begin()迭代器和end()迭代器是否相等;
  *
@@ -137,7 +137,7 @@ class Store : public singleton<Store<T, Container> > {
 			}
 		}
 
-		T& pop(T& element) {
+		void pop(T& element) {
 			mutex_t::scoped_lock lock(_store_lock);
 			while (empty()) {
 				_cond_empty.wait(_store_lock);
@@ -145,11 +145,25 @@ class Store : public singleton<Store<T, Container> > {
 			element = _store.front();
 			_store.pop();
 			_cond_full.notify_one();
+		}
+		T& pop() {
+			mutex_t::scoped_lock lock(_store_lock);
+			while (empty()) {
+				_cond_empty.wait(_store_lock);
+			}
+			T& element = _store.front();
+			_store.pop();
+			_cond_full.notify_one();
 			return element;
 		}
-		T& pop(T* element_ptr) {
-			assert(element_ptr);
-			return pop(*element_ptr);
+		bool pop(T* element_ptr) {
+			if (element_ptr) {
+				pop(*element_ptr);
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		bool empty() const {
