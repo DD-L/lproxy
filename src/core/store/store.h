@@ -123,7 +123,7 @@ class Store : public singleton<Store<T, Container> > {
 			while (full()) {
 				_cond_full.wait(_store_lock);
 			}
-			_store.push(std::move(element));
+			_store.push(std::forward<T>(element));
 			_cond_empty.notify_one();
 		}
 		bool push(const T* element_ptr) {
@@ -151,7 +151,7 @@ class Store : public singleton<Store<T, Container> > {
 			while (empty()) {
 				_cond_empty.wait(_store_lock);
 			}
-			T& element = _store.front();
+			T&& element = _store.front();
 			_store.pop();
 			_cond_full.notify_one();
 			return element;
