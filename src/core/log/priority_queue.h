@@ -45,6 +45,12 @@
  *		才会显现出差别; 而遍历元素出现劣势的情况则大概到了10,000,000级别.
  *		在日志模型中这足够使用了, 并且list从中间移除元素效率远大于其他容器
  *
+ *
+ *
+ *      推荐:
+ *
+ *		    推荐在使用时, 采用一级指针类型作为容器元素, 这样可以提高效率。 
+ *
  */ 
 
 #include <list>
@@ -74,7 +80,7 @@ public:
 		c.push_back(__x);
 	}
 	void push(value_type&& __x) {
-		c.push_back(std::move(__x));	
+		c.push_back(std::forward<value_type>(__x));	
 	}
 
 	//
@@ -163,12 +169,12 @@ public:
 	bool empty() const { return c.empty(); }
 	size_t size() const { return c.size(); }
 
+public:
 	//  constructor/destructor
 	priority_queue(void) : max_value(c.begin()) {}
 	virtual ~priority_queue() {}
-private:
 	// forbid copy
-	priority_queue(const priority_queue&) {}
+	priority_queue(const priority_queue&) = delete;
 private:
 	std::list<value_type>                    c;        // 底层容器
 	typename std::list<value_type>::iterator max_value;// 
@@ -197,6 +203,123 @@ priority_queue<value_type, PriorityFactor>::value_type_mp = NULL;
 // settings flag
 template <typename value_type, typename PriorityFactor>
 bool priority_queue<value_type, PriorityFactor>::is_settings = false;
+
+} // namespace log_tools
+
+
+
+
+/////////////////////////////////////////////////////////////////////////
+//
+// log_tools::priority_queue<value_type*, PriorityFactor> 的偏特化版本
+//
+//     以便log_tools::priority_queue容器能够容纳一级指针类型的元素
+//
+/////////////////////////////////////////////////////////////////////////
+
+namespace log_tools {
+
+template <typename value_type, typename PriorityFactor>
+class priority_queue<value_type*, PriorityFactor> {
+
+	// 'value_type*' should not be a multilevel pointer type
+	static_assert(!std::is_pointer<value_type>::value, 
+			"'value_type' cannot be a pointer type");
+
+public:
+	// init/settings
+	static void settings(
+			PriorityFactor value_type::* __value_mp, // value_type类成员指针
+			const std::vector<PriorityFactor>& __vfactor) {// 优先因子(们)
+		// 判断__vfactor元素是否唯一
+		std::set<PriorityFactor> vf_test(__vfactor.begin(), __vfactor.end());
+		assert(__vfactor.size() == vf_test.size());
+		// 如果这里断言失败，说明__vfactor元素有重复
+
+		value_type_mp    = __value_mp;
+		vfactor          = __vfactor;
+		is_settings      = true;
+	}
+
+	// push
+	/*
+	void push(const value_type& __x) {
+		c.push_back(__x);
+	}
+	void push(value_type&& __x) {
+		c.push_back(std::forward<value_type>(__x));	
+	}
+	*/
+	void push(value_type* __x) {
+		c.push_back(__x);
+	}
+
+	value_type* top() {
+		assert(is_settings);		
+		if (! vfactor.empty()) {
+			// Use method 1 / find
+			for (auto& factor : vfactor) {
+				for (auto it = c.begin(); it != c.end(); ++it) {
+					if ((*it)->*value_type_mp == factor) {
+						max_value = it;
+						return *it;
+					}
+				}
+			}
+		}
+		// not fount
+		max_value = c.begin();
+		return *max_value;
+	}
+	const value_type* top() const {
+		return const_cast<priority_queue*>(this)->front();
+	}
+	// just for Store
+	value_type* front() { return top(); }
+	const value_type* front() const { return top(); }
+
+	// pop
+	void pop() { 
+		c.erase(max_value);
+	}
+	
+	// empty/size
+	bool empty() const { return c.empty(); }
+	size_t size() const { return c.size(); }
+
+public:
+	//  constructor/destructor
+	priority_queue(void) : max_value(c.begin()) {}
+	virtual ~priority_queue() {}
+	// forbid copy
+	priority_queue(const priority_queue&) = delete;
+private:
+	std::list<value_type*>                    c;        // 底层容器
+	typename std::list<value_type*>::iterator max_value;// 
+	static std::vector<PriorityFactor>        vfactor;  // 优先因子
+	// value_type的成员指针
+	static PriorityFactor value_type::*       value_type_mp; 
+	static bool                               is_settings;
+
+}; // log_tools::priority_queue<value_type*, PriorityFactor>
+
+} // namespace log_tools
+
+
+
+namespace log_tools {
+
+// 优先因子容器，规定优先的因素
+template <typename value_type, typename PriorityFactor>
+typename std::vector<PriorityFactor> 
+priority_queue<value_type*, PriorityFactor>::vfactor;
+// 成员指针,默认指向value_type的第一个成员
+template <typename value_type, typename PriorityFactor>
+PriorityFactor value_type::* 
+priority_queue<value_type*, PriorityFactor>::value_type_mp = NULL; 
+// settings flag
+template <typename value_type, typename PriorityFactor>
+bool priority_queue<value_type*, PriorityFactor>::is_settings = false;
 
 } // namespace log_tools
 
