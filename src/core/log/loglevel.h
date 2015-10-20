@@ -80,65 +80,23 @@ public:
 class LogLevelManage {
 public:
 	LogLevelManage(Log_LevelBase&& llb, 
-			const char* filename, const int& linenum) {
-		LogLevelManage::add(
-				std::forward<Log_LevelBase>(llb),
-				filename, linenum
-		);
-	}
+			const char* filename, const int& linenum);
 
 	static const Log_LevelBase& get_level(const char* level,
-			const char* filename, const int& linenum) {
-		assert(level);
-		try {
-			return LogLevels.at(level); // C++11	
-		}
-		catch (const std::out_of_range&) {
-			std::ostringstream msg;
-			msg << "Attempts to reference a non-existent global constant - '"
-				<< level << "' [" << filename << ':' << linenum << "]";
-			throw LogException(msg.str());
-		}
-
-	}
-	void clearwarning(void) { 
-		// do nothing
-		// 仅仅是消除makelevel在局部域中使用时, 编译器产生的警告:
-		// variable '...' set but not used [-Wunused-but-set-variable]
-	}
+			const char* filename, const int& linenum);
+	void clearwarning(void);
 private:
 	static void add(Log_LevelBase&& llb, 
-			const char* filename, const int& linenum) {
-		boost::mutex::scoped_lock lock(levels_lock);
-
-		//typedef std::pair<std::string, Log_LevelBase> value_t;
-		typedef std::pair<const char*, Log_LevelBase> value_t;
-		if (false == 
-				LogLevels.insert(
-					value_t(llb.get_name(), std::forward<Log_LevelBase>(llb))
-				).second) {
-
-			std::ostringstream msg;
-			msg << "Attempts to re-define an existing global constant"
-				" - '" << llb.get_name() << "' [" 
-				<< filename << ":" << linenum << "]";
-			throw LogException(msg.str());
-		}
-	}
-
+			const char* filename, const int& linenum);
 
 	// 慎用, 可能会引发冲突. 暂时不开放此接口
-	size_t erase(const char* level) {
-		assert(level);
-		boost::mutex::scoped_lock lock(levels_lock);
-		return LogLevels.erase(level);
-	}
+	size_t erase(const char* level);
 private:
 	// 因为关联容器包含指针(const char*), 所以需为其定制比较类型
 	// 否则, 使用map::at会出错(得到不想要的结果)
 	class key_less {
 	public:
-		bool operator()(const char* const l, const char* const r) {
+		bool operator() (const char* const l, const char* const r) {
 			/*
 			assert(l && r);
 			size_t llen = strlen(l) + 1, rlen = strlen(r) + 1;
@@ -161,10 +119,6 @@ private:
 	//		而const char* + key_less 的方案，要比使用std::string
 	//		少一次构造
 };
-std::map<const char*, Log_LevelBase, LogLevelManage::key_less> 
-LogLevelManage::LogLevels;
-boost::mutex LogLevelManage::levels_lock;
-
 
 // LogLevel 工厂函数
 #define MAKE_LOGLEVEL(Level, Rank)\
@@ -216,6 +170,7 @@ class LogType {
 	private:
 	   std::shared_ptr<const Log_LevelBase> log_level;
 };
+
 
 #endif // LOGLEVEL_H_
 
