@@ -12,7 +12,7 @@
 #include <string>
 #include <ctime>
 #include <memory> // std::shared_ptr
-#include "log/loglevel.hpp"
+#include "loglevel.h"
 
 // log types
 /** 
@@ -32,12 +32,12 @@ enum LogType {
 */
 
 // 默认内置 6 种日志级别
-MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
-MAKE_LOGLEVEL(DEBUG, 10); // DEBUG 权重为10
-MAKE_LOGLEVEL(INFO , 20); // INFO  权重为20
-MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
-MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
-MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
+//MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
+//MAKE_LOGLEVEL(DEBUG, 10); // DEBUG 权重为10
+//MAKE_LOGLEVEL(INFO , 20); // INFO  权重为20
+//MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
+//MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
+//MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 
 
 #include <boost/thread.hpp>
@@ -52,17 +52,11 @@ namespace log_tools {
 	typedef boost::thread::id                 pid_t;
 
 	// get the current time
-	const ptime local_time() {
-		return microsec_clock::local_time();
-	}
+	const ptime local_time();
 	// boost::posix_time::ptime to std::string
-	const std::string time2string(const ptime& time_point) {
-		return boost::posix_time::to_simple_string(time_point);
-	}
+	const std::string time2string(const ptime& time_point);
 	// get the current thread id
-	const pid_t get_pid() {
-		return boost::this_thread::get_id();
-	}
+	const pid_t get_pid();
 } // namespace log_tools
 
 
@@ -95,7 +89,7 @@ public:
 			virtual ~Extra() {}
 			friend std::ostream& operator<< (
 					std::ostream&         os, 
-					const LogVal::Extra&  e) {
+					LogVal::Extra&&       e) {
 				return os << std::move(e.format());
 			}
 			friend std::ostream& operator<< (
@@ -107,7 +101,7 @@ public:
 	// 默认附加数据, 并演示自定义附加数据的使用
 	class ExtraNone : public LogVal::Extra {
 	public:
-		virtual const std::string format() const {
+		virtual const std::string format(void) const override {
 			return "";
 		}
 	};
