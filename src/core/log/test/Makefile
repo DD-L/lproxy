@@ -6,13 +6,17 @@ BIN = ./bin
 TMP = ./~tmp
 
 PWD = $(shell pwd)/
-BOOST_BUILT = $(PWD)/../../boost_built
+ROOT = $(PWD)../../
+
+BOOST_BUILT = $(ROOT)/boost_built
 BOOST_LINK_DIR = $(BOOST_BUILT)/link
 
-EXCEPT_DIR = $(PWD)/../../except
+EXCEPT_DIR = $(ROOT)/except
 EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 
-ROOT = $(PWD)../../
+LOG_DIR = $(ROOT)/log
+LOG_LINK_DIR = $(LOG_DIR)/link
+
 
 CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
 #STDLIB = -stdlib=libc++  # win32
@@ -26,7 +30,9 @@ BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 
 EXCEPTLINK = $(EXCEPT_LINK_DIR)/except.o
 
-ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK)
+LOGLINK = $(LOG_LINK_DIR)/loglevel.o $(LOG_LINK_DIR)/log_types.o
+
+ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK) $(LOGLINK)
 
 TESTQUEUE = $(BIN)/test_priority_queue
 TESTLOGEX = $(BIN)/test_logval_extra
@@ -44,7 +50,7 @@ TARGET = $(TESTQUEUE) \
 		 $(TESTLOCKFREE) \
 		 $(TESTLOGLEVEL)
 
-all: init $(TARGET)
+all: init  $(TARGET)
 
 
 init:
@@ -52,8 +58,9 @@ init:
 	[ -d '$(BIN)' ] || mkdir $(BIN)
 	cd $(BOOST_BUILT); make -j
 	cd $(EXCEPT_DIR); make -j
+	cd $(LOG_DIR); make loglink
 
-$(BIN)/%: $(TMP)/%.o $(ALL_LINK) 
+$(BIN)/%: $(TMP)/%.o  $(ALL_LINK) 
 	$(XX) -o $@ $^ $(LIBS)
 
 
