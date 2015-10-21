@@ -81,14 +81,12 @@ class LogLevelManage {
 public:
 	LogLevelManage(Log_LevelBase&& llb, 
 			const char* filename, const int& linenum);
-
 	static const Log_LevelBase& get_level(const char* level,
 			const char* filename, const int& linenum);
 	void clearwarning(void);
 private:
-	static void add(Log_LevelBase&& llb, 
+	static void add(Log_LevelBase& llb, 
 			const char* filename, const int& linenum);
-
 	// 慎用, 可能会引发冲突. 暂时不开放此接口
 	size_t erase(const char* level);
 private:
@@ -108,8 +106,31 @@ private:
 				   ) < 0;
 		}
 	};
+
+	// 内置level
+	class __default_log_level {
+	public:
+		__default_log_level();
+	};
 private:
-	static boost::mutex                                   levels_lock;
+	typedef std::map<const char*, Log_LevelBase, key_less> LogLevels_t;
+	//
+	// 为了能使 levels_lock 和 LogLevels, 在运行时能正常的被优先初始化
+	// 采用函数中使用静态变量的方式来代替后面的直接定义静态类成员变量
+	// 否则 levels_lock 和 LogLevels 可能会被正常初始化，导致段错误
+	// 类似的问题: http://www.tuicool.com/articles/QRBF3qN 《C++静态初始化的顺序》
+	//
+	inline static boost::mutex& get_locker() {
+		static boost::mutex levels_lock;
+		return levels_lock;
+	}
+	inline static LogLevels_t& get_LogLevels() {
+		static LogLevelManage::LogLevels_t LogLevels;
+		return LogLevels;
+	}
+/*
+private:
+	static boost::mutex  levels_lock;
 	// 为了能快速查询, 改成map, key-value对
 	static std::map<const char*, Log_LevelBase, key_less> LogLevels;
 	// 使用 (const char* + key_less) 方案的原因
@@ -118,6 +139,7 @@ private:
 	//		std::string 也是提供的比较器basic_string::operator<,
 	//		而const char* + key_less 的方案，要比使用std::string
 	//		少一次构造
+*/
 };
 
 // LogLevel 工厂函数
@@ -135,7 +157,7 @@ private:
 	LogLevelManage::get_level(#Level, __FILE__, __LINE__)
 
 
-// 伪装成一个 enum, 可构造一个Level全局常量
+// 伪装成一个 enum, 可构造一个Level'全局'常量
 class LogType {
 	public:
 		LogType(const Log_LevelBase& loglevel) :

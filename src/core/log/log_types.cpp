@@ -18,13 +18,7 @@
  * FATAL  严重的错误事件将会导致应用程序的退出
  */
 /*
-enum LogType { 
-	TRACE = 0,  DEBUG = 10, 
-	INFO  = 20,  WARN = 30, 
-	ERROR = 40, FATAL = 50
-};
 */
-
 /*
 // 默认内置 6 种日志级别
 MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
@@ -34,7 +28,6 @@ MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
 MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
 MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 */
-
 
 namespace log_tools {
 	/*

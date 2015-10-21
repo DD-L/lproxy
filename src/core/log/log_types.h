@@ -23,13 +23,6 @@
  * ERROR  虽然发生错误事件，但仍然不影响系统的继续运行
  * FATAL  严重的错误事件将会导致应用程序的退出
  */
-/*
-enum LogType { 
-	TRACE = 0,  DEBUG = 10, 
-	INFO  = 20,  WARN = 30, 
-	ERROR = 40, FATAL = 50
-};
-*/
 
 // 默认内置 6 种日志级别
 //MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
