@@ -27,7 +27,7 @@ LOG_LIB_DIR = $(LOG_DIR)/lib
 CFLAGS = -Wall -D_REENTRANT $(Container_Type) -g -std=gnu++0x   # win32: -std=std=c++11
 INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I.
 LIBPATH = -L$(LOG_LIB_DIR)
-LIBS = $(LIBPATH) -lpthread -lrt -llog
+LIBS = $(LIBPATH)  -llog -lpthread -lrt
 
 
 LOG_STATIC_LIB = $(LOG_LIB_DIR)/liblog.a
