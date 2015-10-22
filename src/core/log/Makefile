@@ -44,7 +44,8 @@ LOG_DYNAMIC_LIB = $(LOGLIB)/liblog.so
 
 all: loglib
 
-demo: 
+demo: loglib 
+	@echo "Compiling Log-demo ..."
 	cd $(DEMODIR); make
 
 test: TestQueue TestLogEx TestLockfree TestLogLevel
