@@ -42,7 +42,12 @@ LOG_STATIC_LIB = $(LOGLIB)/liblog.a
 LOG_DYNAMIC_LIB = $(LOGLIB)/liblog.so
 
 
-all: loglib TestQueue TestLogEx TestLockfree TestLogLevel
+all: loglib
+
+demo: 
+	cd $(DEMODIR); make
+
+test: TestQueue TestLogEx TestLockfree TestLogLevel
 
 #loglib: loglink $(LOG_STATIC_LIB) $(LOG_DYNAMIC_LIB)
 loglib: loglink $(LOG_STATIC_LIB)
@@ -97,4 +102,5 @@ TestLogLevel:
 
 clean:
 	cd $(TESTDIR); make clean
+	cd $(DEMODIR); make clean
 	$(RM) $(LINK) $(LOGLIB)
