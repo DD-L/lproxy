@@ -30,7 +30,9 @@ BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 
 EXCEPTLINK = $(EXCEPT_LINK_DIR)/except.o
 
-LOGLINK = $(LOG_LINK_DIR)/loglevel.o $(LOG_LINK_DIR)/log_types.o
+LOGLINK = $(LOG_LINK_DIR)/loglevel.o \
+		  $(LOG_LINK_DIR)/log_types.o \
+		  $(LOG_LINK_DIR)/logging.o
 
 ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK) $(LOGLINK)
 
@@ -38,17 +40,21 @@ TESTQUEUE = $(BIN)/test_priority_queue
 TESTLOGEX = $(BIN)/test_logval_extra
 TESTLOCKFREE = $(BIN)/test_lockfree
 TESTLOGLEVEL = $(BIN)/test_loglevel
+TESTLOGMANAGER = $(BIN)/test_logmanager
+
 
 
 TestQueue: init $(TESTQUEUE)
 TestLogEx: init $(TESTLOGEX)
 TestLockfree: init $(TESTLOCKFREE)
 TestLogLevel: init $(TESTLOGLEVEL)
+TestLogManager: init $(TESTLOGMANAGER)
 
 TARGET = $(TESTQUEUE) \
 		 $(TESTLOGEX) \
 		 $(TESTLOCKFREE) \
-		 $(TESTLOGLEVEL)
+		 $(TESTLOGLEVEL) \
+		 $(TESTLOGMANAGER)
 
 all: init  $(TARGET)
 
