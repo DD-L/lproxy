@@ -20,18 +20,22 @@
 #include <assert.h>
 #include <iostream>
 #include <cstring>
-using std::string;
-using std::ostream;
 
 class Log_LevelBase {
 private:
-	const string name;
-	const int    rank;
+	const std::string name;
+	const int         rank;
 public:
 	Log_LevelBase(const char* _name = "NONELEVEL", const int& _rank = -1) :
 			name(_name), rank(_rank) {
 		assert(_name);
 	}
+
+	/*
+	operator LogType(void) {
+		return LogType(*this); 		
+	}
+	*/
 
 	//Log_LevelBase(const Log_LevelBase&) = delete;
 	// 为了可以被放入容器, 拷贝构造不能少
@@ -62,10 +66,10 @@ public:
 		return l.rank < r.rank;
 	}
 
-	friend ostream& operator<< (ostream& os, const Log_LevelBase& ll) {
+	friend std::ostream& operator<<(std::ostream& os, const Log_LevelBase& ll){
 		return os << ll.name; 
 	}
-	friend ostream& operator<< (ostream& os, Log_LevelBase&& ll) {
+	friend std::ostream& operator<< (std::ostream& os, Log_LevelBase&& ll) {
 		return os << std::move(ll.name); 
 	}
 
@@ -164,35 +168,27 @@ class LogType {
 			log_level(std::make_shared<const Log_LevelBase>(loglevel)) {}
 		LogType(const LogType& that) : 
 			log_level(that.log_level) {}
-		const char* get_name() const {
+		inline const char* get_name() const {
 			return log_level->get_name();
 		}
-		const LogType& operator=(const LogType& that) {
+		
+		const LogType& operator= (const LogType& that) {
 			if (this != &that) {
 				log_level = that.log_level;
 			}
 			return *this;
 		}
 
-		friend bool operator== (const LogType& l, const LogType& r) {
-			return *(l.log_level) == *(r.log_level);
-		}
-		friend bool operator!= (const LogType& l, const LogType& r) {
-			return !(l == r);
-		}
-		friend bool operator> (const LogType& l, const LogType& r) {
-			return (*(l.log_level) > *(r.log_level));
-		}
-		friend bool operator< (const LogType& l, const LogType& r) {
-			return (*(l.log_level) < *(r.log_level));
-		}
-		friend ostream& operator<< (ostream& os, const LogType& lt) {
-			return os << lt.get_name(); 
-		}
+		friend bool operator== (const LogType& l, const LogType& r);
+		friend bool operator!= (const LogType& l, const LogType& r);
+		friend bool operator> (const LogType& l, const LogType& r);
+		friend bool operator< (const LogType& l, const LogType& r);
+		friend bool operator>= (const LogType& l, const LogType& r);
+		friend bool operator<= (const LogType& l, const LogType& r);
+		friend std::ostream& operator<< (std::ostream& os, const LogType& lt);
 	private:
 	   std::shared_ptr<const Log_LevelBase> log_level;
 };
-
 
 #endif // LOGLEVEL_H_
 

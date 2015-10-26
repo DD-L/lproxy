@@ -14,7 +14,28 @@
 
 #include "loglevel.h"
 
-
+// class LogType
+bool operator== (const LogType& l, const LogType& r) {
+	return *(l.log_level) == *(r.log_level);
+}
+bool operator!= (const LogType& l, const LogType& r) {
+	return !(l == r);
+}
+bool operator> (const LogType& l, const LogType& r) {
+	return (*(l.log_level) > *(r.log_level));
+}
+bool operator< (const LogType& l, const LogType& r) {
+	return (*(l.log_level) < *(r.log_level));
+}
+bool operator>= (const LogType& l, const LogType& r) {
+	return (!(l < r));
+}
+bool operator<= (const LogType& l, const LogType& r) {
+	return (!(l > r));
+}
+std::ostream& operator<< (std::ostream& os, const LogType& lt) {
+	return os << lt.get_name(); 
+}
 
 // class LogLevelManage
 /*
