@@ -3,9 +3,11 @@ XX = g++
 RM = rm -rf
 
 # Settings Container Type
-Container_Type = -DLOG_PRIORITY_QUEUE
+#Container_Type = -DLOG_PRIORITY_QUEUE
 #Container_Type = -DLOG_LOCKFREE_QUEUE
 
+# 多线程日志输出 
+#USE_LOCK = -DLOG_USE_LOCK
 
 LINK = ./link
 LOGLIB = ./lib
@@ -22,7 +24,7 @@ EXCEPT_DIR = $(ROOT)/except
 EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 
 
-CFLAGS = -Wall -D_REENTRANT $(Container_Type) -g -std=gnu++0x   # win32: -std=std=c++11
+CFLAGS = -Wall -D_REENTRANT $(Container_Type) $(USE_LOCK) -g -std=gnu++0x   # win32: -std=std=c++11
 #STDLIB = -stdlib=libc++  # win32
 INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I. 
 
@@ -44,11 +46,14 @@ LOG_DYNAMIC_LIB = $(LOGLIB)/liblog.so
 
 all: loglib
 
-demo: loglib 
+demo: empty 
 	@echo "Compiling Log-demo ..."
 	cd $(DEMODIR); make
 
-test: TestQueue TestLogEx TestLockfree TestLogLevel
+empty:
+	@echo
+
+test: TestQueue TestLogEx TestLockfree TestLogLevel TestLogManager
 
 #loglib: loglink $(LOG_STATIC_LIB) $(LOG_DYNAMIC_LIB)
 loglib: loglink $(LOG_STATIC_LIB)
@@ -99,6 +104,13 @@ TestLogLevel:
 	cd $(TESTDIR); make $@
 	@echo
 	@echo "[test_loglevel] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
+	@echo
+
+TestLogManager:
+	@echo "Compiling $@ ..."
+	cd $(TESTDIR); make $@
+	@echo
+	@echo "[test_LogManager] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 clean:
