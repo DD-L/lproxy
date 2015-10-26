@@ -2,6 +2,9 @@ CC = gcc
 XX = g++
 RM = rm -rf
 
+Container_Type = -DLOG_PRIORITY_QUEUE
+#Container_Type = -DLOG_LOCKFREE_QUEUE
+
 BIN = ./bin
 TMP = ./~tmp
 
@@ -16,7 +19,6 @@ EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 
 LOG_DIR = $(ROOT)/log
 LOG_LINK_DIR = $(LOG_DIR)/link
-
 
 CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
 #STDLIB = -stdlib=libc++  # win32
@@ -62,9 +64,7 @@ all: init  $(TARGET)
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
-	cd $(BOOST_BUILT); make -j
-	cd $(EXCEPT_DIR); make -j
-	cd $(LOG_DIR); make loglink
+	cd $(LOG_DIR); make loglink Container_Type=$(Container_Type)
 
 $(BIN)/%: $(TMP)/%.o  $(ALL_LINK) 
 	$(XX) -o $@ $^ $(LIBS)
