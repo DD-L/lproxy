@@ -4,13 +4,12 @@
 #ifndef _EXCEPT_H
 #define _EXCEPT_H
 #include <string>
-using std::string;
 
 // 日志异常
 class LogException : public std::exception {
 public:
 	LogException(void) noexcept;
-	LogException(const string& msg) noexcept;
+	LogException(const std::string& msg) noexcept;
 	virtual ~LogException (void) noexcept {}
 	virtual const char* what() const noexcept;
 private:
