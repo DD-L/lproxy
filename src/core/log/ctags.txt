@@ -19,6 +19,10 @@ logging.h
 logging.cpp
 logoutput.h
 
+BUILD
+Makefile
+
+
 init_simple.h
 
 Makefile
