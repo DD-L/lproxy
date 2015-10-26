@@ -3,20 +3,20 @@
 
 #include <string>
 #include <map>
-using std::string;
+//using std::string;
 
 struct Lang {
-	Lang(const string& str_key) : _key(str_key) {}
+	Lang(const std::string& str_key) : _key(str_key) {}
 	Lang(void) {}
 	operator const char* (void) {
 		return lang ? lang->m[_key].c_str() : "";
 	}
-	string operator+ (const string& str) const {
+	std::string operator+ (const std::string& str) const {
 		if (!lang) return str;
 		return lang->m[_key] + str;
 	}
-	string operator+ (const char* str) const {
-		return *this + string(str);
+	std::string operator+ (const char* str) const {
+		return *this + std::string(str);
 	}
 	static void setLang(Lang* lang) {
 		delete Lang::lang;
@@ -27,10 +27,10 @@ struct Lang {
 	}
 	virtual ~Lang(void) {}
 protected:
-	std::map<string, string> m;
+	std::map<std::string, std::string> m;
 private:
-	const string _key;
-	static Lang* lang;
+	const std::string _key;
+	static Lang*      lang;
 };
 
 
