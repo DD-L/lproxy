@@ -10,7 +10,7 @@
 #include <type_traits> // for std::is_base_of
 #include "log/logstoreinterface.h"
 
-template <typename __LogStore/*, typename __Format = void*/>
+template <typename __LogStore>
 class LogManager {
 public:
 	static_assert(std::is_base_of<LogStoreInterface, __LogStore>::value, 
@@ -44,10 +44,8 @@ private:
 	static LogManager                  m_log_manager;
 	std::shared_ptr<LogStoreInterface> m_logstore;
 };
-template <typename __LogStore/*, typename __Format = void*/>
+template <typename __LogStore>
 LogManager<__LogStore> LogManager<__LogStore>::m_log_manager;
-
-
 
 #endif //_LOGMANAGER_H_1
 
