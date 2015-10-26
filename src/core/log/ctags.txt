@@ -17,6 +17,7 @@ logmanager.h
 
 logging.h
 logging.cpp
+logoutput.h
 
 init_simple.h
 

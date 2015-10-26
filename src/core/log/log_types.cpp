@@ -47,5 +47,12 @@ namespace log_tools {
 	const pid_t get_pid() {
 		return boost::this_thread::get_id();
 	}
+
+	void print_s(std::ostringstream&& oss, 
+			std::ostream& os/* = std::cout*/) {
+		assert(os == std::cout || os == std::cerr);
+		boost::mutex::scoped_lock lock(log_tools::print_lock());
+		os << oss.str();
+	}
 } // namespace log_tools
 

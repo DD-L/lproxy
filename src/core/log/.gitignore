@@ -1,5 +1,10 @@
 loglevel.hpp.set
 loglevel.hpp
+logout.h
+logout.h.test
+logout.cpp
 
 tmp
+*.stackdump
+
 

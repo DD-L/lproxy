@@ -33,6 +33,27 @@
 //MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 
 
+// 1. _print_s(msg)
+// 2. _print_s_err(msg)
+//  demo:
+//		_print_s("123" << 345 << 5.0 << std::endl);
+//
+// Thread-safe print, to std::cout
+#define _print_s(msg)\
+	do {\
+		std::ostringstream oss;\
+		oss << msg;\
+		log_tools::print_s(std::move(oss));\
+	} while(0) 
+// Thread-safe print, to std::cerr
+#define _print_s_err(msg)\
+	do {\
+		std::ostringstream oss;\
+		oss << msg;\
+		log_tools::print_s(std::move(oss), std::cerr);\
+	} while(0) 
+
+
 #include <boost/thread.hpp>
 #define BOOST_DATE_TIME_SOURCE
 //#include <boost/date_time/gregorian/gregorian.hpp>
@@ -45,11 +66,19 @@ namespace log_tools {
 	typedef boost::thread::id                 pid_t;
 
 	// get the current time
-	const ptime local_time();
+	const ptime local_time(void);
 	// boost::posix_time::ptime to std::string
 	const std::string time2string(const ptime& time_point);
 	// get the current thread id
-	const pid_t get_pid();
+	const pid_t get_pid(void);
+
+	// 
+	// global print lock
+	inline boost::mutex& print_lock(void) {
+		static boost::mutex __print_lock;
+		return __print_lock;
+	}
+	void print_s(std::ostringstream&& oss, std::ostream& os = std::cout);
 } // namespace log_tools
 
 
