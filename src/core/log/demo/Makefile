@@ -7,6 +7,9 @@ RM = rm -rf
 Container_Type = -DLOG_PRIORITY_QUEUE
 #Container_Type = -DLOG_LOCKFREE_QUEUE
 
+# 多线程日志输出
+USE_LOCK = -DLOG_USE_LOCK
+
 TMP = ./~tmp
 BIN = ./bin
 
@@ -24,7 +27,7 @@ EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 LOG_DIR = $(ROOT)/log
 LOG_LIB_DIR = $(LOG_DIR)/lib
 
-CFLAGS = -Wall -D_REENTRANT $(Container_Type) -g -std=gnu++0x   # win32: -std=std=c++11
+CFLAGS = -Wall -D_REENTRANT $(Container_Type) $(USE_LOCK) -g -std=gnu++0x   # win32: -std=std=c++11
 INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I.
 LIBPATH = -L$(LOG_LIB_DIR)
 LIBS = $(LIBPATH)  -llog -lpthread -lrt
@@ -40,7 +43,9 @@ BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 
 EXCEPTLINK = $(EXCEPT_LINK_DIR)/except.o
 
-ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK)
+DEMOLINK = $(TMP)/test_logoutput.o
+
+ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK) $(DEMOLINK)
 
 #TARGET = $(BIN)/demo.static $(BIN)/demo.dynamic
 TARGET = $(BIN)/demo.static
@@ -58,7 +63,7 @@ all: init $(TARGET)
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
-	cd $(LOG_DIR); make loglib
+	cd $(LOG_DIR); make loglib Container_Type=$(Container_Type)
 
 $(BIN)/demo.static: $(TMP)/demo.o $(ALL_LINK)
 	$(XX) $^ -o $@  -static  $(LIBS)
