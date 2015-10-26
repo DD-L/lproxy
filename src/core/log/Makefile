@@ -69,7 +69,8 @@ loglink: init $(LOGLINK)
 init:
 	[ -d '$(LINK)' ] || mkdir $(LINK)
 	[ -d '$(LOGLIB)' ] || mkdir $(LOGLIB)
-
+	cd $(BOOST_BUILT); make -j
+	cd $(EXCEPT_DIR); make
 
 
 $(LINK)/%.o: %.c
