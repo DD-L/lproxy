@@ -11,8 +11,8 @@ TMP = ./~tmp
 PWD = $(shell pwd)/
 ROOT = $(PWD)../../
 
-BOOST_BUILT = $(ROOT)/boost_built
-BOOST_LINK_DIR = $(BOOST_BUILT)/link
+BOOST_BUILD = $(ROOT)/boost_build
+BOOST_LINK_DIR = $(BOOST_BUILD)/link
 
 EXCEPT_DIR = $(ROOT)/except
 EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
@@ -28,7 +28,7 @@ LIBS = $(LIBPATH) -lpthread -lrt
 
 BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 			  $(BOOST_LINK_DIR)/tprebuild.o \
-			  $(BOOST_LINK_DIR)/dateprebuilt.o
+			  $(BOOST_LINK_DIR)/dateprebuild.o
 
 EXCEPTLINK = $(EXCEPT_LINK_DIR)/except.o
 

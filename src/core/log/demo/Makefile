@@ -2,13 +2,12 @@ CC = gcc
 XX = g++
 RM = rm -rf
 
-
-# Settings Container Type
-Container_Type = -DLOG_PRIORITY_QUEUE
-#Container_Type = -DLOG_LOCKFREE_QUEUE
-
+ifndef USE_LOCK
+$(info [info] USE_LOCK not set!)
+$(info [info] default: USE_LOCK=-DLOG_USE_LOCK)
 # 多线程日志输出
 USE_LOCK = -DLOG_USE_LOCK
+endif
 
 TMP = ./~tmp
 BIN = ./bin
@@ -18,8 +17,8 @@ PWD = $(shell pwd)/
 ROOT = $(PWD)/../../
 
 
-BOOST_BUILT = $(ROOT)/boost_built
-BOOST_LINK_DIR = $(BOOST_BUILT)/link
+BOOST_BUILD = $(ROOT)/boost_build
+BOOST_LINK_DIR = $(BOOST_BUILD)/link
 
 EXCEPT_DIR = $(ROOT)/except
 EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
@@ -39,7 +38,7 @@ LOG_DYNAMIC_LIB = $(LOG_LIB_DIR)/liblog.so
 
 BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 			  $(BOOST_LINK_DIR)/tprebuild.o \
-			  $(BOOST_LINK_DIR)/dateprebuilt.o
+			  $(BOOST_LINK_DIR)/dateprebuild.o
 
 EXCEPTLINK = $(EXCEPT_LINK_DIR)/except.o
 
@@ -61,6 +60,13 @@ TARGET = $(BIN)/demo.static
 all: init $(TARGET)
 
 init:
+ifndef Container_Type
+	$(info [ err] Container_Type not set!)
+	$(info [info] e.g )
+	$(info [info] $$ Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE')
+	$(info [info] $$ make ... Container_Type=$$Container_Type ...)
+	$(error error)
+endif
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
 	cd $(LOG_DIR); make loglib Container_Type=$(Container_Type)
