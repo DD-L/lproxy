@@ -21,7 +21,11 @@
 		demo/bin/demo.*
 
 	command:
-		$ make demo
+		$ Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE'
+		$ make demo Container_Type=$Container_Type
+		$ # or
+		$ # make demo Container_Type=$Container_Type USE_LOCK=-DLOG_USE_LOCK
+		$ # make demo Container_Type=$Container_Type USE_LOCK=-DNO_LOG_USE_LOCK
 
 	tips:
 		...
