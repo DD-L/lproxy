@@ -1,0 +1,6 @@
+*.stackdump
+link
+~tmp
+*.gch
+
+
