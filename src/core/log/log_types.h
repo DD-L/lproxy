@@ -12,7 +12,7 @@
 #include <string>
 #include <ctime>
 #include <memory> // std::shared_ptr
-#include "loglevel.h"
+#include "log/loglevel.h"
 
 // log types
 /** 

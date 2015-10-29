@@ -12,7 +12,7 @@
  *
  */ 
 
-#include "loglevel.h"
+#include "log/loglevel.h"
 
 // class LogType
 bool operator== (const LogType& l, const LogType& r) {
