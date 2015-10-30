@@ -2,12 +2,6 @@ CC = gcc
 XX = g++
 RM = rm -rf
 
-ifndef USE_LOCK
-$(info [info] USE_LOCK not set!)
-$(info [info] default: USE_LOCK=-DLOG_USE_LOCK)
-# 多线程日志输出
-USE_LOCK = -DLOG_USE_LOCK
-endif
 
 TMP = ./~tmp
 BIN = ./bin
@@ -50,22 +44,28 @@ ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK) $(DEMOLINK)
 TARGET = $(BIN)/demo.static
 
 
-#TestLogLevel:
-#	@echo "Compiling $@ ..."
-#	cd $(TESTDIR); make $@
-#	@echo
-#	@echo "[test_loglevel] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
-#	@echo
-
 all: init $(TARGET)
 
 init:
 ifndef Container_Type
 	$(info [ err] Container_Type not set!)
-	$(info [info] e.g )
+	$(info [info] e.g. )
 	$(info [info] $$ Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE')
 	$(info [info] $$ make ... Container_Type=$$Container_Type ...)
 	$(error error)
+endif
+ifndef USE_LOCK
+	$(info [info] USE_LOCK not set!)
+	$(info [info] If you want to output logs in multiple threads, please define USE_LOCK=-DLOG_USE_LOCK)
+	$(info [info] e.g. )
+	$(info [info] $$ make ... USE_LOCK=-DLOG_USE_LOCK ...)
+else 
+ifneq ($(USE_LOCK), -DLOG_USE_LOCK)
+	$(info [warn] Invalid definition: USE_LOCK=$(USE_LOCK))
+	$(info [info] If you want to output logs in multiple threads, please define USE_LOCK=-DLOG_USE_LOCK)
+	$(info [info] e.g. )
+	$(info [info] $$ make ... USE_LOCK=-DLOG_USE_LOCK ...)
+endif
 endif
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)

@@ -77,7 +77,7 @@ int main() {
 	
 	// 如果输出目标被多个日志线程访问，在编译选项加上 -DLOG_USE_LOCK
 	// 即日志输出线程数大于1时, 需启用 -DLOG_USE_LOCK
-	const int thread_count = 2;
+	const int thread_count = 1;
 	_print_s("create " << thread_count << " thread(s) to output the logs\n");
 	boost::thread_group group;
 	try {
