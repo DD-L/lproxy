@@ -1,6 +1,7 @@
-~tmp
 *.stackdump
-bin
 link
+~tmp
+*.gch
+./test
 
 
