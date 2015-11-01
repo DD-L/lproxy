@@ -9,7 +9,6 @@ PWD = $(shell pwd)/
 BOOST_BUILD = $(PWD)/../../boost_build
 BOOST_LINK = $(BOOST_BUILD)/link
 
-
 MACRO_1 = -D_STD_QUEUE
 MACRO_2 = -D_STD_PRIORITY_QUEUE
 MACRO_3 = -D_BOOST_LOCKFREE_QUEUE
