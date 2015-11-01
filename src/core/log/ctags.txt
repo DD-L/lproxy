@@ -1,10 +1,30 @@
-# Request :
+﻿# Request :
 # 	lproxy/src/core/boost_built/sysprebuild.cpp
 # 	lproxy/src/core/boost_built/tprebuild.cpp
 #   lproxy/src/core/boost_built/dateprebuilt.cpp
 
-loglevel.hpp
+loglevel.h
+loglevel.cpp
 log_types.h
+log_types.cpp
 priority_queue.h
+
+
+logstoreinterface.h
+logstore_priority.h
+logstore_lockfree.h
+logmanager.h
+
+logging.h
+logging.cpp
+logoutput.h
+
+BUILD
+Makefile
+
+
+init_simple.h
+
 Makefile
 test/
+demo/

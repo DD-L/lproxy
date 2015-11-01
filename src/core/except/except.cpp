@@ -4,6 +4,8 @@
 //#include "charcodecast.h"
 //extern CCC ccc;
 
+using std::string;
+
 // 日志异常
 LogException::LogException(void) noexcept : m_msg("Log Exception") {}
 LogException::LogException(const string& msg) noexcept 

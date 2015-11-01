@@ -6,8 +6,8 @@ BIN = ./bin
 TMP = ./~tmp
 
 PWD = $(shell pwd)/
-BOOST_BUILT = $(PWD)/../../boost_built
-BOOST_LINK = $(BOOST_BUILT)/link
+BOOST_BUILD = $(PWD)/../../boost_build
+BOOST_LINK = $(BOOST_BUILD)/link
 
 
 MACRO_1 = -D_STD_QUEUE
@@ -32,7 +32,7 @@ all: init $(TARGET)
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
-	cd $(BOOST_BUILT); make -j
+	cd $(BOOST_BUILD); make -j
 
 $(BIN)/test1: $(TMP)/test_std_queue.o $(BOOSTTHREAD)
 	$(XX) -o $@ $^ $(LIBS)

@@ -12,7 +12,7 @@
 #include <string>
 #include <ctime>
 #include <memory> // std::shared_ptr
-#include "log/loglevel.hpp"
+#include "log/loglevel.h"
 
 // log types
 /** 
@@ -23,21 +23,35 @@
  * ERROR  虽然发生错误事件，但仍然不影响系统的继续运行
  * FATAL  严重的错误事件将会导致应用程序的退出
  */
-/*
-enum LogType { 
-	TRACE = 0,  DEBUG = 10, 
-	INFO  = 20,  WARN = 30, 
-	ERROR = 40, FATAL = 50
-};
-*/
 
 // 默认内置 6 种日志级别
-MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
-MAKE_LOGLEVEL(DEBUG, 10); // DEBUG 权重为10
-MAKE_LOGLEVEL(INFO , 20); // INFO  权重为20
-MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
-MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
-MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
+//MAKE_LOGLEVEL(TRACE,  0); // TRACE 权重为0
+//MAKE_LOGLEVEL(DEBUG, 10); // DEBUG 权重为10
+//MAKE_LOGLEVEL(INFO , 20); // INFO  权重为20
+//MAKE_LOGLEVEL(WARN , 30); // WARN  权重为30
+//MAKE_LOGLEVEL(ERROR, 40); // ERROR 权重为40
+//MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
+
+
+// 1. _print_s(msg)
+// 2. _print_s_err(msg)
+//  demo:
+//		_print_s("123" << 345 << 5.0 << std::endl);
+//
+// Thread-safe print, to std::cout
+#define _print_s(msg)\
+	do {\
+		std::ostringstream oss;\
+		oss << msg;\
+		log_tools::print_s(std::move(oss));\
+	} while(0) 
+// Thread-safe print, to std::cerr
+#define _print_s_err(msg)\
+	do {\
+		std::ostringstream oss;\
+		oss << msg;\
+		log_tools::print_s(std::move(oss), std::cerr);\
+	} while(0) 
 
 
 #include <boost/thread.hpp>
@@ -52,17 +66,19 @@ namespace log_tools {
 	typedef boost::thread::id                 pid_t;
 
 	// get the current time
-	const ptime local_time() {
-		return microsec_clock::local_time();
-	}
+	const ptime local_time(void);
 	// boost::posix_time::ptime to std::string
-	const std::string time2string(const ptime& time_point) {
-		return boost::posix_time::to_simple_string(time_point);
-	}
+	const std::string time2string(const ptime& time_point);
 	// get the current thread id
-	const pid_t get_pid() {
-		return boost::this_thread::get_id();
+	const pid_t get_pid(void);
+
+	// 
+	// global print lock
+	inline boost::mutex& print_lock(void) {
+		static boost::mutex __print_lock;
+		return __print_lock;
 	}
+	void print_s(std::ostringstream&& oss, std::ostream& os = std::cout);
 } // namespace log_tools
 
 
@@ -95,7 +111,7 @@ public:
 			virtual ~Extra() {}
 			friend std::ostream& operator<< (
 					std::ostream&         os, 
-					const LogVal::Extra&  e) {
+					LogVal::Extra&&       e) {
 				return os << std::move(e.format());
 			}
 			friend std::ostream& operator<< (
@@ -107,7 +123,7 @@ public:
 	// 默认附加数据, 并演示自定义附加数据的使用
 	class ExtraNone : public LogVal::Extra {
 	public:
-		virtual const std::string format() const {
+		virtual const std::string format(void) const override {
 			return "";
 		}
 	};
