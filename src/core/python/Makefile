@@ -6,6 +6,7 @@ RM = rm -rf
 PWD = $(shell pwd)
 ROOT = $(PWD)/../
 LINK = ./link
+THIS_LIB = ./lib
 
 CFLAGS =  -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=c++11
 
@@ -19,7 +20,9 @@ INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ \
 BOOSTPYTHON = $(LINK)/pyprebuild.o
 PYINIT = $(LINK)/pyinit.o
 
-all: init TARGET
+TARGET = $(THIS_LIB)/libpyfunc.a #$(THIS_LIB)/libpyfunc.a
+
+all: init $(TARGET)
 
 init:
 ifndef PYTHON_INCLUDE
@@ -28,8 +31,14 @@ ifndef PYTHON_INCLUDE
 	$(error error)
 endif
 	[ -d '$(LINK)' ] || mkdir $(LINK)
+	[ -d '$(THIS_LIB)' ] || mkdir $(THIS_LIB)
 
-TARGET: $(BOOSTPYTHON) $(PYINIT)
+
+#$(THIS_LIB)/libpyfunc.so : $(BOOSTPYTHON) $(PYINIT)
+#	$(XX) -shared $^ -o $@
+
+$(THIS_LIB)/libpyfunc.a : $(BOOSTPYTHON) $(PYINIT)
+	$(AR) crv  $@ $^
 
 $(LINK)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
@@ -38,5 +47,5 @@ $(LINK)/%.o: %.cpp
 
 
 clean:
-	$(RM) $(LINK)
+	$(RM) $(LINK) $(THIS_LIB)
 

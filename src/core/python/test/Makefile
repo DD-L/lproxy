@@ -19,6 +19,7 @@ ROOT = $(PWD)/../../
 
 PYTHON_BUILD = $(ROOT)/python
 PYTHON_LINK_DIR = $(PYTHON_BUILD)/link
+PYGETFUNC_LIB_DIR = $(PYTHON_BUILD)/lib
 
 CFLAGS =  -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=c++11
 
@@ -38,6 +39,7 @@ INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ \
 
 
 PYTHON_LINK = $(PYTHON_LINK_DIR)/pyprebuild.o $(PYTHON_LINK_DIR)/pyinit.o
+PYGETFUNC_LIB = $(PYGETFUNC_LIB_DIR)/libpyfunc.a
 
 TARGET = $(BIN)/demo.static $(BIN)/demo
 
@@ -58,10 +60,10 @@ endif
 	[ -d '$(BIN)' ] || mkdir $(BIN)
 	cd $(PYTHON_BUILD); make clean; make PYTHON_LIB_PATH=$(PYTHON_LIB_PATH)
 
-$(BIN)/demo.static: $(TMP)/demo.o $(PYTHON_LINK)
+$(BIN)/demo.static: $(TMP)/demo.o $(PYGETFUNC_LIB)
 	$(XX) $^ -o $@  -static  $(LIBS)
 
-$(BIN)/demo: $(TMP)/demo.o $(PYTHON_LINK)
+$(BIN)/demo: $(TMP)/demo.o $(PYGETFUNC_LIB)
 	$(XX) $^ -o $@  $(LIBS)
 
 $(TMP)/%.o: %.c
