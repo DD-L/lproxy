@@ -64,9 +64,9 @@ test: TestQueue TestLogEx TestLockfree TestLogLevel TestLogManager
 loglib: loglink $(LOG_STATIC_LIB)
 
 $(LOG_STATIC_LIB): $(LOGLINK)
-	ar crv $@ $^
+	$(AR) crv $@ $^
 $(LOG_DYNAMIC_LIB): $(LOGLINK)
-	g++ -shared $^ -o $@
+	$(XX) -shared $^ -o $@
 	
 
 loglink: init $(LOGLINK)
