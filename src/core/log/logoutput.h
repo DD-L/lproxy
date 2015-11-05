@@ -67,6 +67,7 @@ private:
 			format(that.format) {}
 	}; // struct os_property
 
+public:
 	// scoped lock
 	class scoped_lock {
 	public:
@@ -181,6 +182,10 @@ public:
 				}
 			});
 	}
+
+    void output_once(std::shared_ptr<LogVal>& val) {
+        this->operator() (val);
+    }
 
 	// returns the specified lock pointer
 	// if the parameter, os, is not binding, it will return NULL
