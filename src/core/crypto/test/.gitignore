@@ -1,0 +1,6 @@
+~tmp
+bin
+lib
+*.stackdump
+test_aes.cpp
+
