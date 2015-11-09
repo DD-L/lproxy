@@ -45,7 +45,7 @@ init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(CRYPTOLIB)' ] || mkdir $(CRYPTOLIB)
 ifneq ('$(SRCEXIST)', 'exist')
-	cd $(CRYPTOPP); make
+	cd $(CRYPTOPP); make git_clone
 endif
 #ifneq ('$(LIBEXIST)', 'exist')
 #	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
