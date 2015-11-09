@@ -13,6 +13,7 @@ ROOT = $(PWD)/../
 
 CRYPTOPP = $(ROOT)/../../contrib/cryptopp
 CRYPTOPP_SRC = $(CRYPTOPP)/cryptopp
+SRCEXIST= $(shell if [ -f $(CRYPTOPP_SRC)/aes.h ]; then echo "exist"; else echo "notexist"; fi; )
 #LIBEXIST = $(shell if [ -f $(CRYPTOPP_SRC)/libcryptopp.a ]; then echo "exist"; else echo "notexist"; fi;)
 
 CFLAGS = -Wall -g
@@ -30,7 +31,10 @@ ALL_LINK = $(TMP)/encryptor.o $(TMP)/xor_crypto.o \
 CRYPTO_STATIC_LIB = $(CRYPTOLIB)/libcrypto.a
 CRYPTO_DYNAMIC_LIB = $(CRYPTOLIB)/libcrypto.so
 
+.PHONY : all
+.PHONY : init
 .PHONY : test
+.PHONY : clean
 
 all: init $(CRYPTO_STATIC_LIB)
 
@@ -40,6 +44,9 @@ test:
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(CRYPTOLIB)' ] || mkdir $(CRYPTOLIB)
+ifneq ('$(SRCEXIST)', 'exist')
+	cd $(CRYPTOPP); make git_clone
+endif
 #ifneq ('$(LIBEXIST)', 'exist')
 #	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
 #endif
