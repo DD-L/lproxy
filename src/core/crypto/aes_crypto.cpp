@@ -81,11 +81,11 @@ void Aes::execute(_aes_cryptor& cryptor,
         offset = ((unproc_data % block_size) == 0) ? block_size : unproc_data;
 
         memset(inBlock, 0, block_size);
-        memmove((char*)inBlock, (const char*)(src + loop * offset), offset);
+        memmove(inBlock, (src + loop * offset), offset);
 
         cryptor.ProcessAndXorBlock(inBlock, xorBlock, outBlock);
 
-        memmove((char*)(dest + loop * offset), (char*)outBlock, offset);
+        memmove((dest + loop * offset), outBlock, offset);
     }
 }
 
