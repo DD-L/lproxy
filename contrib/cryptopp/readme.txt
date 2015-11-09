@@ -9,4 +9,3 @@
     $ make libcryptopp.a -j 4
     $ #make libcryptopp.a libcryptopp.so cryptest.exe
 
-# http://www.cppblog.com/ArthasLee/archive/2010/12/01/135186.html
