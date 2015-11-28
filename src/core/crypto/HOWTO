@@ -1,0 +1,18 @@
+1. Build  libcrypto.a
+
+    target:
+        lib/libcrypto.a
+
+    command:
+        $ make
+
+
+2. Build test
+
+    target:
+        test/bin/test
+        test/bin/test.static
+
+    command:
+        $ make test
+
