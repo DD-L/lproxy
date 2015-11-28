@@ -6,7 +6,8 @@ CRYPTOPP_SRC = ./cryptopp
 CRYPTOPP_STATIC_LIB = $(CRYPTOPP_SRC)/libcryptopp.a
 LIBEXIST = $(shell if [ -f $(CRYPTOPP_STATIC_LIB) ]; then echo "exist"; else echo "notexist"; fi;)
 
-SRCEXIST= $(shell if [ -d $(CRYPTOPP_SRC) ]; then echo "exist"; else echo "notexist"; fi; )
+#SRCEXIST= $(shell if [ -d $(CRYPTOPP_SRC) ]; then echo "exist"; else echo "notexist"; fi; )
+SRCEXIST= $(shell if [ -f $(CRYPTOPP_SRC)/aes.h ]; then echo "exist"; else echo "notexist"; fi; )
 
 all: git_clone
 ifneq ('$(LIBEXIST)', 'exist')
