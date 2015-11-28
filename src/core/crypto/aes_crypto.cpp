@@ -78,7 +78,7 @@ void Aes::execute(_aes_cryptor& cryptor,
     for (size_t loop = 0; loop < max_loop; ++loop) {
 
         const size_t unproc_data = src_len - loop * block_size;
-        offset = ((unproc_data % block_size) == 0) ? block_size : unproc_data;
+        offset = (unproc_data >= block_size) ? block_size : unproc_data;
 
         memset(inBlock, 0, block_size);
         memmove(inBlock, (src + loop * offset), offset);
