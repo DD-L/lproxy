@@ -97,7 +97,18 @@ void test_aes(void) {
     using namespace crypto;
     const char* key = "hello crypto!";
     const size_t buffer_size = 1024;
-    uint8_t buffer[buffer_size] = "This is a test ...";
+    //uint8_t buffer[buffer_size] = "This is a test ...";
+    uint8_t buffer[buffer_size] = {0};
+    for (std::size_t i = 0; i < buffer_size; ++i) {
+        static char flag = 'A';
+        if ((i % 10) == 0) {
+            buffer[i] = flag++;
+            if (flag >= 'Z') flag = 'A';
+        }
+        else {
+            buffer[i] = i % 10 + '0';
+        }
+    }
     uint8_t res1[buffer_size] = {0}, res2[buffer_size] = {0};
     uint8_t res3[buffer_size] = {0}, res4[buffer_size] = {0};
     
@@ -128,7 +139,6 @@ void test_aes(void) {
     encryptor.decrypt(res2, res1, buffer_size);
     print(res2, buffer_size);
     std::cout << "---" << std::endl; 
-
 
 }
 
