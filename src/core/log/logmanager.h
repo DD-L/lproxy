@@ -14,7 +14,7 @@ template <typename __LogStore>
 class LogManager {
 public:
 	static_assert(std::is_base_of<LogStoreInterface, __LogStore>::value, 
-			"__LogStore should inherit from LogStoreInterface, "
+			"__LogStore should be derived from LogStoreInterface, "
 			"such as LogStore_priority, LogStore_lockfree ...");
 	static LogManager& get_instance() {
 		return m_log_manager; 
