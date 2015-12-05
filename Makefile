@@ -21,6 +21,7 @@ init: check boost cryptopp
 init.force: check boost.force cryptopp
 
 check:
+	@test `command -v dos2unix` || ( echo -e "Error: 'dos2unix' is missing! please install 'dos2unix' and try again.\n\te.g. sudo apt-get/yum install dos2unix " && dos2unix )
 	cd $(CHECK_CPP11_DIR); make
 
 boost:
