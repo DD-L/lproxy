@@ -22,13 +22,21 @@ public:
     Aes(const Aes&) = delete;
     Aes& operator= (const Aes&) = delete;
 
-    virtual uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
-    virtual uint8_t* decrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    /*
+    virtual uint8_t* encrypt(uint8_t* dest, 
+                        const uint8_t* src, size_t src_len);
+    virtual uint8_t* decrypt(uint8_t* dest, 
+                        const uint8_t* src, size_t src_len);
+    */
+    virtual std::vector<uint8_t>& encrypt(std::vector<uint8_t>& dest, 
+                        const uint8_t* src, size_t src_len);
+    virtual std::vector<uint8_t>& decrypt(std::vector<uint8_t>& dest, 
+                        const uint8_t* src, size_t src_len);
 private:
     void make_md5key(const std::string& key);
     template<typename _aes_cryptor>
     void execute(_aes_cryptor& cryptor, 
-            uint8_t* dest, const uint8_t* src, size_t src_len);
+            std::vector<uint8_t>& dest, const uint8_t* src, size_t src_len);
 private:
     const uint8_t*          md5_key;
     static const size_t     md5_key_len = 32;
