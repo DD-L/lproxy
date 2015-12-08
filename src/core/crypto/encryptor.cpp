@@ -12,10 +12,22 @@ Encryptor::Encryptor(Encrypt* _encrypt)
     : crypto(_encrypt) {
     assert(crypto);
 }
-uint8_t* Encryptor::encrypt(uint8_t* dest, const uint8_t* src, size_t src_len) {
+/*
+uint8_t* Encryptor::encrypt(uint8_t* dest, 
+                    const uint8_t* src, size_t src_len) {
     return crypto->encrypt(dest, src, src_len);
 }
-uint8_t* Encryptor::decrypt(uint8_t* dest, const uint8_t* src, size_t src_len) {
+uint8_t* Encryptor::decrypt(uint8_t* dest, 
+                    const uint8_t* src, size_t src_len) {
+    return crypto->decrypt(dest, src, src_len);
+}
+*/
+std::vector<uint8_t>& Encryptor::encrypt(std::vector<uint8_t>& dest, 
+        const uint8_t* src, size_t src_len) {
+    return crypto->encrypt(dest, src, src_len);
+}
+std::vector<uint8_t>& Encryptor::decrypt(std::vector<uint8_t>& dest, 
+        const uint8_t* src, size_t src_len) {
     return crypto->decrypt(dest, src, src_len);
 }
 

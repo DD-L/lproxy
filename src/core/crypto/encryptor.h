@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <memory>
+#include <vector>
 namespace crypto { 
 
 /**
@@ -22,8 +23,12 @@ public:
     Encrypt& operator= (const Encrypt&) = delete;
     virtual ~Encrypt() {}
 
-    virtual uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len) = 0;
-    virtual uint8_t* decrypt(uint8_t* dest, const uint8_t *src, size_t src_len) = 0;
+    //virtual uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len) = 0;
+    //virtual uint8_t* decrypt(uint8_t* dest, const uint8_t *src, size_t src_len) = 0;
+    virtual std::vector<uint8_t>& encrypt(std::vector<uint8_t>& dest, 
+            const uint8_t* src, size_t src_len) = 0;
+    virtual std::vector<uint8_t>& decrypt(std::vector<uint8_t>& dest, 
+            const uint8_t* src, size_t src_len) = 0;
 };
 
 /**
@@ -34,8 +39,12 @@ class Encryptor {
 public:
     explicit Encryptor(Encrypt* _encrypt);
     virtual ~Encryptor() {}
-    uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
-    uint8_t* decrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    //uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    //uint8_t* decrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    std::vector<uint8_t>& encrypt(std::vector<uint8_t>& dest, 
+            const uint8_t* src, size_t src_len);
+    std::vector<uint8_t>& decrypt(std::vector<uint8_t>& dest, 
+            const uint8_t* src, size_t src_len);
 private:
     std::shared_ptr<Encrypt> crypto;
 };
