@@ -1,20 +1,24 @@
 // except.cpp
 
-#include "except.h"
+#include "except/except.h"
 //#include "charcodecast.h"
 //extern CCC ccc;
 
 using std::string;
 
-// 日志异常
-LogException::LogException(void) noexcept : m_msg("Log Exception") {}
-LogException::LogException(const string& msg) noexcept 
-		: m_msg("Log Exception: ") {
-	m_msg += msg;
-}
-const char* LogException::what(void) const noexcept {
-	return m_msg.c_str();
-}
+
+// 明文加密时异常
+EncryptException::EncryptException(void) noexcept : CryptoException() {}
+EncryptException::EncryptException(const std::string& msg) noexcept 
+    : CryptoException(msg) {}
+
+// 密文解密时异常
+DecryptException::DecryptException(void) noexcept : CryptoException() {}
+DecryptException::DecryptException(const std::string& msg) noexcept
+    : CryptoException(msg) {}
+
+
+
 
 /*
 // 服务器异常 类实现
