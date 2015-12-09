@@ -8,9 +8,9 @@
 template<typename T>
 class ExceptionTemplate : public std::exception {
 public:
-	ExceptionTemplate(void) noexcept : m_msg(T::name() + " Exception") {}
+	ExceptionTemplate(void) noexcept : m_msg(T::name() + " Exception: ") {}
 	ExceptionTemplate(const std::string& msg) noexcept
-            : m_msg(T::name() + " Exception") {
+            : m_msg(T::name() + " Exception: ") {
         m_msg += msg;
     }
 	virtual ~ExceptionTemplate (void) noexcept {}
