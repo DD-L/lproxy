@@ -6,6 +6,7 @@
 
 using std::string;
 
+/*
 
 // 明文加密时异常
 EncryptException::EncryptException(void) noexcept : CryptoException() {}
@@ -17,7 +18,7 @@ DecryptException::DecryptException(void) noexcept : CryptoException() {}
 DecryptException::DecryptException(const std::string& msg) noexcept
     : CryptoException(msg) {}
 
-
+*/
 
 
 /*
