@@ -45,16 +45,16 @@ typedef ExceptionTemplate<__CRYPTO_Except> CryptoException;
 // 加密时异常
 class EncryptException : public CryptoException {
 public:
-    EncryptException(void) noexcept;
-    EncryptException(const std::string& msg) noexcept;
+    EncryptException(void) noexcept : CryptoException() {}
+    EncryptException(const std::string& msg) noexcept : CryptoException(msg) {}
     virtual ~EncryptException(void) {}
 }; // class EncryptException
 
 // 解密时异常
 class DecryptException : public CryptoException {
 public:
-    DecryptException(void) noexcept;
-    DecryptException(const std::string& msg) noexcept;
+    DecryptException(void) noexcept : CryptoException() {}
+    DecryptException(const std::string& msg) noexcept : CryptoException(msg) {}
     virtual ~DecryptException(void) {}
 }; // class DecryptException
 
