@@ -170,11 +170,13 @@ void test_rsa(void) {
     uint8_t buffer[100] = "this is a test..";
     
     // 生成 模长 1024bit 的 key
+    //const RsaKey rsakey(RsaKey::bit1024);
     RsaKey rsakey(RsaKey::bit1024);
 
-    std::cout << "public key: " << rsakey.publicKeyHex << std::endl;
-    std::cout << "private key: " << rsakey.privateKeyHex << std::endl;
+    std::cout << "public key: " << rsakey.publicKeyHex() << std::endl;
+    std::cout << "private key: " << rsakey.privateKeyHex() << std::endl;
     // 
+    //Encryptor encryptor_0(new Rsa(rsakey.keyPair()));
     Encryptor encryptor_0(new Rsa(rsakey));
 
     // encryptor_0 加密
@@ -211,14 +213,18 @@ void test_rsa(void) {
 
 int main() {
     using namespace std;
-    cout << "\n/*--------test xor--------*/" << endl;
-    test_xor();
+    
+   // cout << "\n/*--------test xor--------*/" << endl;
+   // test_xor();
 
-    cout << "\n/*--------test rc4--------*/" << endl;
-    test_rc4();
+   // cout << "\n/*--------test rc4--------*/" << endl;
+   // test_rc4();
 
-    cout << "\n/*--------test aes--------*/" << endl;
-    test_aes();
+   // cout << "\n/*--------test aes--------*/" << endl;
+   // test_aes();
+
+    cout << "\n/*--------test rsa--------*/" << endl;
+    test_rsa();
     return 0;
 }
 
