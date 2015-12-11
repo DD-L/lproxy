@@ -29,6 +29,13 @@ void print(const std::vector<uint8_t>& buffer, size_t size) {
     }
     std::cout << std::endl;
 }
+void print_hex(const std::vector<uint8_t>& buffer, size_t size) {
+    for (size_t i = 0; i < size; ++i) {
+        if (i >= buffer.size()-1) break;
+        std::cout << "0x" << std::hex << (int)(buffer[i]) << ' ';
+    }
+    std::cout << std::endl;
+}
 
 void test_xor(void) {
     using namespace crypto;
@@ -163,8 +170,83 @@ void test_aes(void) {
 
 }
 
+#include "crypto/rsa_crypto.h"
+void test_rsa(void) {
+    using namespace crypto;
+    
+    uint8_t buffer[] = "this is a test..ffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    const std::size_t buffer_size = sizeof(buffer) / sizeof(buffer[0]);
+    
+    // 生成 模长 1024bit 的 key
+    //const RsaKey rsakey(RsaKey::bit1024);
+    RsaKey rsakey(RsaKey::bit1024);
+
+    std::cout << "public key: " << rsakey.publicKeyHex() << std::endl;
+    std::cout << "private key: " << rsakey.privateKeyHex() << std::endl;
+    // 
+    //Encryptor encryptor_0(new Rsa(rsakey.keyPair()));
+    Encryptor encryptor_0(new Rsa(rsakey));
+
+    // encryptor_0 加密
+    std::vector<uint8_t> cipher;
+    encryptor_0.encrypt(cipher, buffer, buffer_size);
+    print_hex(cipher, cipher.size());
+
+    // encryptor_0 解密
+    std::vector<uint8_t> recovered;
+    encryptor_0.decrypt(recovered, &cipher[0], cipher.size());
+    print(recovered, recovered.size());
+
+    // 
+    // Encryptor encryptor_1(RsaKey::bit1024, "abcdefghijklmnopq...");
+    Encryptor encryptor_1(new Rsa(rsakey.keySize(), rsakey.publicKeyHex()));
+    // encryptor_1 加密
+    std::vector<uint8_t> cipher1;
+    encryptor_1.encrypt(cipher1, buffer, buffer_size);
+    print_hex(cipher1, cipher1.size());
+    // rsa 同一公钥加密出的密文会不一样。
+    //assert(cipher1 != cipher);
+
+    // encryptor_0 解密
+    std::vector<uint8_t> recovered1;
+    encryptor_0.decrypt(recovered1, &cipher1[0], cipher.size());
+    print(recovered1, recovered1.size());
+    
+    assert(recovered1 == recovered);
+
+    try {
+        // 
+        std::vector<uint8_t> recovered;
+        // throw exception
+        encryptor_1.decrypt(recovered, &cipher1[0], cipher1.size());
+        print(recovered, recovered.size());
+    }
+    /*
+    // #include "except/except.h"
+    catch(DecryptException& e) {
+        std::cout << e.what() << std::endl;
+    }
+    catch(CryptoException& e) {
+        std::cout << e.what() << std::endl;
+    }
+    */
+    catch(std::exception& e) {
+        std::cout << e.what() << std::endl;
+    }
+
+}
+
 int main() {
     using namespace std;
+    
     cout << "\n/*--------test xor--------*/" << endl;
     test_xor();
 
@@ -173,6 +255,9 @@ int main() {
 
     cout << "\n/*--------test aes--------*/" << endl;
     test_aes();
+
+    cout << "\n/*--------test rsa--------*/" << endl;
+    test_rsa();
     return 0;
 }
 
