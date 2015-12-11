@@ -4,9 +4,10 @@ RM = rm -rf
 
 PWD = $(shell pwd)
 TMP = ./link
+ROOT = $(PWD)/../
 
 CFLAGS = -Wall -g -std=gnu++0x # win32: -std=std=c++11
-INCLUDE = 
+INCLUDE = -I$(ROOT) 
 
 
 

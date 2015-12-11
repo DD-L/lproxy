@@ -43,7 +43,7 @@ void Aes::make_md5key(const std::string& _key) {
     assert(output.length() == md5_key_len);
 }
 
-
+/*
 uint8_t* Aes::encrypt(uint8_t* dest, const uint8_t* src, size_t src_len) {
     this->execute(this->aesEncryptor, dest, src, src_len);
     return dest;
@@ -88,6 +88,53 @@ void Aes::execute(_aes_cryptor& cryptor,
         memmove((dest + loop * offset), outBlock, offset);
     }
 }
+*/
 
 
+std::vector<uint8_t>& Aes::encrypt(std::vector<uint8_t>& dest, 
+        const uint8_t* src, size_t src_len) {
+    this->execute(this->aesEncryptor, dest, src, src_len);
+    return dest;
+}
+std::vector<uint8_t>& Aes::decrypt(std::vector<uint8_t>& dest, 
+        const uint8_t* src, size_t src_len) {
+    this->execute(this->aesDecryptor, dest, src, src_len);
+    return dest;
+}
 
+template<typename _aes_cryptor>
+void Aes::execute(_aes_cryptor& cryptor, 
+        std::vector<uint8_t>& dest, const uint8_t* src, size_t src_len) {
+
+    static_assert(std::is_same<_aes_cryptor, CryptoPP::AESEncryption>::value 
+            or std::is_same<_aes_cryptor, CryptoPP::AESDecryption>::value, 
+            "the type '_aes_cryptor' must be one of 'CryptoPP::AESEncryption',"
+            "'CryptoPP::AESDecryption'.");
+
+    byte xorBlock[CryptoPP::AES::BLOCKSIZE] = {0};
+    byte inBlock[CryptoPP::AES::BLOCKSIZE] = {0};
+    byte outBlock[CryptoPP::AES::BLOCKSIZE] = {0};
+
+    memset(xorBlock, 0, CryptoPP::AES::BLOCKSIZE);
+    dest.clear();
+
+    const size_t block_size = CryptoPP::AES::BLOCKSIZE;
+    size_t       offset     = CryptoPP::AES::BLOCKSIZE;
+
+    const size_t max_loop = ((src_len % block_size) == 0) 
+        ? src_len / block_size 
+        : size_t((float)src_len / (float)block_size + 1.0f);
+
+    for (size_t loop = 0; loop < max_loop; ++loop) {
+
+        const size_t unproc_data = src_len - loop * block_size;
+        offset = (unproc_data >= block_size) ? block_size : unproc_data;
+
+        memset(inBlock, 0, block_size);
+        memmove(inBlock, (src + loop * offset), offset);
+
+        cryptor.ProcessAndXorBlock(inBlock, xorBlock, outBlock);
+
+        dest.insert(dest.end(), outBlock, outBlock + offset);
+    }
+}
