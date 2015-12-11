@@ -22,7 +22,8 @@
 //for CryptoPP::FileSink;
 //for CryptoPP::FileSource;
 
-#include "cryptopp/SecBlock.h"
+//#include "cryptopp/SecBlock.h"
+#include "cryptopp/secblock.h"
 //for CryptoPP::SecByteBlock;
 
 #include "cryptopp/cryptlib.h"
@@ -42,7 +43,7 @@ Rsa::Rsa(const RsaKey& rsakey)
     /*
     : publicKey_(rsakey.privateKey()), privateKey_(rsakey.publicKey()),
       keysize_(rsakey.keySize()), flag_privateKey_set_(true) {}
-      */
+    */
     : publicKey_(rsakey.parameters), privateKey_(rsakey.parameters),
       keysize_(rsakey.keysize), flag_privateKey_set_(true) {}
 
