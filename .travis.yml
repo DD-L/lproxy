@@ -31,5 +31,5 @@ after_script:
 
 os:
     - linux
-sudo: false
+sudo: required
 
