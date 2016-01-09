@@ -15,11 +15,11 @@ before_install:
     - mkdir -p $PROJECT_ROOT/contrib/Python-2.7.11/build
     - cd $PROJECT_ROOT/contrib/Python-2.7.11/build
     - wget https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tar.xz
-    - tar xvfJ Python-2.7.11.tar.xz
+    - tar xvfJ Python-2.7.11.tar.xz > /dev/null
     - cd Python-2.7.11
-    - ./configure --prefix=$PROJECT_ROOT/contrib/Python-2.7.11/
-    - make
-    - make install
+    - ./configure --prefix=$PROJECT_ROOT/contrib/Python-2.7.11/ > /dev/null
+    - make > /dev/null
+    - make install > /dev/null
     - cd $PROJECT_ROOT 
     - python --version
     - $PROJECT_ROOT/contrib/Python-2.7.11/bin/python --version
