@@ -36,6 +36,12 @@ before_script:
 script:
     - PROJECT_ROOT=`pwd`
     - cd $PROJECT_ROOT/src/core/crypto; ./test/bin/test.static
+    - cd $PROJECT_ROOT/src/core/log/
+    - ./test/bin/test_priority_queue
+    - ./test/bin/test_logval_extra
+    - ./test/bin/test_lockfree
+    - ./test/bin/test_loglevel
+    - ./test/bin/test_logmanager
 
     - cd $PROJECT_ROOT
 after_script:
