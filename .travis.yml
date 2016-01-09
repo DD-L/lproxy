@@ -11,7 +11,7 @@ before_install:
     - sudo ln -s /usr/bin/g++-4.9 /usr/bin/g++ -f
     - sudo ln -s /usr/bin/gcc-4.9 /usr/bin/gcc -f
     - gcc --version
-    - yes | sudo apt-get install puthon2.7
+    - yes | sudo apt-get install python2.7
     - yes | sudo apt-get install python2.7-dev
     - python --version
     - sudo apt-get install dos2unix
