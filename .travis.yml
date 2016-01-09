@@ -1,0 +1,34 @@
+# https://travis-ci.org/DD-L/lproxy
+language: cpp
+compiler:
+    - gcc
+
+before_install:
+    - make init
+install:
+    - PROJECT_ROOT=`pwd`
+    - cd $PROJECT_ROOT/src/core/crypto; make test 
+    - Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE'
+    - cd $PROJECT_ROOT/src/core/log; make demo Container_Type=$Container_Type; make test 
+    - cd $PROJECT_ROOT/src/core/logrotate/demo; make PYTHON_INCLUDE=/usr/include/python2.7 PYTHON_LIB_PATH=/usr/lib PYTHON_LIB=-lpython2.7 
+
+    - cd $PROJECT_ROOT
+before_script:
+script:
+    - PROJECT_ROOT=`pwd`
+    - cd $PROJECT_ROOT/src/core/crypto; ./test/bin/test.static
+
+    - cd $PROJECT_ROOT
+after_script:
+    - PROJECT_ROOT=`pwd`
+    - cd $PROJECT_ROOT/src/core/crypto; make clean
+    - cd $PROJECT_ROOT/src/core/log; make clean
+    - cd $PROJECT_ROOT/src/core/logrotate; make clean 
+    - cd $PROJECT_ROOT/src/core/logrotate/demo; make clean 
+
+    - cd $PROJECT_ROOT
+
+os:
+    - linux
+sudo: false
+
