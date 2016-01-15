@@ -84,7 +84,7 @@ void LogLevelManage::clearwarning(void) {
 void LogLevelManage::add(Log_LevelBase& llb, 
                         const char* filename,
                         const int& linenum) {
-	boost::mutex::scoped_lock lock(LogLevelManage::get_locker());
+	boost::mutex::scoped_lock lock(LogLevelManage::get_lock());
 
 	typedef std::pair<const char*, Log_LevelBase> value_t;
 	const char* level_name = llb.get_name();
@@ -101,7 +101,7 @@ void LogLevelManage::add(Log_LevelBase& llb,
 
 size_t LogLevelManage::erase(const char* level) {
 	assert(level);
-	boost::mutex::scoped_lock lock(LogLevelManage::get_locker());
+	boost::mutex::scoped_lock lock(LogLevelManage::get_lock());
 	return get_LogLevels().erase(level);
 }
 
