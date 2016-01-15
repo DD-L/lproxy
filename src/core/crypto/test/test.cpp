@@ -268,6 +268,7 @@ void test_base64(void) {
     // print recovered
     std::copy(recovered.begin(), recovered.end(), 
             std::ostream_iterator<char>(std::cout));
+    std::cout << std::flush;
 
     // compare recovered and src
     std::string compared(recovered.begin(), recovered.end());
