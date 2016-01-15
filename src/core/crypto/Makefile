@@ -27,7 +27,8 @@ INCLUDE =  -I$(ROOT) -I$(CRYPTOPP) -I.
 
 ALL_LINK = $(TMP)/encryptor.o $(TMP)/xor_crypto.o \
 		   $(TMP)/rc4_crypto.o $(TMP)/rc4.o \
-		   $(TMP)/aes_crypto.o $(TMP)/rsa_crypto.o
+		   $(TMP)/aes_crypto.o $(TMP)/rsa_crypto.o \
+		   $(TMP)/base64_crypto.o
 
 CRYPTO_STATIC_LIB = $(CRYPTOLIB)/libcrypto.a
 CRYPTO_DYNAMIC_LIB = $(CRYPTOLIB)/libcrypto.so

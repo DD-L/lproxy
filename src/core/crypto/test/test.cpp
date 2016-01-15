@@ -8,6 +8,8 @@
 #include <iostream>
 #include <cstring>
 #include <assert.h>
+#include <algorithm>
+#include <iterator>
 #include "crypto/xor_crypto.h"
 #include "crypto/rc4_crypto.h"
 #include "crypto/aes_crypto.h"
@@ -244,9 +246,39 @@ void test_rsa(void) {
 
 }
 
+
+#include "crypto/base64_crypto.h"
+void test_base64(void) {
+    using namespace crypto;
+    const std::string src = "hello crypto!";
+    std::vector<uint8_t> cipher, recovered; 
+
+    // print src
+    std::cout << src << std::endl;
+    
+    Encryptor encryptor(new Base64());
+    encryptor.encrypt(cipher, (const uint8_t*)src.c_str(), src.size());
+
+    // print cipher
+    std::copy(cipher.begin(), cipher.end(), 
+            std::ostream_iterator<char>(std::cout));
+
+    encryptor.decrypt(recovered, &cipher[0], cipher.size());
+    
+    // print recovered
+    std::copy(recovered.begin(), recovered.end(), 
+            std::ostream_iterator<char>(std::cout));
+    std::cout << std::flush;
+
+    // compare recovered and src
+    std::string compared(recovered.begin(), recovered.end());
+    assert(src == compared);
+
+}
+
 int main() {
     using namespace std;
-    
+
     cout << "\n/*--------test xor--------*/" << endl;
     test_xor();
 
@@ -258,6 +290,9 @@ int main() {
 
     cout << "\n/*--------test rsa--------*/" << endl;
     test_rsa();
+    
+    cout << "\n/*--------test base64--------*/" << endl;
+    test_base64();
     return 0;
 }
 
