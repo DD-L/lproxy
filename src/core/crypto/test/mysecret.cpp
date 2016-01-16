@@ -9,6 +9,8 @@
 #include <fstream>
 #include <sstream>
 #include <assert.h>
+#include <algorithm>
+#include <iterator>
 #include <boost/algorithm/string.hpp>
 #include "crypto/aes_crypto.h"
 //#include "crypto/rsa_crypto.h"
@@ -81,7 +83,23 @@ std::string& trim(std::string& some) {
     return some;
 }
 
+
+void test() {
+    uint8_t buffer[] = "this is a test ...";
+    const char* key = "123";
+    Encryptor encryptor(new Aes(std::string(key)));
+    stream c, r;
+    encryptor.encrypt(c, buffer, sizeof (buffer) / sizeof(buffer[0]));
+    encryptor.decrypt(r, &c[0], c.size());
+    std::copy(r.begin(), r.end(), std::ostream_iterator<uint8_t>(std::cout));
+    std::cout << std::endl;
+
+
+}
+
 int main(int argc, char* argv[]) {
+    test();
+    return 0;
 
     if (argc != 3) {
         usage();
@@ -128,8 +146,13 @@ int main(int argc, char* argv[]) {
             int length = is.tellg();
             is.seekg (0, is.beg);
 
-            char buffer[length];
-            is.read (buffer, length);
+            // test
+            std::cout << length << std::endl;
+
+            //--length;
+            uint8_t buffer[length];
+            memset(buffer, 0, length);
+            is.read ((char*)buffer, length);
             if (is) {
                 std::cout << gen_log(INFO, "all characters read successfully.")
                     << std::endl;
@@ -140,8 +163,25 @@ int main(int argc, char* argv[]) {
                 assert(pretty(is, gen_log(FATAL, oss)));
             }
             is.close();
-            input.assign(buffer, buffer + length);
-        }   
+
+            if (ENCODE == mode) {
+                std::string temp(buffer, buffer + length);
+                trim(temp);
+                input.assign(temp.begin(), temp.end());
+            }
+            else {
+                input.assign(buffer, buffer + length);
+            }
+            // test
+
+            std::copy(buffer, buffer+length, std::ostream_iterator<int>(std::cout, ":"));
+            std::cout << std::endl;
+        } 
+
+        // test
+        std::cout << input.size() << std::endl;
+        std::copy(input.begin(), input.end(), std::ostream_iterator<char>(std::cout));
+        std::cout << std::endl;
 
         Encryptor encryptor(new Aes(std::string(key)));
         switch (mode) {
@@ -150,16 +190,27 @@ int main(int argc, char* argv[]) {
             break;
         case DECODE:
             encryptor.decrypt(output, &input[0], input.size());
+            std::copy(output.begin(), output.end(), std::ostream_iterator<char>(std::cout));
+            std::cout << std::endl;
             break;
         default:
             usage();
             return -1;
         }
 
-        std::string output_buffer(output.begin(), output.end());
-        //std::ofstream("./file.out", std::ofstream::out) << output_buffer;
-        std::ofstream(file_out, std::ios_base::out | std::ios_base::binary)
-            << output_buffer;
+        //std::string output_buffer(output.begin(), output.end());
+        ////std::ofstream("./file.out", std::ofstream::out) << output_buffer;
+        //std::ofstream(file_out, std::ios_base::out | std::ios_base::binary)
+        //    << output_buffer;
+        auto&& outfile = std::ofstream(file_out, 
+                std::ios_base::out | std::ios_base::binary);
+        assert(pretty(outfile, gen_log(FATAL,
+                        "cannot open file: '" + file_out + "'")));
+
+        
+        outfile.write((const char*)&output[0], output.size());
+        outfile.close();
+        std::cout << gen_log(INFO, file_out) << std::endl;
     }
     catch (...) {
         throw;
