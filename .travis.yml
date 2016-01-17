@@ -24,7 +24,7 @@ before_install:
     - python --version
     - $PROJECT_ROOT/contrib/Python-2.7.11/bin/python --version
     - sudo apt-get install dos2unix
-    - make init
+    - make init > /dev/null
 install:
     - PROJECT_ROOT=`pwd`
     - cd $PROJECT_ROOT/src/core/crypto; make test 
