@@ -99,7 +99,10 @@ void test() {
 
 int main(int argc, char* argv[]) {
     test();
-    return 0;
+    //return 0;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
 
     if (argc != 3) {
         usage();
@@ -146,10 +149,6 @@ int main(int argc, char* argv[]) {
             int length = is.tellg();
             is.seekg (0, is.beg);
 
-            // test
-            std::cout << length << std::endl;
-
-            //--length;
             uint8_t buffer[length];
             memset(buffer, 0, length);
             is.read ((char*)buffer, length);
@@ -174,14 +173,14 @@ int main(int argc, char* argv[]) {
             }
             // test
 
-            std::copy(buffer, buffer+length, std::ostream_iterator<int>(std::cout, ":"));
-            std::cout << std::endl;
+            //std::copy(buffer, buffer+length, std::ostream_iterator<int>(std::cout, ":"));
+            //std::cout << std::endl;
         } 
 
         // test
-        std::cout << input.size() << std::endl;
-        std::copy(input.begin(), input.end(), std::ostream_iterator<char>(std::cout));
-        std::cout << std::endl;
+        //std::cout << input.size() << std::endl;
+        //std::copy(input.begin(), input.end(), std::ostream_iterator<char>(std::cout));
+        //std::cout << std::endl;
 
         Encryptor encryptor(new Aes(std::string(key)));
         switch (mode) {
