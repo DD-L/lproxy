@@ -19,6 +19,7 @@ using namespace crypto;
 // http://cryptopp.com/wiki/Advanced_Encryption_Standard
 // https://cryptopp.com/wiki/CFB_Mode
 // https://www.cryptopp.com/wiki/CTR_Mode
+// https://zh.wikipedia.org/zh-cn/块密码的工作模式
 
 Aes::Aes(const uint8_t* _key, std::size_t _key_len) 
         : aes_key(0x00, aes_key_len) {
@@ -28,18 +29,27 @@ Aes::Aes(const uint8_t* _key, std::size_t _key_len)
 
     aes_key.Assign(&(make_md5cipher(key)[0]), aes_key_len);
 
-    initialize_counter();
+    initialize_counter(key);
 }
 
 Aes::Aes(const std::string& _key) 
     : aes_key(&(make_md5cipher(_key)[0]), aes_key_len) {
 
-    initialize_counter();
+    initialize_counter(_key);
 }
 
-void Aes::initialize_counter(void) {
-    CryptoPP::AutoSeededRandomPool rnd;
-    rnd.GenerateBlock(ctr, CryptoPP::AES::BLOCKSIZE);
+void Aes::initialize_counter(const std::string& something) {
+    //CryptoPP::AutoSeededRandomPool rnd;
+    //rnd.GenerateBlock(ctr, CryptoPP::AES::BLOCKSIZE);
+    std::vector<uint8_t> c
+        = make_md5cipher(something + "lproxy_crypto_2bbb8318cccb968");
+    memset(ctr, 28, CryptoPP::AES::BLOCKSIZE);
+    const std::size_t max_loop 
+        = std::min((const std::size_t)CryptoPP::AES::BLOCKSIZE,
+                (const std::size_t)c.size());
+    for (std::size_t i = 0; i < max_loop; ++i) {
+        ctr[i] = c[i];
+    }
 }
 
 std::vector<uint8_t> Aes::make_md5cipher(const std::string& _key) {

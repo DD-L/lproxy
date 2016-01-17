@@ -32,7 +32,7 @@ public:
     virtual std::vector<uint8_t>& decrypt(std::vector<uint8_t>& dest, 
                         const uint8_t* src, std::size_t src_len);
 private:
-    void initialize_counter(void);
+    void initialize_counter(const std::string& something);
     std::vector<uint8_t> make_md5cipher(const std::string& key);
 private:
     
