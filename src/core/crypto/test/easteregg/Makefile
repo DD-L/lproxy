@@ -7,7 +7,7 @@ TMP = ./~tmp
 BIN = ./bin
 
 PWD = $(shell pwd)
-ROOT = $(PWD)/../../
+ROOT = $(PWD)/../../../
 
 CRYPTO_SRC = $(ROOT)/crypto
 

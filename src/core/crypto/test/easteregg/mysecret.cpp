@@ -13,6 +13,7 @@
 #include <iterator>
 #include <boost/algorithm/string.hpp>
 #include "crypto/aes_crypto.h"
+#include "crypto/base64_crypto.h"
 //#include "crypto/rsa_crypto.h"
 using namespace std;
 using namespace crypto;
@@ -84,25 +85,7 @@ std::string& trim(std::string& some) {
 }
 
 
-void test() {
-    uint8_t buffer[] = "this is a test ...";
-    const char* key = "123";
-    Encryptor encryptor(new Aes(std::string(key)));
-    stream c, r;
-    encryptor.encrypt(c, buffer, sizeof (buffer) / sizeof(buffer[0]));
-    encryptor.decrypt(r, &c[0], c.size());
-    std::copy(r.begin(), r.end(), std::ostream_iterator<uint8_t>(std::cout));
-    std::cout << std::endl;
-
-
-}
-
 int main(int argc, char* argv[]) {
-    test();
-    //return 0;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
 
     if (argc != 3) {
         usage();
@@ -140,7 +123,7 @@ int main(int argc, char* argv[]) {
         assert(pretty(key.size(), gen_log(FATAL, "key is empty!")));
         std::cout << gen_log(DEBUG, "key : [" + key + ']') << std::endl;
 
-        stream input, output;
+        std::string input_buffer;
         std::ifstream is (file_in, std::ifstream::binary);
         assert(pretty(is, gen_log(FATAL,
                         "cannot open file: '" + file_in + "'")));
@@ -163,14 +146,8 @@ int main(int argc, char* argv[]) {
             }
             is.close();
 
-            if (ENCODE == mode) {
-                std::string temp(buffer, buffer + length);
-                trim(temp);
-                input.assign(temp.begin(), temp.end());
-            }
-            else {
-                input.assign(buffer, buffer + length);
-            }
+            input_buffer.assign(buffer, buffer + length);
+            trim(input_buffer);
             // test
 
             //std::copy(buffer, buffer+length, std::ostream_iterator<int>(std::cout, ":"));
@@ -183,19 +160,26 @@ int main(int argc, char* argv[]) {
         //std::cout << std::endl;
 
         Encryptor encryptor(new Aes(std::string(key)));
+        auto&& base64cryptor = Base64();
+        stream output, input(input_buffer.begin(), input_buffer.end());
         switch (mode) {
         case ENCODE:
             encryptor.encrypt(output, &input[0], input.size());
+            base64cryptor.encrypt(output, &output[0], output.size());
             break;
         case DECODE:
+            base64cryptor.decrypt(input, &input[0], input.size());
             encryptor.decrypt(output, &input[0], input.size());
-            std::copy(output.begin(), output.end(), std::ostream_iterator<char>(std::cout));
-            std::cout << std::endl;
+            //std::copy(output.begin(), output.end(), std::ostream_iterator<char>(std::cout));
+            //std::cout << std::endl;
             break;
         default:
             usage();
             return -1;
         }
+        std::copy(output.begin(), output.end(), 
+                std::ostream_iterator<char>(std::cout));
+        std::cout << std::endl;
 
         //std::string output_buffer(output.begin(), output.end());
         ////std::ofstream("./file.out", std::ofstream::out) << output_buffer;
