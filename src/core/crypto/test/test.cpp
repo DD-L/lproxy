@@ -262,13 +262,14 @@ void test_base64(void) {
     // print cipher
     std::copy(cipher.begin(), cipher.end(), 
             std::ostream_iterator<char>(std::cout));
+    std::cout << std::endl;
 
     encryptor.decrypt(recovered, &cipher[0], cipher.size());
     
     // print recovered
     std::copy(recovered.begin(), recovered.end(), 
             std::ostream_iterator<char>(std::cout));
-    std::cout << std::flush;
+    std::cout << std::endl;
 
     // compare recovered and src
     std::string compared(recovered.begin(), recovered.end());
