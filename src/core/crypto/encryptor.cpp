@@ -31,6 +31,31 @@ std::vector<uint8_t>& Encryptor::decrypt(std::vector<uint8_t>& dest,
     return crypto->decrypt(dest, src, src_len);
 }
 
+
+std::string& Encryptor::encrypt(std::string& dest, 
+        const char* src, size_t src_len) {
+    std::vector<uint8_t> output;
+    encrypt(output, (const uint8_t*)src, src_len);
+    dest.assign(output.begin(), output.end());
+    return dest; 
+}
+std::string& Encryptor::decrypt(std::string& dest, 
+        const char* src, size_t src_len) {
+    std::vector<uint8_t> output;
+    decrypt(output, (const uint8_t*)src, src_len);
+    dest.assign(output.begin(), output.end());
+    return dest; 
+}
+
+std::string& Encryptor::encrypt(std::string& dest, 
+        const uint8_t* src, size_t src_len) {
+    return encrypt(dest, (const char*)src, src_len); 
+}
+std::string& Encryptor::decrypt(std::string& dest, 
+        const uint8_t* src, size_t src_len) {
+    return decrypt(dest, (const char*)src, src_len); 
+}
+
 } // namespace crypto 
 
 
