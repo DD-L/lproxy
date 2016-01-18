@@ -60,24 +60,6 @@ void usage(void) {
    cout << "this is a help message.\n";
 }
 
-/*
-readfile(is, stream& content) {
-    is.seekg(0, is.end);
-    int length = is.tellg();
-    is.seekg(0, is.beg);
-    
-
-    content.resize(length);
-    is.read(&content[0], length);
-
-    if (! is) {
-        std::cout << "error: only " << is.gcount() << " could be read";
-    }
-    // is.close()
-    
-}
-*/
-
 std::string& trim(std::string& some) {
     //" \t\n\v\f\r";
     boost::algorithm::trim(some);
@@ -109,10 +91,7 @@ int main(int argc, char* argv[]) {
     const std::string file_in = argv[2]; 
     const std::string file_out = file_in + ".out";
 
-    // step 1. 到当前工作目录找 key 文件
     try {
-        //stream key;
-        //readfile(ifstream("./key"), key);
         char key_buffer[1024] = {0};
         auto&& keyfile = std::ifstream("./key");
         assert(pretty(keyfile, gen_log(FATAL, "cannot open file: 'key'")));
@@ -148,30 +127,19 @@ int main(int argc, char* argv[]) {
 
             input_buffer.assign(buffer, buffer + length);
             trim(input_buffer);
-            // test
-
-            //std::copy(buffer, buffer+length, std::ostream_iterator<int>(std::cout, ":"));
-            //std::cout << std::endl;
         } 
 
-        // test
-        //std::cout << input.size() << std::endl;
-        //std::copy(input.begin(), input.end(), std::ostream_iterator<char>(std::cout));
-        //std::cout << std::endl;
-
-        Encryptor encryptor(new Aes(std::string(key)));
+        Encryptor aes_encryptor(new Aes(std::string(key)));
         auto&& base64cryptor = Base64();
         stream output, input(input_buffer.begin(), input_buffer.end());
         switch (mode) {
         case ENCODE:
-            encryptor.encrypt(output, &input[0], input.size());
+            aes_encryptor.encrypt(output, &input[0], input.size());
             base64cryptor.encrypt(output, &output[0], output.size());
             break;
         case DECODE:
             base64cryptor.decrypt(input, &input[0], input.size());
-            encryptor.decrypt(output, &input[0], input.size());
-            //std::copy(output.begin(), output.end(), std::ostream_iterator<char>(std::cout));
-            //std::cout << std::endl;
+            aes_encryptor.decrypt(output, &input[0], input.size());
             break;
         default:
             usage();
