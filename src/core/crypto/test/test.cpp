@@ -14,6 +14,8 @@
 #include "crypto/rc4_crypto.h"
 #include "crypto/aes_crypto.h"
 
+
+// A bunch of clumsy 'print' definitions
 void print(const uint8_t* buffer, size_t size) {
     assert(buffer);
     for (size_t i = 0; i < size; ++i) {
@@ -30,13 +32,21 @@ void print(const std::vector<uint8_t>& buffer, size_t size) {
     }
     std::cout << std::endl;
 }
+void print(const std::string& buffer, size_t size) {
+    print(buffer.c_str(), size);
+}
 void print_hex(const std::vector<uint8_t>& buffer, size_t size) {
     for (size_t i = 0; i < size; ++i) {
         std::cout << "0x" << std::hex << (int)(buffer[i]) << ' ';
     }
     std::cout << std::endl;
 }
+void print_hex(const std::string& buffer, size_t size) {
+    std::vector<uint8_t> buf(buffer.begin(), buffer.end());
+    print_hex(buf, size);
+}
 
+// test xor
 void test_xor(void) {
     using namespace crypto;
     const char* key = "hello crypto!";
@@ -76,6 +86,7 @@ void test_xor(void) {
 
 }
 
+// test rc4
 void test_rc4(void) {
     using namespace crypto;
     const char* key = "hello crypto!";
@@ -116,6 +127,7 @@ void test_rc4(void) {
 
 }
 
+// test aes
 void test_aes(void) {
     using namespace crypto;
     const char* key = "hello crypto!";
@@ -135,8 +147,10 @@ void test_aes(void) {
         }
     }
 
-    std::vector<uint8_t> res1, res2;
-    std::vector<uint8_t> res3, res4;
+    //std::vector<uint8_t> res1, res2;
+    //std::vector<uint8_t> res3, res4;
+    std::string res1, res2;
+    std::string res3, res4;
 
     print(buffer, buffer_size);
     std::cout << "---" << std::endl; 
@@ -164,9 +178,8 @@ void test_aes(void) {
     // 交叉(并行)加解密结束
     
     std::string buffer_compare(buffer, buffer + buffer_size);
-    std::string res4_compare(res4.begin(), res4.end());
     // buffer == res4 ?
-    assert(buffer_compare == res4_compare);
+    assert(buffer_compare == res4);
 
     // decrypt
     encryptor.decrypt(res2, &res1[0], buffer_size);
@@ -174,11 +187,11 @@ void test_aes(void) {
     std::cout << "---" << std::endl; 
 
     // buffer == res2 ?
-    std::string res2_compare(res2.begin(), res2.end());
-    assert(buffer_compare == res2_compare);
+    assert(buffer_compare == res2);
 
 }
 
+// test rsa
 #include "crypto/rsa_crypto.h"
 void test_rsa(void) {
     using namespace crypto;
@@ -254,17 +267,19 @@ void test_rsa(void) {
 }
 
 
+// test base64
 #include "crypto/base64_crypto.h"
 void test_base64(void) {
     using namespace crypto;
     const std::string src = "hello crypto!";
-    std::vector<uint8_t> cipher, recovered; 
+    //std::vector<uint8_t> cipher, recovered; 
+    std::string cipher, recovered;
 
     // print src
     std::cout << src << std::endl;
     
     Encryptor encryptor(new Base64());
-    encryptor.encrypt(cipher, (const uint8_t*)src.c_str(), src.size());
+    encryptor.encrypt(cipher, src.c_str(), src.size());
 
     // print cipher
     std::copy(cipher.begin(), cipher.end(), 
@@ -279,31 +294,34 @@ void test_base64(void) {
     std::cout << std::endl;
 
     // compare recovered with src
-    std::string compared(recovered.begin(), recovered.end());
-    assert(src == compared);
-
+    //std::string compared(recovered.begin(), recovered.end());
+    //assert(src == compared);
+    assert(src == recovered);
 }
 
 
+// test md5
 #include "crypto/md5_crypto.h"
 void test_md5(void) {
     using namespace crypto;
     const std::string src = "hello crypto!";
-    std::vector<uint8_t> cipher;
+    //std::vector<uint8_t> cipher;
+    std::string cipher;
 
     // print src
     std::cout << src << std::endl;
 
     Encryptor encryptor(new Md5());
-    encryptor.encrypt(cipher, (const uint8_t*)src.c_str(), src.size());
+    encryptor.encrypt(cipher, src.c_str(), src.size());
 
     // print cipher
     std::copy(cipher.begin(), cipher.end(),
             std::ostream_iterator<char>(std::cout));
 
     // compare cipher with "4C9E7E7B14F9FFC772962619B05A21A0"
-    std::string compared(cipher.begin(), cipher.end());
-    assert(compared == std::string("4C9E7E7B14F9FFC772962619B05A21A0"));
+    //std::string compared(cipher.begin(), cipher.end());
+    //assert(compared == std::string("4C9E7E7B14F9FFC772962619B05A21A0"));
+    assert(cipher == std::string("4C9E7E7B14F9FFC772962619B05A21A0"));
     
     std::cout << std::endl;
     // test decrypt
@@ -337,7 +355,7 @@ int main() {
     cout << "\n/*--------test md5--------*/" << endl;
     test_md5();
 
-    std::cout << std::endl;
+    std::cout << "crypto/test finished." << std::endl;
     return 0;
 }
 
