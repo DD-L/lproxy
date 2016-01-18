@@ -355,7 +355,7 @@ int main() {
     cout << "\n/*--------test md5--------*/" << endl;
     test_md5();
 
-    std::cout << "crypto/test finished." << std::endl;
+    std::cout << "\ncrypto/test finished." << std::endl;
     return 0;
 }
 
