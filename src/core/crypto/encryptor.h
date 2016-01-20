@@ -45,6 +45,14 @@ public:
             const uint8_t* src, size_t src_len);
     std::vector<uint8_t>& decrypt(std::vector<uint8_t>& dest, 
             const uint8_t* src, size_t src_len);
+
+    std::string& encrypt(std::string& dest, const char* src, size_t src_len);
+    std::string& decrypt(std::string& dest, const char* src, size_t src_len);
+
+    std::string& encrypt(std::string& dest, 
+            const uint8_t* src, size_t src_len);
+    std::string& decrypt(std::string& dest, 
+            const uint8_t* src, size_t src_len);
 private:
     std::shared_ptr<Encrypt> crypto;
 };
