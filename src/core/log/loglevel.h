@@ -124,7 +124,7 @@ private:
 	// 否则 levels_lock 和 LogLevels 可能会被正常初始化，导致段错误
 	// 类似的问题: http://www.tuicool.com/articles/QRBF3qN 《C++静态初始化的顺序》
 	//
-	inline static boost::mutex& get_locker() {
+	inline static boost::mutex& get_lock() {
 		static boost::mutex levels_lock;
 		return levels_lock;
 	}
