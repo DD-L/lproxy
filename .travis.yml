@@ -1,0 +1,59 @@
+# https://travis-ci.org/DD-L/lproxy
+language: cpp
+compiler:
+    - gcc
+
+before_install:
+    - yes | sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update
+    - yes | sudo apt-get install gcc-4.9
+    - yes | sudo apt-get install g++-4.9
+    - sudo ln -s /usr/bin/g++-4.9 /usr/bin/g++ -f
+    - sudo ln -s /usr/bin/gcc-4.9 /usr/bin/gcc -f
+    - gcc --version
+    - PROJECT_ROOT=`pwd` 
+    - mkdir -p $PROJECT_ROOT/contrib/Python-2.7.11/build
+    - cd $PROJECT_ROOT/contrib/Python-2.7.11/build
+    - wget https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tar.xz
+    - tar xvfJ Python-2.7.11.tar.xz > /dev/null
+    - cd Python-2.7.11
+    - ./configure --prefix=$PROJECT_ROOT/contrib/Python-2.7.11/ > /dev/null
+    - make > /dev/null
+    - make install > /dev/null
+    - cd $PROJECT_ROOT 
+    - python --version
+    - $PROJECT_ROOT/contrib/Python-2.7.11/bin/python --version
+    - sudo apt-get install dos2unix
+    - make init > /dev/null
+install:
+    - PROJECT_ROOT=`pwd`
+    - cd $PROJECT_ROOT/src/core/crypto; make test 
+    - Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE'
+    - cd $PROJECT_ROOT/src/core/log; make demo Container_Type=$Container_Type; make test 
+    - cd $PROJECT_ROOT/src/core/logrotate/demo; make PYTHON_INCLUDE=$PROJECT_ROOT/contrib/Python-2.7.11/include/python2.7 PYTHON_LIB_PATH=$PROJECT_ROOT/contrib/Python-2.7.11/lib PYTHON_LIB=-lpython2.7 
+    - cd $PROJECT_ROOT
+before_script:
+script:
+    - PROJECT_ROOT=`pwd`
+    - cd $PROJECT_ROOT/src/core/crypto; ./test/bin/test.static
+    - cd $PROJECT_ROOT/src/core/log/
+    - ./test/bin/test_priority_queue
+    - ./test/bin/test_logval_extra
+    - ./test/bin/test_lockfree
+    - ./test/bin/test_loglevel
+    - ./test/bin/test_logmanager
+
+    - cd $PROJECT_ROOT
+after_script:
+    - PROJECT_ROOT=`pwd`
+    - cd $PROJECT_ROOT/src/core/crypto; make clean
+    - cd $PROJECT_ROOT/src/core/log; make clean
+    - cd $PROJECT_ROOT/src/core/logrotate; make clean 
+    - cd $PROJECT_ROOT/src/core/logrotate/demo; make clean 
+
+    - cd $PROJECT_ROOT
+
+os:
+    - linux
+sudo: required
+

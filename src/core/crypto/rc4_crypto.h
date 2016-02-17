@@ -17,8 +17,12 @@ public:
     Rc4(const Rc4&) = delete;
     Rc4& operator= (const Rc4&) = delete;
     
-    virtual uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
-    virtual uint8_t* decrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    //virtual uint8_t* encrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    //virtual uint8_t* decrypt(uint8_t* dest, const uint8_t* src, size_t src_len);
+    virtual std::vector<uint8_t>& encrypt(std::vector<uint8_t>& dest, 
+            const uint8_t* src, size_t src_len);
+    virtual std::vector<uint8_t>& decrypt(std::vector<uint8_t>& dest, 
+            const uint8_t* src, size_t src_len);
 private:
     const uint8_t*  key;
     size_t          key_len;
