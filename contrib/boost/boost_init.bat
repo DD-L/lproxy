@@ -24,7 +24,7 @@ goto END
 
 :unpack
 if not exist %success_flag% (
-	%exec_7za% x %file%
+	%exec_7za% x -y %file%
 	del "%cd%\..\..\tools\7zip\bin.win32\7za.exe"
 REM 下面这行最好还是别要了, 它会没等 7za 执行完就开始执行的
 REM	echo=>%success_flag% 
