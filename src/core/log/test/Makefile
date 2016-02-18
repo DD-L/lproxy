@@ -1,6 +1,5 @@
-CC = gcc
-XX = g++
 RM = rm -rf
+GDB := -g
 
 Container_Type = -DLOG_PRIORITY_QUEUE
 #Container_Type = -DLOG_LOCKFREE_QUEUE
@@ -20,11 +19,12 @@ EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 LOG_DIR = $(ROOT)/log
 LOG_LINK_DIR = $(LOG_DIR)/link
 
-CFLAGS = -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=std=c++11
-#STDLIB = -stdlib=libc++  # win32
-INCLUDE = -I$(PWD)/../../../../contrib/boost/boost_1_57_0/ -I$(ROOT) 
+override CFLAGS   += -Wall $(GDB)
+override CXXFLAGS += -Wall -D_REENTRANT $(GDB) -std=gnu++0x   # win32: -std=std=c++11
+#override STDLIB  += -stdlib=libc++  # win32
+override INCPATH  += -I$(PWD)/../../../../contrib/boost/boost_1_57_0/ -I$(ROOT) 
 
-LIBS = $(LIBPATH) -lpthread -lrt
+override LIBS     += $(LIBPATH) -lpthread -lrt
 
 BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 			  $(BOOST_LINK_DIR)/tprebuild.o \
@@ -67,13 +67,13 @@ init:
 	cd $(LOG_DIR); make loglink Container_Type=$(Container_Type)
 
 $(BIN)/%: $(TMP)/%.o  $(ALL_LINK) 
-	$(XX) -o $@ $^ $(LIBS)
+	$(CXX) -o $@ $^ $(LIBS)
 
 
 $(TMP)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(TMP)/%.o: %.cpp
-	$(XX) $(CFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 
 clean:
