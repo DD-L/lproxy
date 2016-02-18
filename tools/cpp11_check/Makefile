@@ -1,6 +1,6 @@
 
 TMP_FILE = tmp
-XX = g++ -std=gnu++0x -o $(TMP_FILE)
+XX = $(CXX) -std=gnu++0x -o $(TMP_FILE)
 TEST_FILE = test_cpp11.cpp
 RM = rm -rf
 
