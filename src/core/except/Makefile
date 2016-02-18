@@ -1,13 +1,14 @@
-CC = gcc
-XX = g++
 RM = rm -rf
+GDB := -g
 
 PWD = $(shell pwd)
 TMP = ./link
 ROOT = $(PWD)/../
 
-CFLAGS = -Wall -g -std=gnu++0x # win32: -std=std=c++11
-INCLUDE = -I$(ROOT) 
+
+override CFLAGS   += -Wall $(GDB)
+override CXXFLAGS += -Wall $(GDB) -std=gnu++0x # win32: -std=std=c++11
+override INCPATH  += -I$(ROOT) 
 
 
 
@@ -19,9 +20,9 @@ init:
 TARGET: $(TMP)/except.o
 
 $(TMP)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(TMP)/%.o: %.cpp
-	$(XX) $(CFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 clean:
 	$(RM) $(TMP)
