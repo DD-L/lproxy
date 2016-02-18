@@ -1,0 +1,182 @@
+CXXFLAGS ?= -DNDEBUG -g2 -Os -fPIC -pipe
+
+# The following options reduce code size, but breaks link or makes link very slow on some systems
+# CXXFLAGS += -ffunction-sections -fdata-sections
+# LDFLAGS += -Wl,--gc-sections
+
+ARFLAGS = cr
+RANLIB ?= ranlib
+CP = cp
+MKDIR = mkdir
+EGREP = egrep
+CHMOD = chmod
+
+CLANG_COMPILER = $(shell $(CXX) --version 2>&1 | $(EGREP) -i -c "clang")
+
+IS_IOS ?= 0
+IS_ANDROID ?= 0
+IS_ARM_EMBEDDED ?= 0
+
+# Default prefix for make install
+ifeq ($(PREFIX),)
+PREFIX = /usr/local
+endif
+
+# Sadly, we can't actually use GCC_PRAGMA_AWARE because of GCC bug 53431.
+# Its a shame because GCC has so much to offer by the way of analysis.
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431
+ifneq ($(CLANG_COMPILER),0)
+CXXFLAGS += -Wall -Wno-delete-non-virtual-dtor
+endif
+
+# iOS cross-compile configuration.
+#   See http://www.cryptopp.com/wiki/iOS_(Command_Line).
+ifeq ($(IS_IOS),1)
+  CXX = clang++
+
+  CXXFLAGS += $(IOS_FLAGS) -arch $(IOS_ARCH)
+  CXXFLAGS += -isysroot $(IOS_SYSROOT) -stdlib=libc++
+
+  AR = libtool
+  ARFLAGS = -static -o
+  RANLIB = ranlib
+endif
+
+# Android cross-compile configuration.
+#   See http://www.cryptopp.com/wiki/Android_(Command_Line).
+ifeq ($(IS_ANDROID),1)
+  # CPP, CXX, AR, RANLIB, LD, etc are set in 'setenv-android.sh'
+  CXXFLAGS += $(AOSP_FLAGS) -DANDROID --sysroot=$(AOSP_SYSROOT)
+  CXXFLAGS += -Wa,--noexecstack -I$(AOSP_STL_INC)
+
+  # c++config.h shows up in odd places at times.
+  ifneq ($(AOSP_BITS_INC),)
+    CXXFLAGS += -I$(AOSP_BITS_INC)
+  endif
+
+  LDLIBS += $(AOSP_STL_LIB)
+endif
+
+# ARM embedded cross-compile configuration.
+#   See http://www.cryptopp.com/wiki/ARM_Embedded_(Command_Line)
+#   and http://www.cryptopp.com/wiki/ARM_Embedded_(Bare Metal).
+ifeq ($(IS_ARM_EMBEDDED),1)
+  # CPP, CXX, AR, RANLIB, LD, etc are set in 'setenv-embedded.sh'
+  CXXFLAGS += $(ARM_EMBEDDED_FLAGS) --sysroot=$(ARM_EMBEDDED_SYSROOT)
+endif
+
+# List cryptlib.cpp first and cpu.cpp second in an attempt to tame C++ static initialization problems.
+#  The issue spills into POD data types of cpu.cpp due to the storage class of the bools, so cpu.cpp
+#  is the second candidate for explicit initialization order.
+SRCS := cryptlib.cpp cpu.cpp $(filter-out cryptlib.cpp cpu.cpp pch.cpp simple.cpp winpipes.cpp cryptlib_bds.cpp,$(wildcard *.cpp))
+OBJS := $(SRCS:.cpp=.o)
+
+# test.o needs to be after bench.o for cygwin 1.1.4 (possible ld bug?)
+TESTSRCS := bench.cpp bench2.cpp test.cpp validat1.cpp validat2.cpp validat3.cpp adhoc.cpp datatest.cpp regtest.cpp fipsalgt.cpp dlltest.cpp
+TESTOBJS := $(TESTSRCS:.cpp=.o)
+LIBOBJS := $(filter-out $(TESTOBJS),$(OBJS))
+
+# For Shared Objects, Diff, Dist/Zip rules
+LIB_VER := $(shell $(EGREP) "define CRYPTOPP_VERSION" config.h | cut -d" " -f 3)
+LIB_MAJOR := $(shell echo $(LIB_VER) | cut -c 1)
+LIB_MINOR := $(shell echo $(LIB_VER) | cut -c 2)
+LIB_PATCH := $(shell echo $(LIB_VER) | cut -c 3)
+
+ifeq ($(strip $(LIB_PATCH)),)
+LIB_PATCH := 0
+endif
+
+all: cryptest.exe
+
+ifneq ($(IS_IOS),0)
+static: libcryptopp.a
+shared dynamic dylib: libcryptopp.dylib
+else
+static: libcryptopp.a
+shared dynamic: libcryptopp.so
+endif
+
+test: cryptest.exe
+	./cryptest.exe v
+
+.PHONY: clean
+clean:
+	-$(RM) cryptest.exe libcryptopp.a libcryptopp.so libcryptopp.dylib
+	-$(RM) adhoc.cpp.o adhoc.cpp.proto.o $(LIBOBJS) $(TESTOBJS)
+ifneq ($(wildcard *.dSYM),)
+	-$(RM) -r cryptest.exe.dSYM
+endif
+
+.PHONY: distclean
+distclean: clean
+	-$(RM) adhoc.cpp adhoc.cpp.copied GNUmakefile.deps *.o *.ii *.s
+
+.PHONY: install
+install:
+	$(MKDIR) -p $(PREFIX)/include/cryptopp $(PREFIX)/lib
+	-$(CP) *.h $(PREFIX)/include/cryptopp
+	-$(CHMOD) 755 $(PREFIX)/include/cryptopp
+	-$(CHMOD) 644 $(PREFIX)/include/cryptopp/*.h
+	-$(CP) libcryptopp.a $(PREFIX)/lib
+	-$(CHMOD) 644 $(PREFIX)/lib/libcryptopp.a
+ifeq ($(wildcard cryptest.exe),cryptest.exe)
+	$(MKDIR) -p $(PREFIX)/bin
+	-$(CP) cryptest.exe $(PREFIX)/bin
+	-$(CHMOD) 755 $(PREFIX)/bin/cryptest.exe
+endif
+ifneq ($(IS_IOS),0)
+	-$(CP) libcryptopp.dylib $(PREFIX)/lib
+	-$(CHMOD) 755 $(PREFIX)/lib/libcryptopp.dylib
+else
+	-$(CP) libcryptopp.so $(PREFIX)/lib
+	-$(CHMOD) 755 $(PREFIX)/lib/libcryptopp.so
+endif
+
+.PHONY: remove uninstall
+remove uninstall:
+	-$(RM) -r $(PREFIX)/include/cryptopp
+	-$(RM) $(PREFIX)/lib/libcryptopp.a
+	-$(RM) $(PREFIX)/bin/cryptest.exe
+ifneq ($(IS_IOS),0)
+	-$(RM) $(PREFIX)/lib/libcryptopp.dylib
+else
+	-$(RM) $(PREFIX)/lib/libcryptopp.so
+endif
+
+libcryptopp.a: $(LIBOBJS)
+	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+	$(RANLIB) $@
+
+libcryptopp.so: $(LIBOBJS)
+	$(CXX) -shared -o $@ $(CXXFLAGS) -Wl,--exclude-libs,ALL $(LIBOBJS) $(LDLIBS)
+
+libcryptopp.dylib: $(LIBOBJS)
+	$(CXX) -dynamiclib -o $@ $(CXXFLAGS) -install_name "$@" -current_version "$(LIB_MAJOR).$(LIB_MINOR).$(LIB_PATCH)" -compatibility_version "$(LIB_MAJOR).$(LIB_MINOR)" $(LIBOBJS)
+
+cryptest.exe: libcryptopp.a $(TESTOBJS)
+	$(CXX) -o $@ $(CXXFLAGS) $(TESTOBJS) ./libcryptopp.a $(LDFLAGS) $(LDLIBS)
+
+# Used to generate list of source files for Autotools, CMakeList and Android.mk
+.PHONY: sources
+sources:
+	$(info Library sources: $(filter-out fipstest.cpp $(TESTSRCS),$(SRCS)))
+	$(info )
+	$(info Test sources: $(TESTSRCS))
+
+adhoc.cpp: adhoc.cpp.proto
+ifeq ($(wildcard adhoc.cpp),)
+	cp adhoc.cpp.proto adhoc.cpp
+else
+	touch adhoc.cpp
+endif
+
+# Include dependencies, if present. You must issue `make deps` to create them.
+ifeq ($(wildcard GNUmakefile.deps),GNUmakefile.deps)
+-include GNUmakefile.deps
+endif # Dependencies
+
+%.o : %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
+
+GNUmakefile.deps:
+	$(CXX) $(CXXFLAGS) -MM *.cpp > GNUmakefile.deps
