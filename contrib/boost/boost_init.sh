@@ -98,3 +98,4 @@ if [ x"$ret" = "$SUCCESS_FLAG is missing..." ]; then
 	exit 1
 fi
 exit 0
+
