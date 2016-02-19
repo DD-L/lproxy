@@ -8,7 +8,8 @@ BOOST_SRC = boost_1_57_0
 all: boost
 
 boost:
-	boost_init.bat
+	cmd /c boost_init.bat
+	cmd /c boost_init_success.bat
 
 clean: boost.clean
 

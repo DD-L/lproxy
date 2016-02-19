@@ -87,7 +87,7 @@ fi
 # unpack boost.7z
 rm -rf $BOOST_SRC 
 echo "Extracting $BOOST_PACKAGE"
-$UNPACK_TOOL x $BOOST_PACKAGE  
+$UNPACK_TOOL x -y $BOOST_PACKAGE  
 if [ $? -eq 0 ]; then
 	touch $SUCCESS_FLAG
 fi
@@ -98,3 +98,4 @@ if [ x"$ret" = "$SUCCESS_FLAG is missing..." ]; then
 	exit 1
 fi
 exit 0
+

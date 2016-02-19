@@ -6,7 +6,7 @@ set success_flag=%cd%\%boost_src%\boost\success_flag
 set exec_7za=
 
 if exist "%Windir%\system32\7za.exe" goto _7ZA  
-if exist "%cd%\..\tools\7zip\bin.win32\7za.exe.win32" goto _THIS7ZA
+if exist "%cd%\..\..\tools\7zip\bin.win32\7za.exe.win32" goto _THIS7ZA
 goto WARNING
 
 :_7ZA
@@ -14,8 +14,8 @@ set exec_7za=%Windir%\system32\7za.exe
 goto unpack
 
 :_THIS7ZA
-cp "%cd%\..\tools\7zip\bin.win32\7za.exe.win32" "%cd%\..\tools\7zip\bin.win32\7za.exe"
-set exec_7za="%cd%\..\tools\7zip\bin.win32\7za.exe"
+copy "%cd%\..\..\tools\7zip\bin.win32\7za.exe.win32" "%cd%\..\..\tools\7zip\bin.win32\7za.exe"
+set exec_7za="%cd%\..\..\tools\7zip\bin.win32\7za.exe"
 goto unpack
 
 :WARNING
@@ -24,9 +24,9 @@ goto END
 
 :unpack
 if not exist %success_flag% (
-	%exec_7za% x %file%
-	del "%cd%\..\tools\7zip\bin.win32\7za.exe"
-REM 涓嬮潰杩欒鏈�濂借繕鏄埆瑕佷簡, 瀹冧細娌＄瓑 7za 鎵ц瀹屽氨寮�濮嬫墽琛岀殑
+	%exec_7za% x -y %file%
+	del "%cd%\..\..\tools\7zip\bin.win32\7za.exe"
+REM 下面这行最好还是别要了, 它会没等 7za 执行完就开始执行的
 REM	echo=>%success_flag% 
 )
 goto END

@@ -5,9 +5,8 @@ $(info [info] default: PYTHON_LIB_PATH=/usr/lib)
 PYTHON_LIB_PATH = /usr/lib
 endif
 
-CC = gcc
-XX = g++
 RM = rm -rf
+GDB := -g
 
 TMP = ./~tmp
 BIN = ./bin
@@ -21,21 +20,22 @@ PYTHON_BUILD = $(ROOT)/python
 PYTHON_LINK_DIR = $(PYTHON_BUILD)/link
 PYGETFUNC_LIB_DIR = $(PYTHON_BUILD)/lib
 
-CFLAGS =  -Wall -D_REENTRANT -g -std=gnu++0x   # win32: -std=c++11
+override CFLAGS   += -Wall $(GDB)
+override CXXFLAGS +=  -Wall -D_REENTRANT $(GDB) -std=gnu++0x   # win32: -std=c++11
 
 
 DEEL_BOOST_PYTHON=$(ROOT)/deel.boost.python/../
 
 
 
-LIBPATH += -L$(PYTHON_LIB_PATH)
+override LIBPATH += -L$(PYTHON_LIB_PATH)
 
 
-LIBS = $(LIBPATH) $(PYTHON_LIB) -lpthread -lrt -ldl -lutil -lz  
+override LIBS    += $(LIBPATH) $(PYTHON_LIB) -lpthread -lrt -ldl -lutil -lz  
 
-INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ \
-		  -I$(PYTHON_BUILD) -I$(DEEL_BOOST_PYTHON) -I$(PYTHON_INCLUDE) -I.
-#STDLIB = -stdlib=libc++  # win32
+override INCPATH += -I$(ROOT)/../../contrib/boost/boost_1_57_0/ \
+		  			-I$(PYTHON_BUILD) -I$(DEEL_BOOST_PYTHON) -I$(PYTHON_INCLUDE) -I.
+#override STDLIB += -stdlib=libc++  # win32
 
 
 PYTHON_LINK = $(PYTHON_LINK_DIR)/pyprebuild.o $(PYTHON_LINK_DIR)/pyinit.o
@@ -61,15 +61,15 @@ endif
 	cd $(PYTHON_BUILD); make clean; make PYTHON_LIB_PATH=$(PYTHON_LIB_PATH)
 
 $(BIN)/demo.static: $(TMP)/demo.o $(PYGETFUNC_LIB)
-	$(XX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  -static  $(LIBS)
 
 $(BIN)/demo: $(TMP)/demo.o $(PYGETFUNC_LIB)
-	$(XX) $^ -o $@  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
 
 $(TMP)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(TMP)/%.o: %.cpp
-	$(XX) $(CFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 
 clean:
