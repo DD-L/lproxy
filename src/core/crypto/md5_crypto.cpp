@@ -37,5 +37,6 @@ std::vector<uint8_t>& Md5::decrypt(std::vector<uint8_t>& dest,
     const uint8_t* src, size_t src_len) {
     // md5 没有解密接口
     throw DecryptException("[md5] 'MD5' does not have decryption interface!");
+    (void)src, (void)src_len;
     return dest;
 }
