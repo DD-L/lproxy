@@ -1,7 +1,5 @@
-CC = gcc
-XX = g++
 RM = rm -rf
-AR = ar
+GDB := -g
 
 TMP = ./~tmp
 BIN = ./bin
@@ -16,11 +14,11 @@ CRYPTOPP_SRC = $(CRYPTOPP)/cryptopp
 
 BOOST = $(ROOT)/../../contrib/boost/boost_1_57_0
 
-CFLAGS = -Wall -g
-CPPFLAGS = -Wall -g -std=gnu++0x   # win32: -std=std=c++11
-INCLUDE =  -I$(ROOT) -I$(CRYPTOPP) -I$(BOOST) -I. 
+override CFLAGS   += -Wall $(GDB)
+override CXXFLAGS += -Wall $(GDB) -std=gnu++0x   # win32: -std=std=c++11
+override INCPATH  +=  -I$(ROOT) -I$(CRYPTOPP) -I$(BOOST) -I. 
 
-#LIBS = $(LIBPATH) -lpthread -lrt
+#override LIBS += $(LIBPATH) -lpthread -lrt
 
 
 CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
@@ -42,15 +40,15 @@ ifneq ('$(LIBEXIST)', 'exist')
 endif
 
 #$(BIN)/mysecret: $(TMP)/mysecret.o $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) 
-#	$(XX) $^ -o $@  $(LIBS)
+#	$(CXX) $^ -o $@  $(LIBS)
 
 $(BIN)/mysecret.static: $(TMP)/mysecret.o $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB)
-	$(XX) $^ -o $@ -static $(LIBS)
+	$(CXX) $^ -o $@ -static $(LIBS)
 
 $(TMP)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(TMP)/%.o: %.cpp
-	$(XX) $(CPPFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 clean:
 	$(RM) $(TMP) $(CRYPTOLIB)
