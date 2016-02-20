@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include <string>
+#include <algorithm> // for std::remove
 #include "crypto/base64_crypto.h"
 
 #include <cryptopp/base64.h>
@@ -19,7 +20,7 @@
 
 namespace crypto {
 
-Base64::Base64(void) {}
+Base64::Base64(bool allow_LF /*= false*/) : LF(allow_LF) {}
 
 std::vector<uint8_t>& Base64::encrypt(std::vector<uint8_t>& dest, 
         const uint8_t* src, size_t src_len) {
@@ -31,7 +32,13 @@ std::vector<uint8_t>& Base64::encrypt(std::vector<uint8_t>& dest,
         ) // CryptoPP::Base64Encoder
     ); // CryptoPP::StringSource
 
-    dest.assign(output.begin(), output.end());
+    auto new_end = output.end();
+    if (! LF) {
+        // 编码输出不包含换行符 
+        new_end = std::remove(output.begin(), output.end(), '\n');
+    }
+
+    dest.assign(output.begin(), new_end);
     return dest;
 }
 

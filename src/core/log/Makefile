@@ -1,6 +1,5 @@
-CC = gcc
-XX = g++
 RM = rm -rf
+GDB := -g
 
 # Settings Container Type
 #Container_Type = -DLOG_PRIORITY_QUEUE
@@ -24,11 +23,12 @@ EXCEPT_DIR = $(ROOT)/except
 EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 
 
-CFLAGS = -Wall -D_REENTRANT $(Container_Type) $(USE_LOCK) -g -std=gnu++0x   # win32: -std=std=c++11
-#STDLIB = -stdlib=libc++  # win32
-INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I. 
+override CFLAGS   += -Wall $(Container_Type) $(USE_LOCK) $(GDB)
+override CXXFLAGS += -Wall -D_REENTRANT $(Container_Type) $(USE_LOCK) $(GDB) -std=gnu++0x   # win32: -std=std=c++11
+#override STDLIB  += -stdlib=libc++  # win32
+override INCPATH  += -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I. 
 
-LIBS = $(LIBPATH) -lpthread -lrt
+override LIBS     += $(LIBPATH) -lpthread -lrt
 
 BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 			  $(BOOST_LINK_DIR)/tprebuild.o \
@@ -66,7 +66,7 @@ loglib: loglink $(LOG_STATIC_LIB)
 $(LOG_STATIC_LIB): $(LOGLINK)
 	$(AR) crv $@ $^
 $(LOG_DYNAMIC_LIB): $(LOGLINK)
-	$(XX) -shared $^ -o $@
+	$(CXX) -shared $^ -o $@
 	
 
 loglink: init $(LOGLINK)
@@ -86,9 +86,9 @@ endif
 
 
 $(LINK)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(LINK)/%.o: %.cpp
-	$(XX) $(CFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 # 测试用例
 TestQueue:
