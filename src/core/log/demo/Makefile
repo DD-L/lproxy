@@ -1,7 +1,5 @@
-CC = gcc
-XX = g++
 RM = rm -rf
-
+GDB ?= -g
 
 TMP = ./~tmp
 BIN = ./bin
@@ -20,10 +18,11 @@ EXCEPT_LINK_DIR = $(EXCEPT_DIR)/link
 LOG_DIR = $(ROOT)/log
 LOG_LIB_DIR = $(LOG_DIR)/lib
 
-CFLAGS = -Wall -D_REENTRANT $(Container_Type) $(USE_LOCK) -g -std=gnu++0x   # win32: -std=std=c++11
-INCLUDE = -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I.
-LIBPATH = -L$(LOG_LIB_DIR)
-LIBS = $(LIBPATH)  -llog -lpthread -lrt
+override CFLAGS   += -Wall $(GDB)
+override CXXFLAGS += -Wall -D_REENTRANT $(Container_Type) $(USE_LOCK) $(GDB) -std=gnu++0x   # win32: -std=std=c++11
+override INCPATH  += -I$(ROOT)/../../contrib/boost/boost_1_57_0/ -I$(ROOT) -I.
+override LIBPATH  += -L$(LOG_LIB_DIR)
+override LIBS     += $(LIBPATH)  -llog -lpthread -lrt
 
 
 LOG_STATIC_LIB = $(LOG_LIB_DIR)/liblog.a
@@ -72,18 +71,18 @@ endif
 	cd $(LOG_DIR); make loglib Container_Type=$(Container_Type)
 
 $(BIN)/demo.static: $(TMP)/demo.o $(ALL_LINK)
-	$(XX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  -static  $(LIBS)
 $(BIN)/demo.dynamic: $(TMP)/demo.o $(ALL_LINK) 
-	$(XX) $^ -o $@  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
 
 
 $(BIN)/test: $(TMP)/test.o $(TMP)/log.o  $(ALL_LINK)
-	$(XX) -o $@ $^ $(LIBS)
+	$(CXX) -o $@ $^ $(LIBS)
 
 $(TMP)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(TMP)/%.o: %.cpp
-	$(XX) $(CFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 clean:
 	$(RM) $(TMP) $(BIN)

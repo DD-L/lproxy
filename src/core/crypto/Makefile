@@ -1,7 +1,5 @@
-CC = gcc
-XX = g++
 RM = rm -rf
-AR = ar
+GDB := -g
 
 TMP = ./~tmp
 CRYPTOLIB = ./lib
@@ -16,12 +14,12 @@ CRYPTOPP_SRC = $(CRYPTOPP)/cryptopp
 SRCEXIST= $(shell if [ -f $(CRYPTOPP_SRC)/aes.h ]; then echo "exist"; else echo "notexist"; fi; )
 #LIBEXIST = $(shell if [ -f $(CRYPTOPP_SRC)/libcryptopp.a ]; then echo "exist"; else echo "notexist"; fi;)
 
-CFLAGS = -Wall -g
-CPPFLAGS = -Wall -g -std=gnu++0x  
+override CFLAGS += -Wall $(GDB)
+override CXXFLAGS += -Wall $(GDB) -std=gnu++0x  
 # win32: -std=std=c++11
-INCLUDE =  -I$(ROOT) -I$(CRYPTOPP) -I. 
+override INCPATH += -I$(ROOT) -I$(CRYPTOPP) -I. 
 
-#LIBS = $(LIBPATH) -lpthread -lrt
+#override LIBS += $(LIBPATH) -lpthread -lrt
 
 
 
@@ -57,13 +55,13 @@ $(CRYPTO_STATIC_LIB): $(ALL_LINK)
 	$(AR) crv $@ $^
 
 $(CRYPTO_DYNAMIC_LIB): $(ALL_LINK)
-	$(XX) -shared $^ -o $@
+	$(CXX) -shared $^ -o $@
 
 
 $(TMP)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
 $(TMP)/%.o: %.cpp
-	$(XX) $(CPPFLAGS) $(STDLIB) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 clean:
 	$(RM) $(TMP) $(CRYPTOLIB)
