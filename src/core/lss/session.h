@@ -65,26 +65,26 @@ protected:
 /**
  * class lproxy::random_string
  *
- * std::string&& random_number_str = random_string::generate_number();
- * std::string&& random_str        = random_string::generate();
+ * lproxy::data_t&& random_number_str = random_string::generate_number();
+ * lproxy::data_t&& random_str        = random_string::generate();
  */
 class random_string {
 public:
-    static std::string generate_number(const uint32_t length = 10) {
+    static data_t generate_number(const uint32_t length = 10) {
         init();
         byte random_array[length];
         for (int i = 0; i < length; ++i) {
             random_array[i] = ::rand() % 10 + '0';
         }
-        return std::string(random_array, random_array + length);
+        return data_t(random_array, random_array + length);
     }
-    static std::string generate(const uint32_t length = 10) {
+    static data_t generate(const uint32_t length = 10) {
         init();
         byte random_array[length];
         for (int i = 0; i < length; ++i) {
             random_array[i] = ::rand() % 255;
         }
-        return std::string(random_array, random_array + length);
+        return data_t(random_array, random_array + length);
     }
 private:
     class __random {

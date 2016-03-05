@@ -26,6 +26,17 @@ private:
      *      case (request::hello) {
      *          async_write:socket_left [bind: hello_handler]
      *      }
+     *      case (request::exchange) {
+     *          unpack_request_exchange
+     *          case ('authenticate key' failed) {
+     *              async_write:socket_left (reply::deny) [bind: delete_this]
+     *          }
+     *          case ('authenticate key' succeeded) {
+     *              async_write:socket_left (reply::exchange) {
+     *                  [bind: exchange_handler]
+     *              }
+     *          }
+     *      }
      * }
      */
     void left_read_handler(const boost::system::error_code& error,
@@ -37,6 +48,12 @@ private:
      */
     void hello_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
+
+    /**
+     * function:exchange_handler {
+     *      socket_left.async_read_some [bind: left_read_handler]
+     * }
+     */
     void exchange_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
 
@@ -53,6 +70,7 @@ private:
 
 private:
     void delete_this(void);
+
 private:
     // 组装 hello
     const reply& pack_hello(void);
@@ -72,7 +90,7 @@ private:
 
 private:
     std::string gen_hello_data(void);
-    void get_authkey_randomstr(std::string& auth_key, std::string& random_str);
+    void unpack_request_exchange(data_t& auth_key, data_t& random_str);
     std::string& get_plain_data(std::string& plain);
 
     // socks5 [var cmd rsv atype dstaddr dstport] 处理流程
@@ -95,7 +113,6 @@ private:
     tcp::socket       socket_left; // local
     tcp::socket       socket_right_tcp; // remote tcp
     udp::socket       socket_right_udp; // remote udp
-    bool              zip_on = false; // config
 
     enum {
         CMD_CONNECT   = 0x01,

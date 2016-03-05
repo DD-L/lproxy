@@ -19,7 +19,6 @@ session::session(boost::asio::io_service& io_service_left,
     //resolver_right(io_service_right), 
     status(status_not_connected) {
     //assert(this->auth_key.size() == 32);
-    this->lss_reply.set_data_size(max_length);
 }
 
 void session::start(void) override {
@@ -110,6 +109,9 @@ void session::hello_handler(const boost::system::error_code& error,
     // </debug>
     if (! error) {
         status = status_hello;
+        // session 中第一次用 this->lss_reply 读数据, 需要开辟空间
+        this->lss_reply.set_data_size(max_length);
+
         socket_right.async_read_some(this->lss_reply.buffers(), 
                 boost::bind(&session::right_read_handler, this,
                     boost::asio::placeholders::error,
@@ -167,9 +169,7 @@ void session::right_read_handler(const boost::system::error_code& error,
 
                 // 在lss_reply.data 中取出模长和公钥
                 keysize_t   keysize = 0;
-                //std::string public_key;
                 data_t      public_key;
-                //parse_hello_reply(keysize, public_key);
                 unpack_reply_hello(keysize, public_key);
                 // 构造 requst::exchange
                 auto&& rqst_exchange = pack_exchange(keysize, public_key);
@@ -178,57 +178,24 @@ void session::right_read_handler(const boost::system::error_code& error,
                         boost::bind(&session::exchange_handler, this,
                             boost::asio:placeholders::error,
                             boost::asio::placeholders::bytes_transferred)); 
-
-
-
-
-                // 生成随机数
-                //std::string&& 
-                this->random_str = lproxy::random_string::generate_number();
-                // 组装明文 data
-                /*
-                std::string data_string = md5(this->auth_key) + this->random_str;
-                data_t buff(data_string.begin(), data_string.end());
-                */
-                //std::string buff = md5(this->auth_key) + this->random_str; 
-                data_t buff = md5(this->auth_key) + this->random_str;
-
-                
-                // 构造加密器
-                crypto::Encryptor encryptor(
-                        new crypro::Rsa(keysize, public_key));
-                // 密文data
-                data_t cipher; 
-                encryptor.encrypt(cipher, buff.c_str(), buff.size());
-
-                // 构造并发送 exchange key
-                boost::asio::async_write(socket_right, pack_exchange(cipher).buffers(),
-                        boost::bind(&session::exchange_handler, this,
-                            boost::asio:placeholders::error,
-                            boost::asio::placeholders::bytes_transferred)); 
-                /**
-                http://www.boost.org/doc/libs/1_49_0/doc/html/boost_asio/example/socks4/socks4.hpp
-                http://www.boost.org/doc/libs/1_49_0/doc/html/boost_asio/example/socks4/sync_client.cpp
-                http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/example/cpp11/echo/async_tcp_echo_server.cpp
-                http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/example/cpp11/echo/blocking_tcp_echo_client.cpp
-                http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/example/cpp03/echo/async_tcp_echo_server.cpp
-                 */
-                
                 break;
             } 
             case reply::exchange: { // 0x03
-                //获取随机key this->data_key, 并验证随机数 
-                if (parse_exchange(data_key)) {
-                    // 通过验证
-                    status = status_data;  
-                    // 认证结束
-                    transport(); 
+                if (status_auth != this->status) {
+                    throw wrong_packet_type(); 
                 }
-                else {
-                    // 非法的server端
+                data_t reply_random_str;
+                // 解包，获取 随机数 和 随机key
+                unpack_reply_exchange(reply_random_str);
+                // 验证 随机 数
+                if (reply_random_str != this->random_str) {
                     std::cout << "非法的server端\n";
                     delete_this();
+                    break; 
                 }
+                // 验证通过
+                status = status_data;  
+                transport(); 
                 break;
             }
             case reply::deny: // 0x04
@@ -239,6 +206,7 @@ void session::right_read_handler(const boost::system::error_code& error,
                     std::cout << "server端session超时\n";
                     delete_this();
                 break;
+            case reply::zipdata:// 0x17
             case reply::data: { // 0x06
                     if (status_data == status) {
                         // step 1 解密
@@ -246,26 +214,6 @@ void session::right_read_handler(const boost::system::error_code& error,
                         this->aes_encryptor->decrypt(data_right, 
                                 lss_replay.data().str(), lss_replay.data_len());
                         // step 2 将数据送回客户端
-                        boost::asio::async_write(socket_left,
-                                boost::asio::buffer(data_right, bytes_transferred),
-                                boost::bind(&session_local::left_write_handler, this,
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred));
-                    }
-                    else {
-                        throw wrong_packet_type();
-                    }
-                break;
-            }
-            case reply::zipdata: { // 0x17
-                    if (status_data == status) {
-                        // step 1 解压
-                        // ...
-                        //
-                        // step 2 解密
-                        std::string data_right; // 解密后的 server 数据 
-                        this->aes_encryptor(data_right, lss_replay.data().c_str(), lss_replay.data_len());
-                        // step 3 将数据送回客户端
                         boost::asio::async_write(socket_left,
                                 boost::asio::buffer(data_right, bytes_transferred),
                                 boost::bind(&session_local::left_write_handler, this,
@@ -322,36 +270,14 @@ void session::left_read_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << "\n";
 
     if (! error) {
-        //this->data_left.resize(bytes_transferred, 0);
-        // 对数据this->data_left[bytes_transferred] 加密
-        /*
-        if (! this->aes_encryptor) { 
-            this->aes_encryptor = std::make_shared<crypto::Encryptor>(
-                    //new crypto::Aes(auth_key));
-                    new crypto::Aes(this->data_key));
-        }
-        */
-        // 用 密文this->data_key 构造加密器
-        this->aes_encryptor = std::make_shared<crypto::Encryptor>(
-                new crypto::Aes(this->data_key, crypto::Aes::raw256keysetting()));
-        data_t data;
-        this->aes_encryptor->encrypt(data, this->data_left.c_str(), bytes_transferred);
-
         // 封包
-        //request rqst(0x00, request::data, bytes_transferred, data);
-
-        // if (zip_on) {
-        //  auto&& rqst = pack_zipdata(data);
-        // }
-        // else {
-            auto&& rqst = pack_data(data, bytes_transferred);
-        // }
-
+        auto&& rqst = pack_data(bytes_transferred);
         // 发送至服务端
         boost::asio::async_write(socket_right, rqst.buffers(),
                 boost::bind(&session::right_write_handler, this,
                     boost::asio::placeholders::error,
                     boost::asio::placeholders::bytes_transferred)); 
+
     }
     else {
         std::cout << "delete this " << __LINE__ << '\n';
@@ -366,7 +292,8 @@ void session::right_write_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
-        socket_left.async_read_some(boost::asio::buffer(data_left, max_length),
+        socket_left.async_read_some(
+                boost::asio::buffer(this->data_left, max_length),
                 boost::bind(&session_local::left_read_handler, this,
                     boost::asio::placeholders::error,
                     boost::asio::placeholders::bytes_transferred));
@@ -405,77 +332,45 @@ const request& session::pack_hello(void) {
     return hello;
 };
 // 组装 exchange
-const request session::pack_exchange(const data_t& data) {
+const session::request pack_exchange(const keysize_t& keysize, 
+        const data_t& public_key) {
+    // step 1 生成随机数
+    this->random_str = lproxy::random_string::generate_number();
+    // step 2 认证 key
+    crypto::Encryptor md5(new crypto::Md5());
+    const sdata_t& auth_key = config::get_instance().get_auth_key();
+    sdata_t md5_auth_key;
+    md5.encrypt(md5_auth_key, &auth_key[0], auth_key.size());
+    // step 3 组装 data
+    auto data_ = md5_auth_key + this->random_str;
+    data_t data(data_.begin(), data_.end());
+    // step 4 组装 lproxy::local::request
     return request(0x00, request::exchange, data.size(), data);
 }
 // 组装 data
-const request session::pack_data(const data_t& data, std::size_t data_len) {
-    return request(0x00, request::data, data.size(), data);
+const request session::pack_data(std::size_t data_len) {
+    // 用 密文this->data_key 构造 this->aes_encryptor 加密器
+    this->aes_encryptor = std::make_shared<crypto::Encryptor>(
+            new crypto::Aes(this->data_key, crypto::Aes::raw256keysetting()));
+    // 加密
+    vdata_t data;
+    this->aes_encryptor->encrypt(data, &(this->data_left[0]), data_len);
+
+    if (config::get_instance().get_zip_on()) {
+        // TODO
+        // 压缩 data
+    }
+
+    return request(0x00, request::data, data_len, 
+            data_t(data.begin(), data.end()));
 }
-// 组装 zipdata
-const request session::pack_zipdata(const data_t& data) {
-    // zip data
-    // ...
-    return request(0x00, request::zipdata, data.size(), data);
-}
+
 // 组装 bad
 const request& session::pack_bad(void) {
     static const request bad(0x00, request::bad, 0, data_t());
     return bad;
 }
 
-// 获取pack.data中的 keysize 与 public_key
-void session::parse_hello_reply(session::keysize_t& keysize, 
-        std::string& public_key) {
-    if (status_connected == this->status) {
-        const data_t&     data     = lss_replay.data();
-        const std::size_t size     = sizeof (keysize_t);
-        const std::size_t data_len = lss_reply.data_len();
-        assert(data_len > size);
-        // TODO data.size() 不允许出现，这个检查要在外边实现
-        if (data_len <= data.size()) {
-            keysize = data[0];
-            keysize = ((keysize << 8) & 0xff00) | data[1];
-            public_key.assign(&data[size], &data[data_len - size]);
-        }
-        else {
-            throw incomplete_data(data_len - data.size());
-        }
-    }
-    else {
-        throw wrong_packet_type(); 
-    }
-}
-// 获取随机key, 并验证服务端
-bool session::parse_exchange() {
-    if (status_auth == this->status) {
-        const std::size_t data_len = lss_reply.data_len();
-        const std::string&    data = lss_reply.data(); // 当前是密文
-        // TODO data.size() 不允许出现，这个检查要在外边实现
-        if (data_len <= data.size()) {
-            // 用this->auth_key 构造aes 加解密器
-            this->aes_encryptor = std::make_shared<crypto::Encryptor>(
-                    new crypto::Aes(this->auth_key));
-            data_t plaintext;
-            // 解密data
-            this->aes_encryptor->decrypt(plaintext, data.c_str(), data.size());
-            // 随机key赋值， 得到密文的 data_key
-            this->data_key.assgin(plaintext.c_str(), plaintext.c_str() + 32);
-            // 获取 server 端发来的随机数
-            std::string random(plaintext.c_str() + 32, 
-                    plaintext.c_str() + plaintext.size());
-
-            return random == random_str;
-        }
-        else {
-            throw incomplete_data(data_len - data.size());
-        }
-        return false; 
-    }
-    else {
-        throw wrong_packet_type(); 
-    }
-}
 
 void session::delete_this(void) {
     //static std::atomic_flag flag = ATOMIC_FLAG_INIT;
@@ -487,23 +382,50 @@ void session::delete_this(void) {
 
 
 void session::unpack_reply_hello(keysize_t& keysize, data_t& public_key) {
-    if (status_connected == this->status) {
-        const data_t&     data     = lss_replay.data();
-        const std::size_t size     = sizeof (keysize_t);
-        const std::size_t data_len = lss_reply.data_len();
-        assert(data_len > size);
-        // TODO data.size() 不允许出现，这个检查要在外边实现
-        if (data_len <= data.size()) {
-            keysize = data[0];
-            keysize = ((keysize << 8) & 0xff00) | data[1];
-            public_key.assign(&data[size], &data[data_len - size]);
-        }
-        else {
-            throw incomplete_data(data_len - data.size());
-        }
-    }
-    else {
-        throw wrong_packet_type(); 
-    }
+    const data_t&     data     = lss_replay.data();
+    const std::size_t size     = sizeof (keysize_t);
+    const std::size_t data_len = lss_reply.data_len();
+    keysize = data[0];
+    keysize = ((keysize << 8) & 0xff00) | data[1];
+    //public_key.assign(&data[size], &data[data_len - size]);
+    public_key.assign(&data[size], &data[data_len]);
 }
 
+
+
+// 获取 随机key 和 随机数
+void session::unpack_reply_exchange(data_t& reply_ramdom_str) {
+    const data_t&     data     = lss_reply.data(); // 当前是密文
+    // 用this->auth_key 构造aes 加解密器
+    this->aes_encryptor = std::make_shared<crypto::Encryptor>(
+            new crypto::Aes(this->auth_key));
+    vdata_t plaintext;
+    // 解密data
+    this->aes_encryptor->decrypt(plaintext, &data[0], data.size());
+
+    // 随机key赋值， 得到密文的 data_key
+    this->data_key.assign(plaintext.begin(), plaintext.begin() + 32);
+
+    // 获取 server 端发来的随机数
+    reply_random_str.assign(plaintext.begin() + 32, plaintext.end());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+http://www.boost.org/doc/libs/1_49_0/doc/html/boost_asio/example/socks4/socks4.hpp
+http://www.boost.org/doc/libs/1_49_0/doc/html/boost_asio/example/socks4/sync_client.cpp
+http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/example/cpp11/echo/async_tcp_echo_server.cpp
+http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/example/cpp11/echo/blocking_tcp_echo_client.cpp
+http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/example/cpp03/echo/async_tcp_echo_server.cpp
+ */

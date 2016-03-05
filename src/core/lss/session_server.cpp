@@ -19,10 +19,7 @@ session::session(boost::asio::io_service& io_service_left,
             socket_right_udp(io_service_right);
             //ios_right(io_service_right),
             /*resolver_right(io_service_right), */
-            status(status_not_connected) {
-    this->lss_request.set_data_size(max_length);            
-    this->zip_on = false; // config TODO
-}
+            status(status_not_connected) {}
 
 void session::start(void) override {
     std::cout << "client: ";
@@ -37,6 +34,9 @@ void session::start(void) override {
     //        boost::bind(&session::resolve_handler, this, _1, _2));
 
     std::cout << "start read msg from local.." << std::endl;
+    // 第一次 用 this->lss_request 读数据, 需要开辟空间
+    this->lss_request.set_data_size(max_length);            
+
     socket_left.async_read_some(this->lss_request.buffers(),
             boost::bind(&session::left_read_handler, this,
                 boost::asio::placeholders::error,
@@ -69,6 +69,10 @@ void session::left_read_handler(const boost::system::error_code& error,
     //switch (this->lss_request.version()) {
     //case 0x00:}
         try {
+
+            // lss包完整性检查
+            lss_pack_integrity_check(bytes_transferred, this->lss_request);
+
             switch (this->lss_request.type()) {
             case request::hello: { // 0x00
                 // 验证 hello 包是否正确
@@ -100,19 +104,13 @@ void session::left_read_handler(const boost::system::error_code& error,
                     throw wrong_packet_type();
                 }
 
-                int less = bytes_transferred - (4 + this->lss_request.data_len());
-                if (less > 0) {
-                    throw incomplete_data(less);
-                }
+                data_t auth_key, random_str;
+                unpack_request_exchange(auth_key, random_str);
 
-                std::string auth_key, random_str;
-                get_authkey_randomstr(auth_key, random_str);
-                
                 // 验证 auth_key
-                std::cout << "这里有认证... 注意了，以后别忘了添加" << std::endl;
-                /* ？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？
-                // server 端只保存密文key
-                if (auth_key == ) {
+                const auto& key_set 
+                    = config::get_instance().get_cipher_auth_key_set();
+                if (key_set.find(auth_key) == key_set.end()) {
                     // 将打包好的"认证失败"数据 发送至 local, 然后再delete_this
                     auto& rply_deny = pack_deny();
                     boost::asio::async_write(socket_left, rply_deny.buffers(),
@@ -120,21 +118,19 @@ void session::left_read_handler(const boost::system::error_code& error,
                     break;
                 }
                 else {
-                */
-                // 验证通过
-                // 组装 reply::exchange 发给 local
-                auto&& rply_exchange = pack_exchange(auth_key, random_str);
-                boost::asio::async_write(socket_left, rply_exchange.buffers(),
-                            boost::bind(&session::exchange_handler, this,
-                            boost::asio::placeholders::error,
-                            boost::asio::placeholders::bytes_transferred));
-                status = status_auth;
-                break;
-                //}
+                    // 验证通过
+                    // 组装 reply::exchange 发给 local
+                    auto&& rply_exchange = pack_exchange(auth_key, random_str);
+                    boost::asio::async_write(socket_left, rply_exchange.buffers(),
+                                boost::bind(&session::exchange_handler, this,
+                                boost::asio::placeholders::error,
+                                boost::asio::placeholders::bytes_transferred));
+                    status = status_auth;
+                    break;
+                }
             }
             case requset::zipdata: // 0x17
-                // TODO
-                this->zip_on = true;
+                //this->zip_on = true;
             case requset::data: { // 0x06
                 if (status_data != status) {
                     throw wrong_packet_type();
@@ -421,7 +417,7 @@ void session::right_read_handler(const boost::system::error_code& error,
 
 
 const reply& session::pack_hello(void) {
-    static const std::string&& data = gen_hello_data();
+    static const data_t&& data = gen_hello_data();
     // 明文
     static const reply hello(0x00, reply::hello, data.size(), data);
     return hello;
@@ -489,7 +485,7 @@ const reply session::pack_data(const lproxy::socks5::data_t& data,
         std::string data_(cipher.begin(), cipher.end());
         
         // 压缩数据
-        if (this->zip_on) {
+        if (config::get_instance().get_zip_on()) {
             // TODO 
         }
 
@@ -498,33 +494,30 @@ const reply session::pack_data(const lproxy::socks5::data_t& data,
     }
 }
 
-std::string session::gen_hello_data() {
+data_t session::gen_hello_data() {
     auto& config  = config::get_instance();
     auto& keysize = config.get_rsa_keysize();
     auto& publickey = config.get_rsa_publickey_hex();
     byte keysize_arr[2] = {0};
     keysize_arr[0] = (keysize >> 8) & 0xff; // high_byte
     keysize_arr[1] = keysize & 0xff;        // low_byte
-    data.assgin();
-    std::string data(keysize_arr, keysize_arr+2); 
+    sdata_t data(keysize_arr, keysize_arr+2); 
     data += publickey;
-    return data;
+    return data_t(data.begin(), data.end());
 }
 
-void session::get_authkey_randomstr(std::string& auth_key, 
-        std::string& random_str) {
+void session::unpack_request_exchange(data_t& auth_key, data_t& random_str) {
     // 对包解密
-    auto& config  = config::get_instance();
-    crypto::Encryptor rsa_encryptor(new crypto::Rsa(config.get_rsakey()));
-    std::string plain;
-    std::string& cipher = this->lss_request.data();
+    crypto::Encryptor rsa_encryptor(
+            new crypto::Rsa(config::get_instance().get_rsakey()));
+    auto& cipher = this->lss_request.data();
     std::size_t cipher_len = this->lss_request.data_len();
-    rsa_encryptor.decrypt(plain, cipher.c_str(), cipher_len);
+    vdata_t plain;
+    rsa_encryptor.decrypt(plain, &cipher[0], cipher_len);
 
     // 取 plain 的前 256bit (32byte) 为 auth_key, 余下的为 随机字符串
-    auto& data = this->lss_replay.data();
-    auth_key.assign(data.begin(), data.begin() + 32);
-    random_str.assign(data.begin() + 32, data.end());
+    auth_key.assign(plain.begin(), plain.begin() + 32);
+    random_str.assign(plain.begin() + 32, plain.end());
 }
 
 std::string& session::get_plain_data(std::string& plain) {
@@ -539,7 +532,7 @@ std::string& session::get_plain_data(std::string& plain) {
     }
     else {
         // 解压数据
-        if (this->zip_on) {
+        if (config::get_instance().get_zip_on()) {
             // TODO 
         }
         // 对包解密

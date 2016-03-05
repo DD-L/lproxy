@@ -7,12 +7,16 @@
 	> Created Time: 2016/3/1 7:47:37
  ************************************************************************/
 
-#include "crypto/encrytor.h"
-#include "crypto/rsa_encryptor.h"
+#include <crypto/encrytor.h>
+#include <crypto/rsa_encryptor.h>
+#include <lss/typedefine.h>
 
 namespace lproxy {
 
-class config {}; // class config
+class config {
+    private:
+      void configure (void) = 0;
+}; // class config
 
 namespace local {
 
@@ -29,29 +33,35 @@ public:
         static config instance;
         return instance;
     }
-    const std::string& get_server_name() {
+    const data_t& get_server_name() {
         return m_server_name;
     }
-    const std::string& get_server_name() {
+    const data_t& get_server_name() {
         return m_server_port;
     }
-    const std::string& get_auth_key() {
+    const data_t& get_auth_key() {
         return m_auth_key;
     }
+    const bool get_zip_on(void) {
+        return m_zip_on;
+    }
 private:
-    void configure() {
-        // read data from configure file
-        // ...
+    virtual void configure() override {
+        // read data from local configure file
         // TODO
         // 临时解决方案
         m_server_name = "192.168.33.124";
         m_server_port = "8088";
         m_auth_key    = "xxxxxxxxx";
+        m_zip_on      = false;
     }
 private:
-    std::string m_server_name; /* server ipv4/ipv6/domain */
-    std::string m_server_port; /* server port */
-    std::string m_auth_key;    /* auth_key */
+    data_t m_server_name; /* server ipv4/ipv6/domain */
+    data_t m_server_port; /* server port */
+    data_t m_auth_key;    /* auth_key */
+
+    bool                 m_zip_on = false;
+    /*timeout in sec*/
 }; 
 
 } // namespace lproxy::local
@@ -62,7 +72,9 @@ namespace server {
 // class lproxy::server::config
 class config : public lproxy::config {
 private:
-    config() : rsakey(config::m_rsakeysize) {}
+    config() : rsakey(config::m_rsakeysize) {
+        configure();
+    }
     config(const config&) = delete;
     config& operator= (const config&) = delete;
 
@@ -74,16 +86,36 @@ public:
     constexpr crypto::RsaKey::size get_rsa_keysize(void) {
         return m_rsa_keysize;
     }
-    const std::string& get_rsa_publickey_hex(void) {
+    const sdata_t& get_rsa_publickey_hex(void) {
         return m_rsakey.publicKeyHex;
     }
     const crypto::Rsakey& get_rsakey(void) {
         return m_rsakey;
     }
+    const bool get_zip_on(void) {
+        return m_zip_on;
+    }
+    const std::set<data_t>& get_cipher_auth_key_set(void) {
+        return m_cipher_auth_key_set;
+    }
+private:
+    virtual void configure() override {
+        // read data from server configure file
+        // TODO
+        // 临时解决方案
+        m_zip_on = false;
+        // MD5(xxxxxxxxx)
+        m_cipher_auth_key_set.insert("ABA369F7D2B28A9098A0A26FEB7DC965");
+    }
 private:
     static const 
     crypto::RsaKey::size m_rsa_keysize = crypto::RsaKey::bit1024;
     crypto::RsaKey       m_rsakey;
+    bool                 m_zip_on = false;
+    // 客户端 认证key 集合
+    std::set<data_t>     m_cipher_auth_key_set;
+
+    /*timeout in sec*/
 
 }; // lproxy::server::config
 

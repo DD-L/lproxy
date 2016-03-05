@@ -46,10 +46,6 @@ private:
      */
     void connect_handler(const boost::system::error_code& ec,
             tcp::resolver::iterator i);
-    /*
-    void shakehands_right_write_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
-    */
 
     /**
      * function:hello_handler {
@@ -58,6 +54,15 @@ private:
      */
     void hello_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
+
+    /**
+     * function:exchange_handler {
+     *      socket_right.async_read_some [bind: right_read_handler]
+     * }
+     */
+    void exchange_handler(const boost::system::error_code& error,
+            std::size_t bytes_transferred);
+
     /**
      * function:right_read_handler {
      *      case (reply::hello) {
@@ -65,20 +70,47 @@ private:
      *          pack_exchange
      *          async_write:socket_right [bind: exchange_handler]
      *      }
+     *      case (reply::exchange) {
+     *          unpack_reply_exchange
+     *          'verify_random_string'
+     *          transport
+     *      }
+     *
+     *      case (reply::deny) {
+     *          delete_this
+     *      }
+     *      case (reply::timeout) {
+     *          delete_this
+     *      }
      * }
      */
     void right_read_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
 
-    void exchange_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
 private:
+    /**
+     * function:transport {
+     *      socket_left.async_read_some  [bind: left_read_handler]
+     *      socket_right.async_read_some [bind: right_read_handler]
+     * }
+     */
     void transport(void);
 
 private:
+    /**
+     * function:left_read_handler {
+     *      pack_data
+     *      async_write:socket_right [bind: right_write_handler]
+     * }
+     */
     void left_read_handler(const boost::system::error_code& error,
             size_t bytes_transferred);
 
+    /**
+     * function:right_write_handler {
+     *      socket_left.async_read_some [bind: left_read_handler]
+     * }
+     */
     void right_write_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
     void left_write_handler(const boost::system::error_code& error,
@@ -88,11 +120,11 @@ private:
     // 组装 hello
     const request& pack_hello(void);
     // 组装 exchange
-    const request pack_exchange(const data_t& data);
+    const request pack_exchange(const keysize_t& keysize, 
+            const data_t& public_key);
     
     // 组装 data
-    //const request pack_data(const data_t& data);
-    const request pack_data(const data_t& data, std::size_t data_len);
+    const request pack_data(std::size_t data_len);
     
     // 组装 zipdata
     //const request pack_zipdata(const data_t& data);
@@ -102,11 +134,13 @@ private:
     // 获取pack.data中的 keysize 与 public_key
     void unpack_reply_hello(keysize_t& keysize, data_t& public_key);
 
+    // 获取 随机key 和 随机数
+    void unpack_reply_exchange(data_t& reply_random_str);
+
 private:
-    void parse_hello_reply(keysize_t& keysize, data_t& public_key);
 
     // 获取随机key, 并验证服务端
-    bool parse_exchange();
+    //bool parse_exchange();
 
 private:
     void delete_this(void);
@@ -121,14 +155,11 @@ private:
     } status; 
     */
     lproxy::local::reply    lss_reply; // server 端发来的原始数据
-    const std::string& auth_key = "xxxxxx"; // 明文
     std::string        random_str; // local 端生成的随机数
-    bool               zip_on = false;
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
     std::string        data_key;  // server 端发来的 随机 key, 也是 数据传输 用的 key
     enum             { max_length = 2048 };
-    //uint8_t          data_left[max_length]; // 从 client 发来的 数据 （通常是 socks5 数据）
-    std::vector<uint8_t> data_left; //从 client 发来的 数据 （通常是 socks5 数据） 
+    vdata_t          data_left; //从 client 发来的数据（通常是 socks5 数据） 
 private:
     tcp::socket      socket_left;  // client 
     tcp::socket      socket_right; // remote
