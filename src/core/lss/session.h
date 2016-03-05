@@ -17,7 +17,17 @@ public:
     virtual void start(void) = 0;
     virtual tcp::socket& socket(void) = 0;
 protected:
-    //reply  lss_reply; // server 端 或 local 端 发来的原始数据
+    // 包完整性检查
+    void lss_pack_integrity_check(std::size_t bytes_transferred, 
+            const data_t& lss_data) throw (incomplete_data) {
+        if (bytes_transferred < 4) {
+            throw incomplete_data(0xffffffff);
+        }
+        int less = lss_data.data_len() + 4 - bytes_transferred;
+        if (less > 0) {
+            throw incomplete_data(less);
+        }
+    }
 protected:
     enum {
         status_not_connected = 0,
@@ -41,14 +51,12 @@ protected:
         virtual const char* what(void) const noexcept {
             return "incomplete_data";
         }
-        const int less(void) {
+        const int less(void) const {
+            //return const_cast<decltype(this)>(this)->less();
             return less_;
         }
-        const int less(void) const {
-            return const_cast<decltype(this)>(this)->less();
-        }
     private:
-        uint16_t    less_;
+        int   less_;
     }
 protected:
 }; // class lproxy::session

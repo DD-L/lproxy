@@ -11,12 +11,9 @@
 //#include <vector>
 #include <string>
 
-namespace lproxy {
+#include <lss/typedefine.h>
 
-typedef uint8_t           byte;
-typedef uint16_t          data_len_t;
-//typedef std::vector<byte> data_t;
-typedef std::string       data_t;
+namespace lproxy {
 
 struct __packet {
 public:
@@ -90,6 +87,7 @@ struct __reply_type {
 
 namespace local {
 
+// local 端用来发给 server 端的数据包
 class request : public __request_type {
 typedef request THIS_CLASS;
 public:
@@ -131,13 +129,20 @@ private:
     __packet pack;
 }; // class lproxy::local::request
 
+// local 端用来接收 server 端的数据包
 class reply : public __reply_type {
 typedef request THIS_CLASS;
 public:
-    THIS_CLASS(void) : pack() {}
+    THIS_CLASS(void) : pack(), pack_data_size_setting(false) {}
     virtual ~THIS_CLASS(void) {}
 
+    void set_data_size(std::size_t size, char c = 0) {
+        pack.data.resize(size, c);
+        pack_data_size_setting = true;
+    }
+
     boost::array<boost::asio::mutable_buffer, 5> buffers() {
+        assert(pack_data_size_setting);
         boost::array<boost::asio::mutable_buffer, 5> bufs =
         {
             {
@@ -171,6 +176,7 @@ public:
     
 private:
     __packet pack;
+    bool pack_data_size_setting = false;
 }; // class lproxy::local::reply
 
 
@@ -178,13 +184,20 @@ private:
 
 namespace server {
 
+// server 端用来接收 local 端发来的数据包
 class request : __request_type {
 typedef request THIS_CLASS;
 public:
-    THIS_CLASS(void) : pack() {}
+    THIS_CLASS(void) : pack(), pack_data_size_setting(false) {}
     virtual ~THIS_CLASS(void) {}
 
+    void set_data_size(std::size_t size, char c = 0) {
+        pack.data.resize(size, c);
+        pack_data_size_setting = true;
+    }
+
     boost::array<boost::asio::mutable_buffer, 5> buffers() {
+        assert(pack_data_size_setting);
         boost::array<boost::asio::mutable_buffer, 5> bufs =
         {
             {
@@ -197,10 +210,29 @@ public:
         };
         return bufs;
     }
+
+    byte version(void) {
+        return pack.version;
+    }
+
+    reply::PackTpye type(void) {
+        return pack.type;
+    }
+    
+    data_len_t data_len(void) {
+        data_len_t len = pack.data_len_high_byte;
+        return ((len << 8) & 0xff00) | pack.data_len_low_byte;
+    }
+
+    data_t& data(void) {
+        return pack.data;
+    }
 private:
     __packet pack;
+    bool pack_data_size_setting = false;
 }; // class lproxy::server::request
 
+// server 端用来发给 local 端的数据
 class reply : __reply_type {
 typedef request THIS_CLASS;
 public:

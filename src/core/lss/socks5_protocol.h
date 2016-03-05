@@ -21,13 +21,14 @@
 #include <stdint.h>
 #include <vector>
 #include <exception>
+#include <lss/typedefine.h>
 
 namespace lproxy {
 
 namespace socks5 {
 
-typedef std::vector<uint8_t> data_t;
-const uint8_t _version_ = 5;
+// lproxy::socks5::_version_
+static const byte _version_ = 0x05;
 
 // 不支持的socks版本
 class unsupported_version : public std::exception {
@@ -58,12 +59,13 @@ enum state {
 };
 } // namspace lproxy::socks5::server
 
+// 客户端 发来的 ID request
 struct ident_req {
-    uint8_t Version = 0x05;
-    uint8_t NumberOfMethods;
-    //uint8_t Methods[256];
+    byte Version = 0x05;
+    byte NumberOfMethods;
+    //byte Methods[256];
     data_t  Methods;
-    ident_req(const uint8_t* data_p, std::size_t len) {
+    ident_req(const byte* data_p, std::size_t len) {
         if (!(data_p && (len >= 3))) {
             throw illegal_data_type();
         }
@@ -77,9 +79,10 @@ struct ident_req {
     }
 };
 
+// 服务端 响应 ID response
 struct ident_resp {
-    uint8_t Version = 0x05;
-    uint8_t Method;
+    byte Version = 0x05;
+    byte Method;
     static data_t& pack(data_t& data, ident_req* ident_req_p = nullptr) {
         if (ident_req_p) {
             Version = ident_req_p->Version; // always 5
@@ -88,44 +91,45 @@ struct ident_resp {
                 // 当前仅支持 0x00 的认证方法
                 if (v == 0x00) {
                     Method  = 0x00; 
-                    uint8_t data_arr[2] = {0x05, 0x00}; 
+                    byte data_arr[2] = {0x05, 0x00}; 
                     data.assign(data_arr, data_arr + 2);
                     return data;
                 }
             }
             // 没有一个认证方法被选中，客户端需要关闭连接
-            uint8_t data_arr[2] = {0x05, 0xff};
+            byte data_arr[2] = {0x05, 0xff};
             data.assign(data_arr, data_arr + 2);
         }
         else {
             // 默认方法
-            uint8_t data_arr[2] = {0x05, 0x00}; 
+            byte data_arr[2] = {0x05, 0x00}; 
             data.assign(data_arr, data_arr + 2);
         }
         return data;
     } 
 };
 
+// 客户端 发来的 request
 struct req {
-    uint8_t Version = 0x05;
+    byte Version = 0x05;
     //enum Version { V5 = 0x05 } version;
-    uint8_t Cmd;
+    byte Cmd;
     //enum Cmd { CONNECT = 0x01, BIND = 0x02, UDP = 0x03 } cmd;
-    uint8_t Reserved = 0x00;
+    byte Reserved = 0x00;
     //enum Reserved { RESERVED = 0x00 } reserved;
-    uint8_t AddrType;
+    byte AddrType;
     //enum AddrType {IPv4 = 0x01, DOMAIN = 0x03, IPV6 = 0x04} addrType;
     union {
-        uint8_t IPv4[4];
+        byte IPv4[4];
         struct {
-            uint8_t Len;
-            //uint8_t name[256];
+            byte Len;
+            //byte name[256];
             std::string name;
         } Domain;
-        uint8_t IPv6[16];
+        byte IPv6[16];
     } DestAddr;
     uint16_t DestPort;
-    req(const uint8_t* data_p, std::size_t len) {
+    req(const byte* data_p, std::size_t len) {
         if (!(data_p && (len < 7))) {
             throw illegal_data_type();
         }
@@ -143,7 +147,7 @@ struct req {
         }
         AddrType        = *(data_p + 3);
 
-        uint8_t port_high_byte_ = 0, port_low_byte_ = 0;
+        byte port_high_byte_ = 0, port_low_byte_ = 0;
         switch(AddrType) {
         case 0x01: // ipv4
             memmove(DestAddr.IPv4, data_p + 4, 4);
@@ -180,28 +184,29 @@ struct req {
 
 };
 
+// 服务端 响应 response
 struct resp {
-    uint8_t Version = 0x05;
-    uint8_t Reply;
-    uint8_t Reserved = 0x00;
-    uint8_t AddrType;
+    byte Version = 0x05;
+    byte Reply;
+    byte Reserved = 0x00;
+    byte AddrType;
     union {
-        uint8_t IPv4[4];
+        byte IPv4[4];
         struct {
-            uint8_t Len;
+            byte Len;
             std::string name;
         } Domain;
-        uint8_t IPv6[16];
+        byte IPv6[16];
     } BindAddr;
     uint16_t  BindPort;
 
     // method
-    void set_IPv4(const uint8_t* ip, std::size_t size = 4) {
+    void set_IPv4(const byte* ip, std::size_t size = 4) {
         assert(size == 4);
         AddrType = 0x01;
         ::memmove(BindAddr.IPv4, ip, 4);
     }
-    void set_IPv6(const uint8_t* ip, std::size_t size = 16) {
+    void set_IPv6(const byte* ip, std::size_t size = 16) {
         assert(size == 16);
         AddrType = 0x04;
         ::memmove(BindAddr.IPv4, ip, 16);
@@ -219,7 +224,7 @@ struct resp {
     data_t& pack(data_t& data) {
 
         const std::size_t size = 4+1+256+2;
-        uint8_t data_arr[size] = {0}; 
+        byte data_arr[size] = {0}; 
         
         data_arr[0] = 0x05;
         

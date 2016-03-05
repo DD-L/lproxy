@@ -17,19 +17,19 @@ class lss_server {
 static_assert(std::is_base_of<session, SESSION>::value, 
         "SESSION should be derived from 'session'.");
 public:
-    lss_server(boost::asio::io_service& io_service, short port)
+    lss_server(boost::asio::io_service& io_service, unsigned short port)
             : io_service_(io_service),
             acceptor_(io_service, tcp::endpoint(tcp::v4(), port)) {
         start_accept();
-        std::thread tright(handle_thread_right, std::ref(io_service_right()));
-        this->thread_right = std::move(tright);
+        std::thread thread_right(handle_thread_right, std::ref(io_service_right()));
+        this->thread_right = std::move(thread_right);
     }
 
 private:
     void start_accept() {
         session* new_session = 
             new SESSION(io_service_left(), io_service_right());
-        acceptor_.async_accept(new_session->socket(),
+        acceptor_.async_accept(new_session->socket_left(),
                 boost::bind(&lss_server::handle_accept, this, new_session,
                     boost::asio::placeholders::error));
     }

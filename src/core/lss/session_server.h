@@ -15,11 +15,26 @@ class session : public lproxy::session {
 public:
     session(boost::asio::io_service& io_service_left,
             boost::asio::io_service& io_service_right);
+    /**
+     * function:start {socket_left.async_read_some [bind: left_read_handler]}
+     */
     virtual void start(void) override;
-    virtual tcp::socket& socket(void) override;
+    virtual tcp::socket& socket_left(void) override;
 private:
+    /**
+     * function:left_read_handler {
+     *      case (request::hello) {
+     *          async_write:socket_left [bind: hello_handler]
+     *      }
+     * }
+     */
     void left_read_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
+    /**
+     * function:hello_handler {
+     *  socket_left.async_read_some [bind: left_read_handler]
+     * }
+     */
     void hello_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
     void exchange_handler(const boost::system::error_code& error,
@@ -47,8 +62,9 @@ private:
     const reply pack_exchange(const std::string& auth_key,
             const std::string& random_str);
     // 组装 data
-    const reply pack_data(const std::string& data);
-    const reply pack_data(const lproxy::socks5::data_t& data);
+    const reply pack_data(const std::string& data, std::size_t data_len);
+    const reply pack_data(const lproxy::socks5::data_t& data,
+            std::size_t data_len);
     // 组装 bad
     const reply& pack_bad(void);
     // 组装 timeout
@@ -91,7 +107,7 @@ private:
     uint16_t       dest_port; // 目标端口
     uint8_t        socks5_resp_reply; // socks5::resq::Reply
 
-    lproxy::server::reply lss_reply; // 从local端发来的原始数据
+    lproxy::server::request lss_request; // 从local端发来的原始数据
     //std::string       data_right; // 从web 发来的原始数据
     enum             { max_length = 2048};
     //uint8_t          data_right[max_length]; // 从web 发来的原始数据
