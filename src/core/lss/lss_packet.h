@@ -21,28 +21,26 @@ public:
     byte   type;
     byte   data_len_high_byte,  data_len_low_byte;
     data_t data;
-private:
-    typedef __packet THIS_CLASS;
 public:
-    THIS_CLASS(void) : version(0xff), type(0xff), 
+    __packet(void) : version(0xff), type(0xff), 
                        data_len_high_byte(0x00), data_len_low_byte(0x00),
                        data() {}
     
-    THIS_CLASS(byte version_,  byte pack_type_, 
+    __packet(byte version_,  byte pack_type_, 
                data_len_t data_len_, const data_t& data_)
 
                 : version(version_), type(pack_type_), 
                   data_len_high_byte((data_len_ >> 8) & 0xff),
                   data_len_low_byte(data_len_ & 0xff), data(data_) {}
 
-    THIS_CLASS(byte version_, byte pack_type_,  byte data_len_high_, 
+    __packet(byte version_, byte pack_type_,  byte data_len_high_, 
                byte data_len_low_, const data_t& data_)
 
                 : version(version_), type(pack_type_), 
                   data_len_high_byte(data_len_high_),
                   data_len_low_byte(data_len_high_), data(data_) {}
 
-    THIS_CLASS(byte version_,  byte pack_type_, 
+    __packet(byte version_,  byte pack_type_, 
                data_len_t data_len_, data_t&& data_)
 
                 : version(version_), type(pack_type_), 
@@ -50,19 +48,25 @@ public:
                   data_len_low_byte(data_len_ & 0xff), 
                   data(std::move(data_)) {}
 
-    THIS_CLASS(byte version_, byte pack_type_,  byte data_len_high_, 
+    __packet(byte version_, byte pack_type_,  byte data_len_high_, 
                byte data_len_low_, data_t&& data_)
 
                 : version(version_), type(pack_type_), 
                   data_len_high_byte(data_len_high_),
                   data_len_low_byte(data_len_high_), data(std::move(data_)) {}
 
-    virtual ~THIS_CLASS(void) {}
+    virtual ~__packet(void) {}
 
     
 }; // struct lproxy::__packet
 
-struct __request_type {
+class request_or_reply_base_class {
+public:
+    virtual data_len_t data_len(void) const = 0;
+    virtual ~request_or_reply_base_class() {}
+};
+
+struct __request_type : request_or_reply_base_class {
     enum PackType {
         hello    = 0x00,
         exchange = 0x02,
@@ -70,10 +74,11 @@ struct __request_type {
         zipdata  = 0x17,
         bad      = 0xff
     };
+    
 }; // struct lproxy::__request_type
 
-struct __reply_type {
-    enum PackTpye {
+struct __reply_type : request_or_reply_base_class {
+    enum PackType {
         hello    = 0x01,
         exchange = 0x03,
         deny     = 0x04,
@@ -89,26 +94,29 @@ namespace local {
 
 // local 端用来发给 server 端的数据包
 class request : public __request_type {
-typedef request THIS_CLASS;
 public:
-    THIS_CLASS(byte version,        byte pack_type, 
+    request(byte version,        byte pack_type, 
                data_len_t data_len, const data_t& data)
         : pack(version, pack_type, data_len, data) {}
 
-    THIS_CLASS(byte version, byte pack_type,  byte data_len_high, 
+    request(byte version, byte pack_type,  byte data_len_high, 
                byte data_len_low, const data_t& data)
         : pack(version, pack_type, data_len_high, data_len_low, data) {}
 
-    THIS_CLASS(byte version,        byte pack_type, 
+    request(byte version,        byte pack_type, 
                data_len_t data_len, data_t&& data)
         : pack(version, pack_type, data_len, std::move(data)) {}
 
-    THIS_CLASS(byte version, byte pack_type,  byte data_len_high, 
+    request(byte version, byte pack_type,  byte data_len_high, 
                byte data_len_low, data_t&& data)
         : pack(version, pack_type, data_len_high, 
                 data_len_low, std::move(data)) {}
 
-    virtual ~THIS_CLASS(void) {}
+    virtual ~request(void) {}
+    virtual data_len_t data_len(void) const override {
+        data_len_t len = pack.data_len_high_byte;
+        return ((len << 8) & 0xff00) | pack.data_len_low_byte;
+    }
 
 
     boost::array<boost::asio::const_buffer, 5> buffers(void) const {
@@ -131,17 +139,16 @@ private:
 
 // local 端用来接收 server 端的数据包
 class reply : public __reply_type {
-typedef request THIS_CLASS;
 public:
-    THIS_CLASS(void) : pack(), pack_data_size_setting(false) {}
-    virtual ~THIS_CLASS(void) {}
+    reply(void) : pack(), pack_data_size_setting(false) {}
+    virtual ~reply(void) {}
 
     void set_data_size(std::size_t size, char c = 0) {
         pack.data.resize(size, c);
         pack_data_size_setting = true;
     }
 
-    boost::array<boost::asio::mutable_buffer, 5> buffers() {
+    boost::array<boost::asio::mutable_buffer, 5> buffers(void) {
         assert(pack_data_size_setting);
         boost::array<boost::asio::mutable_buffer, 5> bufs =
         {
@@ -150,7 +157,7 @@ public:
                 boost::asio::buffer(&(pack.type),  1), 
                 boost::asio::buffer(&(pack.data_len_high_byte),  1), 
                 boost::asio::buffer(&(pack.data_len_low_byte),   1), 
-                boost::asio::buffer(pack.data), 
+                boost::asio::buffer(&(pack.data[0]), pack.data.size()), 
                 
             }
         };
@@ -161,16 +168,16 @@ public:
         return pack.version;
     }
 
-    reply::PackTpye type(void) {
-        return pack.type;
+    reply::PackType type(void) {
+        return (reply::PackType)pack.type;
     }
     
-    data_len_t data_len(void) {
+    virtual data_len_t data_len(void) const override {
         data_len_t len = pack.data_len_high_byte;
         return ((len << 8) & 0xff00) | pack.data_len_low_byte;
     }
 
-    data_t& data(void) {
+    data_t& get_data(void) {
         return pack.data;
     }
     
@@ -185,18 +192,17 @@ private:
 namespace server {
 
 // server 端用来接收 local 端发来的数据包
-class request : __request_type {
-typedef request THIS_CLASS;
+class request : public __request_type {
 public:
-    THIS_CLASS(void) : pack(), pack_data_size_setting(false) {}
-    virtual ~THIS_CLASS(void) {}
+    request(void) : pack(), pack_data_size_setting(false) {}
+    virtual ~request(void) {}
 
     void set_data_size(std::size_t size, char c = 0) {
         pack.data.resize(size, c);
         pack_data_size_setting = true;
     }
 
-    boost::array<boost::asio::mutable_buffer, 5> buffers() {
+    boost::array<boost::asio::mutable_buffer, 5> buffers(void) {
         assert(pack_data_size_setting);
         boost::array<boost::asio::mutable_buffer, 5> bufs =
         {
@@ -205,7 +211,7 @@ public:
                 boost::asio::buffer(&(pack.type),  1), 
                 boost::asio::buffer(&(pack.data_len_high_byte),  1), 
                 boost::asio::buffer(&(pack.data_len_low_byte),   1), 
-                boost::asio::buffer(pack.data), 
+                boost::asio::buffer(&(pack.data[0]), pack.data.size()), 
             }
         };
         return bufs;
@@ -215,16 +221,16 @@ public:
         return pack.version;
     }
 
-    reply::PackTpye type(void) {
-        return pack.type;
+    request::PackType type(void) {
+        return (request::PackType)pack.type;
     }
     
-    data_len_t data_len(void) {
+    virtual data_len_t data_len(void) const override {
         data_len_t len = pack.data_len_high_byte;
         return ((len << 8) & 0xff00) | pack.data_len_low_byte;
     }
 
-    data_t& data(void) {
+    data_t& get_data(void) {
         return pack.data;
     }
 private:
@@ -233,27 +239,30 @@ private:
 }; // class lproxy::server::request
 
 // server 端用来发给 local 端的数据
-class reply : __reply_type {
-typedef request THIS_CLASS;
+class reply : public __reply_type {
 public:
-    THIS_CLASS(byte version,        byte pack_type, 
+    reply(byte version,        byte pack_type, 
                data_len_t data_len, const data_t& data)
         : pack(version, pack_type, data_len, data) {}
 
-    THIS_CLASS(byte version, byte pack_type,  byte data_len_high, 
+    reply(byte version, byte pack_type,  byte data_len_high, 
                byte data_len_low, const data_t& data)
         : pack(version, pack_type, data_len_high, data_len_low, data) {}
 
-    THIS_CLASS(byte version,        byte pack_type, 
+    reply(byte version,        byte pack_type, 
                data_len_t data_len, data_t&& data)
         : pack(version, pack_type, data_len, std::move(data)) {}
 
-    THIS_CLASS(byte version, byte pack_type,  byte data_len_high, 
+    reply(byte version, byte pack_type,  byte data_len_high, 
                byte data_len_low, data_t&& data)
         : pack(version, pack_type, data_len_high, 
                 data_len_low, std::move(data)) {}
 
-    virtual ~THIS_CLASS(void) {}
+    virtual ~reply(void) {}
+    virtual data_len_t data_len(void) const override {
+        data_len_t len = pack.data_len_high_byte;
+        return ((len << 8) & 0xff00) | pack.data_len_low_byte;
+    }
 
 
     boost::array<boost::asio::const_buffer, 5> buffers(void) const {

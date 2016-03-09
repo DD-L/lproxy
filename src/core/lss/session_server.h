@@ -6,7 +6,9 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2015/12/1 3:59:10
  ************************************************************************/
-#include "lss/session.h"
+#include <lss/session.h>
+#include <lss/socks5_protocol.h>
+#include <crypto/encryptor.h>
 
 namespace lproxy {
 namespace server {
@@ -19,7 +21,7 @@ public:
      * function:start {socket_left.async_read_some [bind: left_read_handler]}
      */
     virtual void start(void) override;
-    virtual tcp::socket& socket_left(void) override;
+    virtual tcp::socket& get_socket_left(void) override;
 private:
     /**
      * function:left_read_handler {
@@ -34,6 +36,35 @@ private:
      *          case ('authenticate key' succeeded) {
      *              async_write:socket_left (reply::exchange) {
      *                  [bind: exchange_handler]
+     *              }
+     *          }
+     *      }
+     *      case (request::zipdata or request::data) {
+     *          unpack_data
+     *          // sock5
+     *          case (socks5::server::OPENING) {
+     *             'VER NMETHODS METHODS' -> socks5::ident_req
+     *             'VER NMETHOD' -> sock5::ident_resp
+     *             sock5::ident_resp -> rply_data 
+     *             async_write:socket_left [bind: left_read_handler]
+     *          }
+     *          case (socks5::server::CONNECTING) {
+     *              'VER CMD RSV ATYP DST-ADDR DST-PROT' -> socks5::req rq
+     *              socks5_request_processing(rq);
+     *          }
+     *          case (socks5::server::CONNECTED) {
+     *              case (CMD_CONNECT) {
+     *                  async_write:this->socket_right_tcp {
+     *                      [bind: right_write_handler]
+     *                  }
+     *              }
+     *              case (CMD_BIND) {
+     *                  // TODO
+     *              }
+     *              case (CMD_UDP) {
+     *                  socket_right_udp.async_send_to {
+     *                      [bind: right_write_handler]
+     *                  }
      *              }
      *          }
      *      }
@@ -57,14 +88,41 @@ private:
     void exchange_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
 
-    //void left_write_handler 【leftread -> left_read_handler】
+    /**
+     * function:left_write_handler {
+     *      socket_left.async_read_some [bind: left_read_handler]
+     * }
+     */
     void left_write_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred); 
     
-    //void right_write_handler 【rightread -> right_read_handler】
+    /**
+     * function: right_write_handler {
+     *      case (CMD_CONNECT) {
+     *          socket_right_tcp.async_read_some [bind: right_read_handler]
+     *      }
+     *      case (CMD_BIND) {
+     *          // TODO
+     *      }
+     *      case (CMD_UDP) {
+     *          socket_right_udp.async_receive_from [bind: right_read_handler]
+     *      }
+     *      default {
+     *          async_write:socket_left (pack_bad().buffers()) {
+     *              [bind: delete_this]
+     *          }
+     *      }
+     * }
+     */
     void right_write_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
-    //void right_read_handler  【leftwrite -> left_write_handler】
+
+    /**
+     * function:right_read_handler {
+     *      pack_data
+     *      async_write:socket_left [bind: left_write_handler]
+     * }
+     */
     void right_read_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred);
 
@@ -77,37 +135,158 @@ private:
     // 组装 deny
     const reply& pack_deny(void);
     // 组装 exchange
-    const reply pack_exchange(const std::string& auth_key,
-            const std::string& random_str);
+    const reply pack_exchange(const data_t& auth_key, 
+            const data_t& random_str);
     // 组装 data
     const reply pack_data(const std::string& data, std::size_t data_len);
-    const reply pack_data(const lproxy::socks5::data_t& data,
-            std::size_t data_len);
+    const reply pack_data(const data_t& data, std::size_t data_len);
     // 组装 bad
     const reply& pack_bad(void);
     // 组装 timeout
     const reply& pack_timeout(void);
 
 private:
-    std::string gen_hello_data(void);
+    const data_t gen_hello_data(void);
     void unpack_request_exchange(data_t& auth_key, data_t& random_str);
-    std::string& get_plain_data(std::string& plain);
+
+    /**
+     * function:unpack_data {
+     *      if ('this->aes_encryptor not initialized') {
+     *          async_write:socket_left (deny.buffers()) {
+     *              [bind: delete_this]
+     *          }
+     *      }
+     *      else {
+     *          'unzip if requested'
+     *          'decrypt'
+     *      }
+     * }
+     */
+    data_t& unpack_data(data_t& plain);
 
     // socks5 [var cmd rsv atype dstaddr dstport] 处理流程
+    /**
+     * function:socks5_request_processing {
+     *     case (0x01) 'ADDR-TYPE ipv4' {
+     *          this->dest_name = 
+     *     }
+     *     case (0x03) 'ADDR-TYPE domain' {
+     *          this->dest_name = 
+     *     }
+     *     case (0x04) 'ADDR-TYPE ipv6' {
+     *          this->dest_name = 
+     *     }
+     *     default { throw illegal_data_type }
+     *
+     *     this->dest_port = rq.DestPort
+     *
+     *     case (0x01) 'CMD CONNECT' {
+     *          this->socks5_cmd = CMD_CONNECT
+     *          resovle_connect_tcp(this->dest_name, this->dest_port)
+     *     }
+     *     case (0x02) 'CMD BIND' {
+     *          TODO
+     *     }
+     *     case (0x03) 'CMD UDP' {
+     *          this->socks5_cmd = CMD_UDP
+     *          resovle_open_udp(this->dest_name, this->dest_port)
+     *     }
+     *     default { '0x07 CMD_UNSUPPORT' }
+     *
+     *     if (Cmd != 0x01 && Cmd != 0x03) {
+     *          socks5_resp_to_local
+     *     }
+     * }
+     */
     void socks5_request_processing(const lproxy::socks5::req& rq);
+
+    /**
+     * function:resovle_connect_tcp {
+     *     ip::tcp::resolver::query::async_resolve {
+     *          [bind: tcp_resolve_handler]
+     *     }
+     * }
+     */
     void resovle_connect_tcp(const char* name, uint16_t port);
+
+    /**
+     * function:resovle_open_udp {
+     *    ip::udp::resolver::query::async_resolve {
+     *          [bind: udp_resolve_handler]
+     *    }
+     * }
+     */
     void resovle_open_udp(const char* name, uint16_t port);
+
+    /**
+     * function:tcp_resolve_handler {
+     *      socket_right_tcp.async_connect {
+     *          [bind: tcp_connect_handler]
+     *      }
+     * }
+     */
     void tcp_resolve_handler(const boost::system::error_code& err, 
         tcp::resolver::iterator endpoint_iterator);
-    void upd_resolve_handler(const boost::system::error_code& err, 
-        tcp::resolver::iterator endpoint_iterator);
 
+    /**
+     * function:udp_resolve_handler {
+     *      socket_right_udp.async_connect {
+     *          [bind: udp_connect_handler]
+     *      }
+     * }
+     */
+    void udp_resolve_handler(const boost::system::error_code& err, 
+        udp::resolver::iterator endpoint_iterator);
+
+    /**
+     * function:tcp_connect_handler {
+     *      case ('connected') {
+     *          this->socks5_resp_reply = 0x00
+     *          socks5_resp_to_local
+     *      }
+     *      case ('connection failed, try next') {
+     *          socket_right_tcp.async_connect [bind: tcp_connect_handler]
+     *      }
+     *      case ('connection failed, end') {
+     *          this->socks5_resp_reply = 0x03
+     *          socks5_resp_to_local
+     *      }
+     * }
+     */
     void tcp_connect_handler(const boost::system::error_code& err,
       tcp::resolver::iterator endpoint_iterator);
 
+    /**
+     * function:udp_connect_handler {
+     *      case ('connected') {
+     *          this->dest_name =
+     *          socket_right_udp.open
+     *          socks5_resp_to_local
+     *      }
+     *      case ('connection failed, try next') {
+     *          socket_right_udp.async_connect [bind: tcp_connect_handler]
+     *      }
+     *      case ('connection failed, end') {
+     *          this->socks5_resp_reply = 0x03
+     *          socks5_resp_to_local
+     *      }
+     * }
+     */
+    void udp_connect_handler(const boost::system::error_code& err,
+          udp::resolver::iterator endpoint_iterator);
+    
+
     // 封包 socks5::resp 数据包
-    lproxy::data_t& pack_socks5_resp(lproxy::data_t& data);
+    // TODO
+    data_t& pack_socks5_resp(data_t& data);
+    
     // 将socks5::resp反馈给local
+    /**
+     * function:socks5_resp_to_local {
+     *      pack_socks5_resp
+     *      async_write:socket_left [bind: left_read_handler]
+     * }
+     */
     void socks5_resp_to_local();
 private:
     tcp::socket       socket_left; // local
@@ -120,7 +299,7 @@ private:
         CMD_UDP       = 0x03,
         CMD_UNSUPPORT = 0xff
     } socks5_cmd; // socks5_cmd 
-    std::string    dest_name; // 目标ip(v4/v6)或域名
+    sdata_t        dest_name; // 目标ip(v4/v6)或域名
     uint16_t       dest_port; // 目标端口
     uint8_t        socks5_resp_reply; // socks5::resq::Reply
 
@@ -128,10 +307,10 @@ private:
     //std::string       data_right; // 从web 发来的原始数据
     enum             { max_length = 2048};
     //uint8_t          data_right[max_length]; // 从web 发来的原始数据
-    std::vector<uint8_t> data_right; // 从web 发来的原始数据, 
+    data_t             data_right; // 从web 发来的原始数据, 
     //不用数组是为了减少lproxy::server::session的对象构造所用的时间
 
-    lprxoy::socks5::server::state socks5_state = lprxoy::socks5::server::OPENING;
+    lproxy::socks5::server::state socks5_state = lproxy::socks5::server::OPENING;
 
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
     std::atomic_flag  delete_flag = ATOMIC_FLAG_INIT;

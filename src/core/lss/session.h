@@ -6,28 +6,16 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2015/11/30 15:58:54
  ************************************************************************/
+#include <lss/typedefine.h>
+#include <lss/lss_packet.h>
 
 namespace lproxy {
-
-using boost::asio::ip::tcp;
-using boost::asio::ip::udp;
 
 class session {
 public:
     virtual void start(void) = 0;
-    virtual tcp::socket& socket(void) = 0;
-protected:
-    // 包完整性检查
-    void lss_pack_integrity_check(std::size_t bytes_transferred, 
-            const data_t& lss_data) throw (incomplete_data) {
-        if (bytes_transferred < 4) {
-            throw incomplete_data(0xffffffff);
-        }
-        int less = lss_data.data_len() + 4 - bytes_transferred;
-        if (less > 0) {
-            throw incomplete_data(less);
-        }
-    }
+    virtual tcp::socket& get_socket_left(void) = 0;
+    virtual ~session(void) {}
 protected:
     enum {
         status_not_connected = 0,
@@ -43,7 +31,7 @@ protected:
         virtual const char* what(void) const noexcept {
             return "wrong_packet_type";
         } 
-    }
+    };
     class incomplete_data : public std::exception {
     public:
         incomplete_data(int less) noexcept : less_(less) {}
@@ -57,34 +45,46 @@ protected:
         }
     private:
         int   less_;
-    }
+    };
 protected:
+    // 包完整性检查
+    void lss_pack_integrity_check(std::size_t bytes_transferred, 
+            const request_or_reply_base_class& lss_data) 
+                throw (incomplete_data) {
+        if (bytes_transferred < 4) {
+            throw incomplete_data(0xffffffff);
+        }
+        int less = lss_data.data_len() + 4 - bytes_transferred;
+        if (less > 0) {
+            throw incomplete_data(less);
+        }
+    }
 }; // class lproxy::session
 
 
 /**
  * class lproxy::random_string
  *
- * lproxy::data_t&& random_number_str = random_string::generate_number();
- * lproxy::data_t&& random_str        = random_string::generate();
+ * lproxy::sdata_t&& random_number_str = random_string::generate_number();
+ * lproxy::vdata_t&& random_str        = random_string::generate();
  */
 class random_string {
 public:
-    static data_t generate_number(const uint32_t length = 10) {
+    static sdata_t generate_number(const std::size_t length = 10) {
         init();
         byte random_array[length];
-        for (int i = 0; i < length; ++i) {
+        for (std::size_t i = 0; i < length; ++i) {
             random_array[i] = ::rand() % 10 + '0';
         }
-        return data_t(random_array, random_array + length);
+        return sdata_t(random_array, random_array + length);
     }
-    static data_t generate(const uint32_t length = 10) {
+    static vdata_t generate(const std::size_t length = 10) {
         init();
         byte random_array[length];
-        for (int i = 0; i < length; ++i) {
+        for (std::size_t i = 0; i < length; ++i) {
             random_array[i] = ::rand() % 255;
         }
-        return data_t(random_array, random_array + length);
+        return vdata_t(random_array, random_array + length);
     }
 private:
     class __random {
@@ -94,7 +94,7 @@ private:
         }
     }; // class __random
     static void init(void) {
-        static __random r; void(r);
+        static __random r; (void)r;
     }
 }; // class lproxy::random_string
 

@@ -1,0 +1,80 @@
+PWD := $(shell pwd)
+ROOT := $(PWD)/../../../
+SRC_DIR := $(ROOT)/src
+CORE_DIR := $(SRC_DIR)/core
+
+
+BOOST := $(ROOT)/contrib/boost/boost_1_57_0/
+CRYPTOPP := $(ROOT)/contrib/cryptopp/
+CRYPTOPP_SRC := $(CRYPTOPP)/cryptopp/
+
+
+CRYPTO_SRC := $(CORE_DIR)/crypto/
+
+BOOST_BUILD := $(CORE_DIR)/boost_build
+BOOST_LINK_DIR := $(BOOST_BUILD)/link
+
+EXCEPT_DIR := $(CORE_DIR)/except
+EXCEPT_LINK_DIR := $(EXCEPT_DIR)/link
+
+
+
+BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
+			  $(BOOST_LINK_DIR)/tprebuild.o \
+			  $(BOOST_LINK_DIR)/dateprebuild.o
+
+
+COMMON_LINKS = $(BOOSTLINK) $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB)
+
+LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o    $(COMMON_LINKS)
+SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(COMMON_LINKS)
+
+
+CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
+CRYPTO_DYNAMIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.so
+
+CRYPTOPP_STATIC_LIB = $(CRYPTOPP_SRC)/libcryptopp.a
+LIBCRYPTOPPEXIST := $(shell if [ -f $(CRYPTOPP_STATIC_LIB) ]; then echo "exist"; else echo "notexist"; fi;)
+
+CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
+CRYPTO_DYNAMIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.so
+
+
+.PHONY : all
+.PHONY : init
+.PHONY : test
+.PHONY : clean
+.PHONY : target
+
+LOCAL  = $(BIN)/lsslocal.exe 
+SERVER = $(BIN)/lssserver.exe
+
+all: init target
+
+target: $(LOCAL) $(SERVER) 
+
+
+init:
+	[ -d '$(TMP)' ] || mkdir $(TMP)
+	[ -d '$(BIN)' ] || mkdir $(BIN)
+	#cd $(BOOST_BUILD); make -j
+	cd $(CRYPTO_SRC); make
+ifneq ('$(LIBCRYPTOPPEXIST)', 'exist')
+	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
+endif
+
+$(LOCAL): $(LOCAL_LINK)
+	#$(CXX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
+
+$(SERVER): $(SERVER_LINK)
+	#$(CXX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
+
+$(TMP)/%.o: %.c
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
+$(TMP)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
+
+clean:
+	$(RM) $(TMP) $(BIN)

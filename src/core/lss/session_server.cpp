@@ -5,33 +5,31 @@
 	> Created Time: 2016/3/1 4:29:50
  ************************************************************************/
 
-#include "lss/session_server.h"
+#include <lss/session_server.h>
+#include <lss/config.h>
+#include <crypto/aes_crypto.h>
 
-//using namespace lproxy;
 using namespace lproxy::server;
-
-
-
+using lproxy::tcp;
+using lproxy::udp;
+using lproxy::data_t;
 
 session::session(boost::asio::io_service& io_service_left,
                   boost::asio::io_service& io_service_right)
             : socket_left(io_service_left), socket_right_tcp(io_service_right),
-            socket_right_udp(io_service_right);
+            socket_right_udp(io_service_right)
             //ios_right(io_service_right),
             /*resolver_right(io_service_right), */
-            status(status_not_connected) {}
+{
+    this->status = status_not_connected;
+    this->socks5_state = lproxy::socks5::server::OPENING;            
+}
 
-void session::start(void) override {
+void session::start(void) {
     std::cout << "client: ";
     std::cout << socket_left.remote_endpoint().address() << std::endl;      
 
     status = status_connected;
-
-    // remote ip port
-    //const char* host = "192.168.2.109"; // ?
-    //const char* port = "6689";
-    //socket_right.async_resolve({host, port}, 
-    //        boost::bind(&session::resolve_handler, this, _1, _2));
 
     std::cout << "start read msg from local.." << std::endl;
     // 第一次 用 this->lss_request 读数据, 需要开辟空间
@@ -42,22 +40,23 @@ void session::start(void) override {
                 boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
 }
-tcp::socket& session::socket_left(void) override {
+tcp::socket& session::get_socket_left(void) {
     return this->socket_left; 
 }
 
 void session::delete_this(void) {
     if (! delete_flag.test_and_set()) {
+        // TODO
+        // step 1
+        // cancel session 上所有的异步
+        // http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
+        socket_left.close();
+        socket_right_tcp.close();
+        socket_right_udp.close();
+        // step 2
         delete this;
     }
 }
-/*
-void session::delete_this(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
-    (void)error, (void)bytes_transferred;
-    return delete_this();
-}
-*/
 
 void session::left_read_handler(const boost::system::error_code& error,
         std::size_t bytes_transferred) {
@@ -84,9 +83,9 @@ void session::left_read_handler(const boost::system::error_code& error,
                 auto& rply_hello = pack_hello();
                 // 发送给 local
                 boost::asio::async_write(socket_left, rply_hello.buffers(),
-                        boost::bind(&session::hello_handler, this
-                            boost::asio::placeholders::error,
-                            boost::asio::placeholders::bytes_transferred));
+                        boost::bind(&session::hello_handler, this, _1, _2));
+                            //boost::asio::placeholders::error,
+                            //boost::asio::placeholders::bytes_transferred));
                 break;
             }
             case request::exchange: { // 0x02
@@ -121,38 +120,37 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 验证通过
                     // 组装 reply::exchange 发给 local
                     auto&& rply_exchange = pack_exchange(auth_key, random_str);
-                    boost::asio::async_write(socket_left, rply_exchange.buffers(),
-                                boost::bind(&session::exchange_handler, this,
+                    boost::asio::async_write(this->socket_left, 
+                            rply_exchange.buffers(),
+                            boost::bind(&session::exchange_handler, this,
                                 boost::asio::placeholders::error,
                                 boost::asio::placeholders::bytes_transferred));
                     status = status_auth;
                     break;
                 }
             }
-            case requset::zipdata: // 0x17
-                //this->zip_on = true;
-            case requset::data: { // 0x06
+            case request::zipdata: // 0x17
+            case request::data: { // 0x06
                 if (status_data != status) {
                     throw wrong_packet_type();
                 }
                 // step 1
-                //  解包 得到 data , data 通常是 socks5 数据 
-                int less = bytes_transferred - (4 + this->lss_request.data_len());
-                if (less > 0) {
-                    throw incomplete_data(less);
-                }
-                std::string data;
-                get_plain_data(data);
+                //  解包 得到 plain_data , plain_data 通常是 socks5 数据 
+                //std::string data;
+                //get_plain_data(data);
+
+                data_t plain_data;
+                unpack_data(plain_data);
 
                 // step 2
-                //  将 data 交付给 socks5 处理
+                //  将 plain_data 交付给 socks5 处理
                 switch (this->socks5_state) {
                 case lproxy::socks5::server::OPENING: {
-                    // 用 data 得到 package
-                    lproxy::socks5::ident_req ir((const uint8_t*)data.c_str(),
-                            data.size());
-                    lproxy::socks5::data_t package;
-                    lproxy::sock5::ident_resp::pack(package, &ir);
+                    // 用 plain_data 得到 package
+                    lproxy::socks5::ident_req ir(&plain_data[0], 
+                            plain_data.size());
+                    data_t package;
+                    lproxy::socks5::ident_resp::pack(package, &ir);
                     // 将 package 加密封包
                     auto&& rply_data = pack_data(package, package.size());
                     // 发给 local
@@ -166,9 +164,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                     break;
                 }
                 case lproxy::socks5::server::CONNECTING: {
-                    // 用 data 得到 package
-                    lproxy::socks5::req rq((const uint8_t*)data.c_str(),
-                            data.size());
+                    // 用 plain_data 得到 package
+                    lproxy::socks5::req rq(&plain_data[0], plain_data.size());
 
                     // 分析 rq , 该干啥干啥...
                     socks5_request_processing(rq);
@@ -176,40 +173,37 @@ void session::left_read_handler(const boost::system::error_code& error,
                     break;
                 }
                 case lproxy::socks5::server::CONNECTED:
-                    // 真正的 socket 数据即将开始
-                    // step 1 判断socket_right_tcp 是否打开 
-                    // step 2 将 data 异步发送给 sock_right_tcp/udp ? , 
-                    // 之后绑定的是 right_write_handler
-                    //
-                    //
                     switch (this->socks5_cmd) {
                     case CMD_CONNECT:
-                        boost::asio::async_write(socket_right_tcp, 
-                                boost::asio::buffer(data.c_tr(), data.size()),
-                                boost::bind(&session::right_write_handler, this,
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred));
+                        boost::asio::async_write(this->socket_right_tcp, 
+                            boost::asio::buffer(&plain_data[0], 
+                                 plain_data.size()),
+                            boost::bind(&session::right_write_handler, this,
+                                 boost::asio::placeholders::error,
+                                 boost::asio::placeholders::bytes_transferred));
                         break;
                     case CMD_BIND:
                         // TODO
                         // 临时方案：
                         //
-                        boost::asio::async_write(socket_left, 
+                        boost::asio::async_write(this->socket_left, 
                                 pack_bad().buffers(),
                                 boost::bind(&session::delete_this, this));
                         break;
                     case CMD_UDP: {
                         ip::udp::endpoint destination(
-                                ip::address::from_string(this->dest_name), this->dest_port);
+                             ip::address::from_string(this->dest_name), 
+                             this->dest_port);
                         socket_right_udp.async_send_to(
-                                boost::asio::buffer(data.c_str(), data.size()), destination,
-                                boost::bind(&session::right_write_handler, this,
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred));
+                             boost::asio::buffer(&plain_data[0], 
+                                 plain_data.size()), destination,
+                             boost::bind(&session::right_write_handler, this,
+                                 boost::asio::placeholders::error,
+                                 boost::asio::placeholders::bytes_transferred));
                         break;
                     }
                     default: {
-                        // 发送给 local 让他 关闭 他的 session, lss_pack_type::0xff
+                        // 发送给 local 让其关闭它的session, lss_pack_type::0xff
                         //auto& rply_data = pack_bad();
                         boost::asio::async_write(socket_left, 
                                 pack_bad().buffers(),
@@ -221,8 +215,6 @@ void session::left_read_handler(const boost::system::error_code& error,
                     break;
                 } // switch (this->socks5_state)
 
-                //// 这里面 socket_left 异步 write 后， 绑定的是 left_read_handler
-                //// 这里面 socket_right 异步write 后，绑定的是 right_write_handler
                 break;
             }
             case request::bad: // 0xff
@@ -324,11 +316,10 @@ void session::left_write_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
-        socket_left.async_read_some(
-                boost::asio::buffer(this->lss_request.buffers()), 
-                boost::bind(&session::left_read_handler, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
+        socket_left.async_read_some(this->lss_request.buffers(), 
+                boost::bind(&session::left_read_handler, this, _1, _2));
+                    //boost::asio::placeholders::error,
+                    //boost::asio::placeholders::bytes_transferred));
     }
     else {
         // <debug>
@@ -350,19 +341,20 @@ void session::right_write_handler(const boost::system::error_code& error,
         switch (this->socks5_cmd) {
         case CMD_CONNECT:
             socket_right_tcp.async_read_some(
-                    boost::asio::buffer(this->data_right, max_length), 
-                    boost::bind(&session::right_read_handler, this,
-                        boost::asio::placeholders::error,
-                        boost::asio::placeholders::bytes_transferred));
+                    boost::asio::buffer(&this->data_right[0], max_length), 
+                    boost::bind(&session::right_read_handler, this, _1, _2));
+                        //boost::asio::placeholders::error,
+                        //boost::asio::placeholders::bytes_transferred));
             break;
         case CMD_UDP: {
             ip::udp::endpoint destination(
-                    ip::address::from_string(this->dest_name), this->dest_port);
+                ip::address::from_string(this->dest_name), this->dest_port);
             socket_right_udp.async_receive_from(
-                    boost::asio::buffer(this->data_right, max_length), destination,
-                    boost::bind(&session::right_read_handler, this,
-                        boost::asio::placeholders::error,
-                        boost::asio::placeholders::bytes_transferred));
+                boost::asio::buffer(&this->data_right[0], max_length), 
+                destination,
+                boost::bind(&session::right_read_handler, this, _1, _2));
+                    //boost::asio::placeholders::error,
+                    //boost::asio::placeholders::bytes_transferred));
             break;
         }
         case CMD_BIND:
@@ -392,14 +384,9 @@ void session::right_read_handler(const boost::system::error_code& error,
     if (! error) {
         // step 1, 修正 data_right 的大小
         //this->data_right.resize(bytes_transferred);
-        // 
         // step 2, 将读来的数据，加密打包
         auto&& data = pack_data(this->data_right, bytes_transferred);
-        // 
-        // step 3, 是否压缩数据 TODO
-        //
-        // step 4, 发给 local 端
-        // 
+        // step 3, 发给 local 端
         boost::asio::async_write(socket_left, data.buffers(),
                 boost::bind(&session::left_write_handler, this,
                     boost::asio::placeholders::error,
@@ -424,12 +411,12 @@ const reply& session::pack_hello(void) {
 }
 
 const reply& session::pack_bad(void) {
-    static const reply bad(0x00, reply::bad, data.size(), data_t());
+    static const reply bad(0x00, reply::bad, 0x00, data_t());
     return bad;
 }
 
 const reply& session::pack_timeout(void) {
-    static const reply timeout(0x00, reply::timeout, data.size(), data_t());
+    static const reply timeout(0x00, reply::timeout, 0x00, data_t());
     return timeout;
 }
 
@@ -439,35 +426,35 @@ const reply& session::pack_deny(void) {
 }
 
 
-const reply session::pack_exchange(const std::string& auth_key,
-        const std::string& random_str) {
+const reply session::pack_exchange(const data_t& auth_key,
+        const data_t& random_str) {
 
     assert(auth_key.size() == 32);
 
     // 1. 生成随机 key (密文的data_key)
-    std::string&& data_key = lproxy::random_string::generate(32);
+    vdata_t&& data_key = lproxy::random_string::generate(32);
     assert(data_key.size() == 32);
 
-    this->aes_encryptor = std::make_shared(new crypto::Aes(
-                data_key, crypto::Aes::raw256keysetting));
+    this->aes_encryptor = std::make_shared<crypto::Encryptor>(
+            new crypto::Aes(data_key, crypto::Aes::raw256keysetting()));
 
     // 2. 打包 随机key + 随机数
-    std::string plain = data_key + random_str;
-    std::string cipher;
+    data_t plain = &data_key[0] + random_str;
+    vdata_t cipher;
     // 3. 将打包后的数据 用 auth_key 进行aes加密。
-    crypto::Encrytor aescryptor(new crypto::Aes(
-                auth_key, crypto::Aes::raw256keysetting));
-    aescryptor.encrypt(cipher, plain.c_str(), plain.size());
+    crypto::Encryptor aescryptor(new crypto::Aes(
+                (const char*)&auth_key[0], crypto::Aes::raw256keysetting()));
+    aescryptor.encrypt(cipher, &plain[0], plain.size());
     
-    return reply(0x00, reply::exchange, cipher.size(), cipher);
+    data_t cipher_(cipher.begin(), cipher.end());
+    return reply(0x00, reply::exchange, cipher_.size(), cipher_);
 }
 
 const reply session::pack_data(const std::string& data, std::size_t data_len) {
-    lproxy::socks5::data_t data_(data.begin(), data.begin() + data_len);
+    data_t data_(data.begin(), data.begin() + data_len);
     return pack_data(data_, data_len);
 }
-const reply session::pack_data(const lproxy::socks5::data_t& data, 
-        std::size_t data_len) {
+const reply session::pack_data(const data_t& data, std::size_t data_len) {
     if (! this->aes_encryptor) {
         // this->aes_encrytor 未被赋值
         std::cout << "this->aes_encrytor 未被赋值" << std::endl;
@@ -480,9 +467,9 @@ const reply session::pack_data(const lproxy::socks5::data_t& data,
     }
     else {
         // 对包加密
-        lproxy::socks5::data_t cipher;
-        this->ase_encryptor->encrypt(cipher, &data[0], data_len);
-        std::string data_(cipher.begin(), cipher.end());
+        vdata_t cipher;
+        this->aes_encryptor->encrypt(cipher, &data[0], data_len);
+        data_t data_(cipher.begin(), cipher.end());
         
         // 压缩数据
         if (config::get_instance().get_zip_on()) {
@@ -494,9 +481,9 @@ const reply session::pack_data(const lproxy::socks5::data_t& data,
     }
 }
 
-data_t session::gen_hello_data() {
+const data_t session::gen_hello_data() {
     auto& config  = config::get_instance();
-    auto& keysize = config.get_rsa_keysize();
+    auto&& keysize = config.get_rsa_keysize();
     auto& publickey = config.get_rsa_publickey_hex();
     byte keysize_arr[2] = {0};
     keysize_arr[0] = (keysize >> 8) & 0xff; // high_byte
@@ -510,7 +497,7 @@ void session::unpack_request_exchange(data_t& auth_key, data_t& random_str) {
     // 对包解密
     crypto::Encryptor rsa_encryptor(
             new crypto::Rsa(config::get_instance().get_rsakey()));
-    auto& cipher = this->lss_request.data();
+    auto& cipher = this->lss_request.get_data();
     std::size_t cipher_len = this->lss_request.data_len();
     vdata_t plain;
     rsa_encryptor.decrypt(plain, &cipher[0], cipher_len);
@@ -520,7 +507,7 @@ void session::unpack_request_exchange(data_t& auth_key, data_t& random_str) {
     random_str.assign(plain.begin() + 32, plain.end());
 }
 
-std::string& session::get_plain_data(std::string& plain) {
+data_t& session::unpack_data(data_t& plain) {
     if (! this->aes_encryptor) {
         // this->aes_encrytor 未被赋值
         std::cout << "this->aes_encrytor 未被赋值" << std::endl;
@@ -536,42 +523,50 @@ std::string& session::get_plain_data(std::string& plain) {
             // TODO 
         }
         // 对包解密
-        std::string& cipher = this->lss_request.data();
+        data_t&         cipher = this->lss_request.get_data();
         std::size_t cipher_len = this->lss_request.data_len();
-        aes_encryptor->decrypt(plain, cipher.c_str(), cipher_len);
-        // data 清零
-        cipher = std::string();
+        vdata_t plain_;
+        aes_encryptor->decrypt(plain_, cipher.c_str(), cipher_len);
+        plain.assign(plain_.begin(), plain_.end());
+
+        // data 清零, 有必要? TODO
+        //cipher = data_t();
     }
     return plain;
 }
 
 void session::socks5_request_processing(const lproxy::socks5::req& rq) {
-
-    // dest_name 和 dest_port , name 可能的值 为 ipv4 地址, ipv6 地址， 域名
-    uint16_t   port = 0;
+    // dest_name 和 dest_port, dest_name 可能的值 为 ipv4/ipv6/域名
     switch (rq.AddrType) {
     case 0x01: {// ipv4
         // typedef array< unsigned char, 4 > bytes_type;
         ip::address_v4::bytes_type name_arr;
-        ::memmove(name_arr, rq.DestAddr.IPv4, 4);
+        ::memmove(name_arr.data(), 
+                boost::get<socks5::Ipv4_t>(rq.DestAddr).ip, 4);
         ip::address_v4 ipv4(name_arr);
         this->dest_name = ipv4.to_string();
         break;
     }
     case 0x03: { // domain
+        const data_t& domain_name = 
+            boost::get<socks5::Domain_t>(rq.DestAddr).Name;
+        this->dest_name.assign(domain_name.begin(), domain_name.end());
+        /*
         this->dest_name.assign(rq.DestAddr.Domain.name.begin(),
-                rq.DestAddr.Domain.name.end());
+              rq.DestAddr.Domain.name.end());
+        */
         break;
     }
     case 0x04: {// ipv6
         // typedef array< unsigned char, 16 > bytes_type;
         ip::address_v6::bytes_type name_arr;
-        ::memmove(name_arr, rq.DestAddr.IPv4, 16);
+        ::memmove(name_arr.data(),
+                boost::get<socks5::Ipv6_t>(rq.DestAddr).ip, 16);
         ip::address_v6 ipv6(name_arr);
         this->dest_name = ipv6.to_string();
         break;
     }
-    default: throw illegal_data_type();
+    default: throw socks5::illegal_data_type();
     }
 
     this->dest_port = rq.DestPort;
@@ -579,7 +574,7 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
     switch (rq.Cmd) {
     case 0x01: // CONNECT请求
         this->socks5_cmd = CMD_CONNECT;
-        resovle_connect_tcp(this->dest_name, this->dest_port);
+        resovle_connect_tcp(&this->dest_name[0], this->dest_port);
         // 异步成功才可，打包 socks5::resp 发给 local
         break;
     case 0x02: // BIND请求
@@ -595,7 +590,7 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
         break;
     case 0x03: {// UDP转发
         this->socks5_cmd = CMD_UDP;
-        resovle_open_udp(this->dest_name, this->dest_port);
+        resovle_open_udp(&this->dest_name[0], this->dest_port);
         // 异步成功才可，打包 socks5::resp 发给 local
 
         break;
@@ -654,8 +649,8 @@ void session::tcp_resolve_handler(const boost::system::error_code& err,
     }
 }
 
-void session::upd_resolve_handler(const boost::system::error_code& err, 
-        tcp::resolver::iterator endpoint_iterator) {
+void session::udp_resolve_handler(const boost::system::error_code& err, 
+        udp::resolver::iterator endpoint_iterator) {
     if (! err) {
         // Attempt a connection to the first endpoint in the list. Each endpoint
         // will be tried until we successfully establish a connection.
@@ -705,8 +700,8 @@ void session::udp_connect_handler(const boost::system::error_code& err,
     if (! err) {
         // The connection was successful. Send the request to local.
         // 连接成功
-        //ip::udp::endpoint endpoint = *endpoint_iterator;
-        this->dest_name = endpoint_iterator->address().to_string();
+        udp::endpoint endpoint = *endpoint_iterator;
+        this->dest_name = endpoint.address().to_string();
 
         // 
         auto&& upd_open_ip_protocol = ip::udp::v4();
@@ -728,12 +723,12 @@ void session::udp_connect_handler(const boost::system::error_code& err,
         // 反馈给 local, 并将状态设置为连接
         socks5_resp_to_local();
     }
-    else if (endpoint_iterator != tcp::resolver::iterator()) {
+    else if (endpoint_iterator != udp::resolver::iterator()) {
         // The connection failed. Try the next endpoint in the list.
         this->socket_right_udp.close();
         udp::endpoint endpoint = *endpoint_iterator;
         socket_right_udp.async_connect(endpoint,
-                boost::bind(&session::tcp_connect_handler, this,
+                boost::bind(&session::udp_connect_handler, this,
                     boost::asio::placeholders::error, ++endpoint_iterator));
     }
     else {
@@ -748,24 +743,32 @@ lproxy::data_t& session::pack_socks5_resp(lproxy::data_t& data) {
     // 应答字段
     resp.Reply = this->socks5_resp_reply;
     // TODO
-    //std::string& type = config::get_instance().get_bind_addr_type();
-    //if (type == "ipv4") { resp.AddrType = 0x01; }
-    //else if (type == "ipv6") { resp.AddrType = 0x04; }
-    //else if (type == "domain") { resp.AddrType = 0x03; }
-    //else { resp.AddrType = 0x01; }
+    const sdata_t& type = config::get_instance().get_bind_addr_type();
+    if (type == "ipv4") { resp.AddrType = 0x01; }
+    else if (type == "ipv6") { resp.AddrType = 0x04; }
+    else if (type == "domain") { resp.AddrType = 0x03; }
+    else { resp.AddrType = 0x01; }
     
+    const sdata_t& bind_addr = config::get_instance().get_bind_addr();
+    uint16_t bindport  = config::get_instance().get_bind_port();
+
     ip::address addr;
-    addr = ip::address::from_string("127.0.0.1"); // config TODO
-    ip::address_v4 ipv4 = addr.to_v4();
-    ip::address_v4::byte_type& ipv4_bytes = ipv4.to_bytes();
+    addr = ip::address::from_string(&bind_addr[0]);
+    // 如果是 ipv4 if (type == "ipv4") TODO
+        ip::address_v4 ipv4 = addr.to_v4();
+        ip::address_v4::bytes_type&& ipv4_bytes = ipv4.to_bytes();
     // BindAddr
     resp.set_IPv4(ipv4_bytes.data(), 4);
     // BindPort
-    resp.set_BindPort(1080); // config TODO
+    resp.set_BindPort(bindport);
 
-    socks5::data_t data_;
+    /*
+    data_t data_;
     resp.pack(data_);
     data.assign(data_.begin(), data_.end());
+    */
+
+    resp.pack(data);
     return data;
 }
 
@@ -780,8 +783,8 @@ void session::socks5_resp_to_local() {
 
     boost::asio::async_write(socket_left, rply_data.buffers(),
                 boost::bind(&session::left_read_handler, this,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+                    boost::asio::placeholders::error,
+                    boost::asio::placeholders::bytes_transferred));
     if (this->socks5_resp_reply == 0x00) {
         // 设置当前 socks5 状态为: CONNECTED 
         this->socks5_state = lproxy::socks5::server::CONNECTED; 

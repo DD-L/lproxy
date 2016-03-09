@@ -1,0 +1,22 @@
+RM = rm -rf
+GDB := -g
+
+TMP = ./~tmp
+BIN = ./bin
+
+CYGWIN_MACROS = -D_WIN32_WINDOWS -D__USE_W32_SOCKETS
+CYGWIN_SOCKET_LIB = -lws2_32
+CYGWIN_INCLUDE_FILE = -include w32api/_mingw_mac.h
+
+MACROS = -D_REENTRANT -DBOOST_REGEX_NO_LIB \
+		 -DBOOST_DATE_TIME_SOURCE -DBOOST_SYSTEM_NO_LIB \
+		 $(CYGWIN_MACROS)
+
+override CFLAGS   += -Wall $(GDB) $(CYGWIN_INCLUDE_FILE)
+override CXXFLAGS += -Wall $(MACROS) $(CYGWIN_INCLUDE_FILE) $(GDB) -std=c++1y
+override LIBS     += $(LIBPATH) -lpthread -lrt $(CYGWIN_SOCKET_LIB)
+
+override INCPATH  +=  -I$(CORE_DIR) -I$(BOOST) -I$(CRYPTOPP) -I. 
+
+include ./Makefile.COMMON
+

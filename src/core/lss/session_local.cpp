@@ -6,33 +6,45 @@
  ************************************************************************/
 #include <atomic>
 #include <lss/session_local.h>
+#include <lss/config.h>
+#include <crypto/md5_crypto.h>
 
 using namespace lproxy::local;
+using lproxy::tcp;
 
 /**
  * class lproxy::local::session
  */ 
 session::session(boost::asio::io_service& io_service_left,
               boost::asio::io_service& io_service_right)
-        : socket_left(io_service_left), socket_right(io_service_right),
-//remote_ep(boost::asio::ip::address::from_string("192.168.2.109"), 6689) 
-    //resolver_right(io_service_right), 
-    status(status_not_connected) {
-    //assert(this->auth_key.size() == 32);
+        : socket_left(io_service_left), socket_right(io_service_right)
+{
+    status = status_not_connected;    
+    // 是否 发心跳?
+    // TODO
+    ip::tcp::socket::keep_alive keepalive(true);
+    socket_right.set_option(keepalive);
 }
 
-void session::start(void) override {
+void session::start(void) {
     std::cout << "client: ";
     std::cout << socket_left.remote_endpoint().address() << std::endl;            
     // server
-    auto& server_name = config::get_instance().get_server_name();
-    auto& server_port = config::get_instance().get_server_port();
-    ip::tcp::resolver resolver_right(this->socket_right.get_io_service());
+    /*
+    auto server_name = 
+        (const char*)&(config::get_instance().get_server_name()[0]);
+    auto server_port =
+        (const char*)&(config::get_instance().get_server_port()[0]);
+    */
+    const auto& server_name = config::get_instance().get_server_name();
+    const auto& server_port = config::get_instance().get_server_port();
+
+    tcp::resolver resolver_right(this->socket_right.get_io_service());
     resolver_right.async_resolve({server_name, server_port}, 
             boost::bind(&session::resolve_handler, this, _1, _2));
 }
 
-tcp::socket& socket_left(void) override {
+tcp::socket& session::get_socket_left(void) {
     return this->socket_left; 
 }
 
@@ -58,9 +70,11 @@ void session::connect_handler(const boost::system::error_code& ec,
         
         // send hello to server
         boost::asio::async_write(socket_right, pack_hello().buffers(),
-                boost::bind(&session::hello_handler, this,
-                    boost::asio:placeholders::error,
+                boost::bind(&session::hello_handler, this, _1, _2));
+        /*
+                    boost::asio::placeholders::error,
                     boost::asio::placeholders::bytes_transferred)); 
+        */
     }
     else if (i != tcp::resolver::iterator()) {
         // The connection failed. Try the next endpoint in the list.
@@ -78,28 +92,6 @@ void session::connect_handler(const boost::system::error_code& ec,
     }
 }
 
-/*
-void session::shakehands_right_write_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
-    // <debug>
-    std::cout << "shakehands_right_write_handler\n"
-        "---> bytes_transferred = "
-        << std::dec << bytes_transferred << '\n';
-    // </debug>
-    if (! error) {
-        socket_right.async_read_some(this->lss_reply.buffers(), 
-                boost::bind(&session::right_read_handler, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
-    }
-    else {
-        // <debug>
-        std::cout << "delete this " << __LINE__ << '\n';
-        // </debug>
-        delete_this();
-    }
-}
-*/
 
 void session::hello_handler(const boost::system::error_code& error,
         std::size_t bytes_transferred) {
@@ -175,16 +167,16 @@ void session::right_read_handler(const boost::system::error_code& error,
                 auto&& rqst_exchange = pack_exchange(keysize, public_key);
                 // 发送给 server
                 boost::asio::async_write(socket_right, rqst_exchange.buffers(),
-                        boost::bind(&session::exchange_handler, this,
-                            boost::asio:placeholders::error,
-                            boost::asio::placeholders::bytes_transferred)); 
+                        boost::bind(&session::exchange_handler, this, _1, _2));
+                            //boost::asio:placeholders::error,
+                            //boost::asio::placeholders::bytes_transferred)); 
                 break;
             } 
             case reply::exchange: { // 0x03
                 if (status_auth != this->status) {
                     throw wrong_packet_type(); 
                 }
-                data_t reply_random_str;
+                sdata_t reply_random_str;
                 // 解包，获取 随机数 和 随机key
                 unpack_reply_exchange(reply_random_str);
                 // 验证 随机 数
@@ -194,7 +186,7 @@ void session::right_read_handler(const boost::system::error_code& error,
                     break; 
                 }
                 // 验证通过
-                status = status_data;  
+                status = status_data;
                 transport(); 
                 break;
             }
@@ -209,16 +201,15 @@ void session::right_read_handler(const boost::system::error_code& error,
             case reply::zipdata:// 0x17
             case reply::data: { // 0x06
                     if (status_data == status) {
-                        // step 1 解密
-                        std::string data_right; // 解密后的 server 数据 
-                        this->aes_encryptor->decrypt(data_right, 
-                                lss_replay.data().str(), lss_replay.data_len());
-                        // step 2 将数据送回客户端
+                        // 解包
+                        data_t data_right;
+                        unpack_reply_data(data_right);
+                        // 将 data_right 发至 client
                         boost::asio::async_write(socket_left,
-                                boost::asio::buffer(data_right, bytes_transferred),
-                                boost::bind(&session_local::left_write_handler, this,
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred));
+                             boost::asio::buffer(data_right),
+                             boost::bind(&session::left_write_handler,
+                                 this, boost::asio::placeholders::error,
+                                 boost::asio::placeholders::bytes_transferred));
                     }
                     else {
                         throw wrong_packet_type();
@@ -234,10 +225,21 @@ void session::right_read_handler(const boost::system::error_code& error,
         }
         catch (wrong_packet_type&) {
             // default:
+            // TODO
+            // 临时方案
+            delete_this();
         }
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
+            // TODO
+            // 临时方案
+            delete_this();
+        }
+        catch (...) {
+            // TODO
+            // 临时方案
+            delete_this();
         }
         //break;}
     }
@@ -253,14 +255,14 @@ void session::transport(void) {
     this->data_left.resize(max_length, 0);
     socket_left.async_read_some(
             boost::asio::buffer(this->data_left, max_length),
-            boost::bind(&session_local::left_read_handler, this,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            boost::bind(&session::left_read_handler, this, _1, _2));
+                //boost::asio::placeholders::error,
+                //boost::asio::placeholders::bytes_transferred));
 
     socket_right.async_read_some(lss_reply.buffers(), 
-            boost::bind(&session::right_read_handler, this,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            boost::bind(&session::right_read_handler, this, _1, _2));
+                //boost::asio::placeholders::error,
+                //boost::asio::placeholders::bytes_transferred));
 }
 
 void session::left_read_handler(const boost::system::error_code& error,
@@ -294,9 +296,9 @@ void session::right_write_handler(const boost::system::error_code& error,
     if (! error) {
         socket_left.async_read_some(
                 boost::asio::buffer(this->data_left, max_length),
-                boost::bind(&session_local::left_read_handler, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
+                boost::bind(&session::left_read_handler, this, _1, _2));
+                    //boost::asio::placeholders::error,
+                    //boost::asio::placeholders::bytes_transferred));
     }
     else {
         // <debug>
@@ -307,16 +309,16 @@ void session::right_write_handler(const boost::system::error_code& error,
 }
 
 void session::left_write_handler(const boost::system::error_code& error,
-        std::size_t bytes_trannsferred) {
+        std::size_t bytes_transferred) {
     // <debug>
     std::cout << "left_write_handler\n---> bytes_transferred = "
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
         socket_right.async_read_some(boost::asio::buffer(data_left, max_length),
-                boost::bind(&session_local::right_read_handler, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
+                boost::bind(&session::right_read_handler, this, _1, _2));
+                    //boost::asio::placeholders::error,
+                    //boost::asio::placeholders::bytes_transferred));
     }
     else {
         // <debug>
@@ -332,7 +334,7 @@ const request& session::pack_hello(void) {
     return hello;
 };
 // 组装 exchange
-const session::request pack_exchange(const keysize_t& keysize, 
+const request session::pack_exchange(const keysize_t& keysize, 
         const data_t& public_key) {
     // step 1 生成随机数
     this->random_str = lproxy::random_string::generate_number();
@@ -342,7 +344,7 @@ const session::request pack_exchange(const keysize_t& keysize,
     sdata_t md5_auth_key;
     md5.encrypt(md5_auth_key, &auth_key[0], auth_key.size());
     // step 3 组装 data
-    auto data_ = md5_auth_key + this->random_str;
+    auto&& data_ = md5_auth_key + this->random_str;
     data_t data(data_.begin(), data_.end());
     // step 4 组装 lproxy::local::request
     return request(0x00, request::exchange, data.size(), data);
@@ -367,7 +369,7 @@ const request session::pack_data(std::size_t data_len) {
 
 // 组装 bad
 const request& session::pack_bad(void) {
-    static const request bad(0x00, request::bad, 0, data_t());
+    static const request bad(0x00, request::bad, 0x00, data_t());
     return bad;
 }
 
@@ -375,6 +377,14 @@ const request& session::pack_bad(void) {
 void session::delete_this(void) {
     //static std::atomic_flag flag = ATOMIC_FLAG_INIT;
     if (! delete_flag.test_and_set()) {
+        // TODO
+        // step 1
+        // http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
+        // 
+        // cancel session 上所有的异步
+        socket_left.close();
+        socket_right.close();
+        // step 2
         delete this;
         //flag = false;
     }
@@ -382,26 +392,28 @@ void session::delete_this(void) {
 
 
 void session::unpack_reply_hello(keysize_t& keysize, data_t& public_key) {
-    const data_t&     data     = lss_replay.data();
-    const std::size_t size     = sizeof (keysize_t);
-    const std::size_t data_len = lss_reply.data_len();
+    const data_t&     data     = this->lss_reply.get_data();
+    //const std::size_t size     = sizeof (keysize_t);
+    const std::size_t data_len = this->lss_reply.data_len();
     keysize = data[0];
     keysize = ((keysize << 8) & 0xff00) | data[1];
-    //public_key.assign(&data[size], &data[data_len - size]);
-    public_key.assign(&data[size], &data[data_len]);
+    //public_key.assign(&data[size], &data[data_len]);
+    public_key.assign(data.begin() + 2, data.begin() + data_len);
 }
 
 
 
 // 获取 随机key 和 随机数
-void session::unpack_reply_exchange(data_t& reply_ramdom_str) {
-    const data_t&     data     = lss_reply.data(); // 当前是密文
+void session::unpack_reply_exchange(sdata_t& reply_random_str) {
+    const data_t&     data     = this->lss_reply.get_data(); // 当前是密文
+    const std::size_t data_len = this->lss_reply.data_len();
     // 用this->auth_key 构造aes 加解密器
-    this->aes_encryptor = std::make_shared<crypto::Encryptor>(
-            new crypto::Aes(this->auth_key));
+    const sdata_t& auth_key = config::get_instance().get_auth_key();
+    auto aes_encryptor = std::make_shared<crypto::Encryptor>(
+            new crypto::Aes(auth_key));
     vdata_t plaintext;
     // 解密data
-    this->aes_encryptor->decrypt(plaintext, &data[0], data.size());
+    aes_encryptor->decrypt(plaintext, &data[0], data_len);
 
     // 随机key赋值， 得到密文的 data_key
     this->data_key.assign(plaintext.begin(), plaintext.begin() + 32);
@@ -411,6 +423,23 @@ void session::unpack_reply_exchange(data_t& reply_ramdom_str) {
 }
 
 
+void session::unpack_reply_data(data_t& data_right) {
+    const data_t&     data     = this->lss_reply.get_data(); // 当前是密文
+    const std::size_t data_len = this->lss_reply.data_len();
+    
+    if (config::get_instance().get_zip_on()) {
+        // TODO
+        // 解压 data
+    }
+    if (! (this->aes_encryptor)) {
+        this->aes_encryptor = std::make_shared<crypto::Encryptor>(
+            new crypto::Aes(this->data_key, crypto::Aes::raw256keysetting()));
+    
+    }
+    vdata_t data_right_;
+    this->aes_encryptor->decrypt(data_right_, &data[0], data_len);
+    data_right.assign(data_right_.begin(), data_right_.end());
+}
 
 
 

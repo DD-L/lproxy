@@ -7,6 +7,8 @@
 	> Created Time: 2015/11/30 5:17:21
  ************************************************************************/
 #include <type_traits>
+#include <thread>
+#include <lss/config.h>
 #include <lss/session.h>
 
 namespace lproxy {
@@ -17,7 +19,7 @@ class lss_server {
 static_assert(std::is_base_of<session, SESSION>::value, 
         "SESSION should be derived from 'session'.");
 public:
-    lss_server(boost::asio::io_service& io_service, unsigned short port)
+    lss_server(boost::asio::io_service& io_service, uint16_t port)
             : io_service_(io_service),
             acceptor_(io_service, tcp::endpoint(tcp::v4(), port)) {
         start_accept();
@@ -29,7 +31,7 @@ private:
     void start_accept() {
         session* new_session = 
             new SESSION(io_service_left(), io_service_right());
-        acceptor_.async_accept(new_session->socket_left(),
+        acceptor_.async_accept(new_session->get_socket_left(),
                 boost::bind(&lss_server::handle_accept, this, new_session,
                     boost::asio::placeholders::error));
     }
@@ -73,6 +75,12 @@ private:
 }; // class lproxy::lss_server
 
 
+
+} // namespace lproxy
+
+#include <lss/session_local.h>  // for  lproxy::local::session
+#include <lss/session_server.h> // for lproxy::server::session
+namespace lproxy {
 namespace local { 
     typedef lproxy::lss_server<local::session>  lss_server;
 } // namespace lproxy::local
@@ -80,10 +88,7 @@ namespace local {
 namespace server {
     typedef lproxy::lss_server<server::session> lss_server;
 } // namespace lproxy::server
-
 } // namespace lproxy
 
 #endif // _LSS_SERVER_H_1
-
-
 
