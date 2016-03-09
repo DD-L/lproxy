@@ -11,11 +11,6 @@ int main(int argc, char* argv[])
 try {
     // step 0
     // 获取配置
-    //if (argc != 2) {
-    //    std::cerr << "Usage: " << argv[0] << " <port>\n";
-    //    return 1;
-    //}
-    
     uint16_t local_bind_port 
         = lproxy::local::config::get_instance().get_local_bind_port(); 
 

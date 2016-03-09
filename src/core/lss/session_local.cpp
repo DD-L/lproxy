@@ -22,8 +22,8 @@ session::session(boost::asio::io_service& io_service_left,
     status = status_not_connected;    
     // 是否 发心跳?
     // TODO
-    ip::tcp::socket::keep_alive keepalive(true);
-    socket_right.set_option(keepalive);
+    //ip::tcp::socket::keep_alive keepalive(true);
+    //socket_right.set_option(keepalive);
 }
 
 void session::start(void) {
@@ -38,6 +38,8 @@ void session::start(void) {
     */
     const auto& server_name = config::get_instance().get_server_name();
     const auto& server_port = config::get_instance().get_server_port();
+
+    std::cout << "async_resolve: " << server_name << ":" << server_port << std::endl;
 
     tcp::resolver resolver_right(this->socket_right.get_io_service());
     resolver_right.async_resolve({server_name, server_port}, 
@@ -59,6 +61,8 @@ void session::resolve_handler(const boost::system::error_code& ec,
         // TODO
         std::cout << "Error: " << ec.message() << "\n";
         std::cout << "主机不可达" << std::endl;
+        std::cout << "delete this " << __LINE__ << '\n';
+        delete_this();
     }
 }
 
@@ -89,6 +93,9 @@ void session::connect_handler(const boost::system::error_code& ec,
         // TODO
         // 网络不可达
         std::cout << "Error: " << ec.message() << "\n";
+        std::cout << "网络不可达" << std::endl;
+        std::cout << "delete this " << __LINE__ << '\n';
+        delete_this();
     }
 }
 

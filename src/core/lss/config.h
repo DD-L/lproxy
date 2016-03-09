@@ -6,15 +6,35 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2016/3/1 7:47:37
  ************************************************************************/
-
 #include <crypto/encryptor.h>
 #include <crypto/rsa_crypto.h>
 #include <lss/typedefine.h>
+#include <thread>
+#include <chrono>
 
 namespace lproxy {
 
 class config {
     virtual void configure(void) = 0;
+public:
+    static void signal_handler(boost::asio::io_service* ios,
+            const boost::system::error_code& err, 
+            int signal) {
+        if (err)   return;
+        if (! ios) return;
+        switch (signal) {
+            case SIGINT:
+            case SIGTERM:
+                std::cout << "Exit..\n";
+                ios->stop();
+                while (! ios->stopped()) {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                }
+                exit(0);
+        default:
+            break;
+        } 
+    } 
 }; // class config
 
 namespace local {
@@ -52,7 +72,8 @@ private:
         // read data from local configure file
         // TODO
         // 临时解决方案
-        m_server_name = /*(const_byte_ptr)*/"192.168.33.124";
+        //m_server_name = /*(const_byte_ptr)*/"192.168.33.124";
+        m_server_name = /*(const_byte_ptr)*/"127.0.0.1";
         m_server_port = /*(const_byte_ptr)*/"8088";
         m_auth_key    = /*(const_byte_ptr)*/"xxxxxxxxx";
         m_zip_on      = false;
@@ -123,7 +144,8 @@ private:
         m_cipher_auth_key_set.insert(
                 (const_byte_ptr)"ABA369F7D2B28A9098A0A26FEB7DC965");
 
-        m_bind_addr = "192.168.33.124";
+        //m_bind_addr = "192.168.33.124";
+        m_bind_addr = "127.0.0.1";
         m_bind_addr_type = "ipv4";
         m_bind_port = 8088;
     }

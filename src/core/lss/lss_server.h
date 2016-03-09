@@ -23,8 +23,17 @@ public:
             : io_service_(io_service),
             acceptor_(io_service, tcp::endpoint(tcp::v4(), port)) {
         start_accept();
-        std::thread thread_right(handle_thread_right, std::ref(io_service_right()));
+        std::thread thread_right(handle_thread_right, 
+                std::ref(io_service_right()));
         this->thread_right = std::move(thread_right);
+
+        // register signal
+        boost::asio::signal_set sig_left(io_service_left(), SIGINT, SIGTERM);
+        boost::asio::signal_set sig_right(io_service_right(), SIGINT, SIGTERM);
+        sig_left.async_wait(boost::bind(&config::signal_handler, 
+                    &io_service_left(), _1, _2));
+        sig_right.async_wait(boost::bind(&config::signal_handler, 
+                    &io_service_right(), _1, _2));
     }
 
 private:

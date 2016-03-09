@@ -6,6 +6,7 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2016/03/05 - 07:00:52
  ************************************************************************/
+#include <lss/macros.h>
 #include <iostream>
 #include <stdint.h>
 #include <string>
