@@ -6,6 +6,10 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2016/03/05 - 07:00:52
  ************************************************************************/
+
+// TODO
+#define LSS_DEBUG
+
 #include <lss/macros.h>
 #include <iostream>
 #include <stdint.h>
@@ -38,7 +42,27 @@ using ip::tcp;
 using ip::udp;
 
 // function
+template <typename DATA_TYPE, typename VTYPE, 
+         typename F = decltype(std::dec)>
+void _debug_print_data(const DATA_TYPE& data, VTYPE, 
+        char c = ' ', F f = std::dec) {
+#ifdef LSS_DEBUG
+    for (auto& v : data) {
+        std::cout << f << VTYPE(v) << c;
+    }
+    std::cout << std::dec << std::endl;
+#endif
+}
 
+template <typename T>
+vdata_t get_vdata_from_lss_pack(T&& lss) {
+#ifdef LSS_DEBUG
+    vdata_t _test(boost::asio::buffer_size(std::forward<T>(lss).buffers()));
+    boost::asio::buffer_copy(boost::asio::buffer(_test), 
+            std::forward<T>(lss).buffers());
+    return _test;
+#endif
+}
 
 } // namespace lproxy
 

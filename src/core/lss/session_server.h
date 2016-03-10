@@ -162,7 +162,7 @@ private:
      *      }
      * }
      */
-    data_t& unpack_data(data_t& plain);
+    data_t& unpack_data(data_t& plain, bool is_zip = false);
 
     // socks5 [var cmd rsv atype dstaddr dstport] 处理流程
     /**
@@ -292,6 +292,8 @@ private:
     tcp::socket       socket_left; // local
     tcp::socket       socket_right_tcp; // remote tcp
     udp::socket       socket_right_udp; // remote udp
+    std::shared_ptr<tcp::resolver> resolver_right_tcp;// 
+    std::shared_ptr<udp::resolver> resolver_right_udp;// 
 
     enum {
         CMD_CONNECT   = 0x01,

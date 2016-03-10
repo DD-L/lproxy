@@ -109,8 +109,9 @@ public:
         static config instance;
         return instance;
     }
-    crypto::RsaKey::size get_rsa_keysize(void) {
-        return m_rsa_keysize;
+    //crypto::RsaKey::size get_rsa_keysize(void) {
+    uint16_t get_rsa_keysize(void) {
+        return (uint16_t)m_rsa_keysize;
     }
     const sdata_t get_rsa_publickey_hex(void) {
         return m_rsakey.publicKeyHex();

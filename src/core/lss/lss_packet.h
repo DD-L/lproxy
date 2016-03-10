@@ -27,33 +27,53 @@ public:
                        data() {}
     
     __packet(byte version_,  byte pack_type_, 
-               data_len_t data_len_, const data_t& data_)
+           data_len_t data_len_, const data_t& data_)
 
-                : version(version_), type(pack_type_), 
-                  data_len_high_byte((data_len_ >> 8) & 0xff),
-                  data_len_low_byte(data_len_ & 0xff), data(data_) {}
+            : version(version_), type(pack_type_), 
+              data_len_high_byte((data_len_ >> 8) & 0xff),
+              data_len_low_byte(data_len_ & 0xff), data(data_) {}
 
     __packet(byte version_, byte pack_type_,  byte data_len_high_, 
-               byte data_len_low_, const data_t& data_)
+           byte data_len_low_, const data_t& data_)
 
-                : version(version_), type(pack_type_), 
-                  data_len_high_byte(data_len_high_),
-                  data_len_low_byte(data_len_high_), data(data_) {}
+            : version(version_), type(pack_type_), 
+              data_len_high_byte(data_len_high_),
+              data_len_low_byte(data_len_high_), data(data_) {}
 
     __packet(byte version_,  byte pack_type_, 
-               data_len_t data_len_, data_t&& data_)
+           data_len_t data_len_, data_t&& data_)
 
-                : version(version_), type(pack_type_), 
-                  data_len_high_byte((data_len_ >> 8) & 0xff),
-                  data_len_low_byte(data_len_ & 0xff), 
-                  data(std::move(data_)) {}
+            : version(version_), type(pack_type_), 
+              data_len_high_byte((data_len_ >> 8) & 0xff),
+              data_len_low_byte(data_len_ & 0xff), 
+              data(std::move(data_)) {}
 
     __packet(byte version_, byte pack_type_,  byte data_len_high_, 
-               byte data_len_low_, data_t&& data_)
+           byte data_len_low_, data_t&& data_)
 
-                : version(version_), type(pack_type_), 
-                  data_len_high_byte(data_len_high_),
-                  data_len_low_byte(data_len_high_), data(std::move(data_)) {}
+            : version(version_), type(pack_type_), 
+              data_len_high_byte(data_len_high_),
+              data_len_low_byte(data_len_high_), data(std::move(data_)) {}
+
+    __packet(const __packet& that) {
+        if (this != &that) {
+            version = that.version;
+            type    = that.type;
+            data_len_high_byte = that.data_len_high_byte;
+            data_len_low_byte  = that.data_len_low_byte;
+            data.assign(that.data.begin(), that.data.end());
+        }
+    }
+    __packet& operator= (const __packet& that) {
+        if (this != &that) {
+            version = that.version;
+            type    = that.type;
+            data_len_high_byte = that.data_len_high_byte;
+            data_len_low_byte  = that.data_len_low_byte;
+            data.assign(that.data.begin(), that.data.end());
+        }
+        return *this;
+    }
 
     virtual ~__packet(void) {}
 
@@ -74,7 +94,6 @@ struct __request_type : request_or_reply_base_class {
         zipdata  = 0x17,
         bad      = 0xff
     };
-    
 }; // struct lproxy::__request_type
 
 struct __reply_type : request_or_reply_base_class {
@@ -146,10 +165,18 @@ public:
     void set_data_size(std::size_t size, char c = 0) {
         pack.data.resize(size, c);
         pack_data_size_setting = true;
+        //_data_size = size;
     }
 
     boost::array<boost::asio::mutable_buffer, 5> buffers(void) {
         assert(pack_data_size_setting);
+        /*
+        pack.version = 0xff;
+        pack.type    = 0xff;
+        pack.data_len_high_byte = 0x00;
+        pack.data_len_high_byte = 0x00;
+        pack.data.assign(_data_size, (char)0);
+        */
         boost::array<boost::asio::mutable_buffer, 5> bufs =
         {
             {
@@ -184,6 +211,7 @@ public:
 private:
     __packet pack;
     bool pack_data_size_setting = false;
+    //std::size_t    _data_size;
 }; // class lproxy::local::reply
 
 
@@ -200,10 +228,18 @@ public:
     void set_data_size(std::size_t size, char c = 0) {
         pack.data.resize(size, c);
         pack_data_size_setting = true;
+        //_data_size = size;
     }
 
     boost::array<boost::asio::mutable_buffer, 5> buffers(void) {
         assert(pack_data_size_setting);
+        /*
+        pack.version = 0xff;
+        pack.type    = 0xff;
+        pack.data_len_high_byte = 0x00;
+        pack.data_len_high_byte = 0x00;
+        pack.data.assign(_data_size, (char)0);
+        */
         boost::array<boost::asio::mutable_buffer, 5> bufs =
         {
             {
@@ -236,6 +272,7 @@ public:
 private:
     __packet pack;
     bool pack_data_size_setting = false;
+    //std::size_t _data_size;
 }; // class lproxy::server::request
 
 // server 端用来发给 local 端的数据

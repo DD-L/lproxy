@@ -144,7 +144,7 @@ private:
     void unpack_reply_exchange(sdata_t& reply_random_str);
 
     // 解包data.
-    void unpack_reply_data(data_t& data_right);
+    void unpack_reply_data(data_t& data_right, bool is_zip = false);
 
 private:
     void delete_this(void);
@@ -158,6 +158,7 @@ private:
 private:
     tcp::socket      socket_left;  // client 
     tcp::socket      socket_right; // remote
+    tcp::resolver resolver_right;  // remote resolver
     std::atomic_flag delete_flag = ATOMIC_FLAG_INIT;
 }; // class lproxy::local::session
 
