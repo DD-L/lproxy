@@ -17,6 +17,7 @@ public:
     virtual tcp::socket& get_socket_left(void) = 0;
     virtual ~session(void) {}
 protected:
+    enum             { max_length = 2048};
     enum {
         status_not_connected = 0,
         status_connected     = 1,

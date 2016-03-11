@@ -8,6 +8,8 @@
 #include <lss/session_local.h>
 #include <lss/config.h>
 #include <crypto/md5_crypto.h>
+#include <crypto/rsa_crypto.h>
+#include <except/except.h>
 
 using namespace lproxy::local;
 using lproxy::tcp;
@@ -106,6 +108,8 @@ void session::hello_handler(const boost::system::error_code& error,
     if (! error) {
         // session 中第一次用 this->lss_reply 读数据, 需要开辟空间
         this->lss_reply.set_data_size(max_length);
+        // or
+        //this->lss_reply.assign_data(max_length, 0);
 
         socket_right.async_read_some(this->lss_reply.buffers(), 
                 boost::bind(&session::right_read_handler, this,
@@ -128,6 +132,8 @@ void session::exchange_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
+        // 每次异步读数据前，清空 data
+        this->lss_reply.assign_data(max_length, 0);
         socket_right.async_read_some(this->lss_reply.buffers(), 
                 boost::bind(&session::right_read_handler, this, _1, _2));
                     //boost::asio::placeholders::error,
@@ -155,9 +161,6 @@ void session::right_read_handler(const boost::system::error_code& error,
         << this->lss_reply.data_len() << '\n';
     _debug_print_data(get_vdata_from_lss_pack(this->lss_reply), 
             int(), ' ', std::hex);
-    std::cout << "[[[";
-    _debug_print_data(this->lss_reply.get_data(), int(), ' ', std::hex);
-    std::cout << "]]]\n";
     // </debug>
     if (! error) {
         //switch (this->lss_reply.version()) {
@@ -181,16 +184,24 @@ void session::right_read_handler(const boost::system::error_code& error,
                 data_t      public_key;
                 unpack_reply_hello(keysize, public_key);
                 // 构造 requst::exchange
-                auto&& exchange = pack_exchange(keysize, public_key);
+                //auto&& exchange = pack_exchange(keysize, public_key);
+
+                // test
+                boost::asio::async_write(socket_right, 
+                        pack_exchange(keysize, public_key).buffers(),
+                        boost::bind(&session::exchange_handler, this, _1, _2));
+
+                // test
+                /*
                 // 发送给 server
                 boost::asio::async_write(socket_right, exchange.buffers(),
                         boost::bind(&session::exchange_handler, this, _1, _2));
                             //boost::asio:placeholders::error,
                             //boost::asio::placeholders::bytes_transferred)); 
-
+                */
                 // debug
                 std::cout << "send exchange to server: " << std::endl;
-                _debug_print_data(get_vdata_from_lss_pack(exchange), 
+                _debug_print_data(get_vdata_from_lss_pack(this->lss_request), 
                         int(), ' ', std::hex);
                 break;
             } 
@@ -232,14 +243,19 @@ void session::right_read_handler(const boost::system::error_code& error,
                         // 解包
                         data_t data_right;
                         unpack_reply_data(data_right, is_zip_data);
+                        std::shared_ptr<data_t> data 
+                            = std::make_shared<data_t>(data_right);
                         // 将 data_right 发至 client
                         boost::asio::async_write(socket_left,
-                             boost::asio::buffer(data_right),
+                             boost::asio::buffer(*data),
                              boost::bind(&session::left_write_handler,
-                                 this, boost::asio::placeholders::error,
-                                 boost::asio::placeholders::bytes_transferred));
+                               this, _1, _2)); 
+
+                        std::cout << "\nsend plain data to client : ";
+                        _debug_print_data(*data, int(), ' ', std::hex);
                     }
                     else {
+                        std:: cout << "reply::data: status Wrong" << std::endl;
                         throw wrong_packet_type();
                     }
                 break;
@@ -266,6 +282,16 @@ void session::right_read_handler(const boost::system::error_code& error,
             // 临时方案
             delete_this();
         }
+        catch (EncryptException& ec) {
+            std::cout << ec.what() << std::endl; 
+            std::cout << __LINE__ << " Error right_read_handler, delete.\n";
+            delete_this(); 
+        }
+        catch (DecryptException& ec) {
+            std::cout << ec.what() << std::endl; 
+            std::cout << __LINE__ << " Error right_read_handler, delete.\n";
+            delete_this(); 
+        }
         catch (...) {
             // TODO
             // 临时方案
@@ -283,14 +309,17 @@ void session::right_read_handler(const boost::system::error_code& error,
 }
 
 void session::transport(void) {
+    // 第一次 用 data_left 读数据
     this->data_left.resize(max_length, 0);
-    socket_left.async_read_some(
+    this->socket_left.async_read_some(
             boost::asio::buffer(this->data_left, max_length),
             boost::bind(&session::left_read_handler, this, _1, _2));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::bytes_transferred));
 
-    socket_right.async_read_some(lss_reply.buffers(), 
+    // 每次异步读数据前，清空 data
+    this->lss_reply.assign_data(max_length, 0);
+    this->socket_right.async_read_some(lss_reply.buffers(), 
             boost::bind(&session::right_read_handler, this, _1, _2));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::bytes_transferred));
@@ -303,14 +332,21 @@ void session::left_read_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << "\n";
 
     if (! error) {
-        // 封包
-        auto&& rqst = pack_data(bytes_transferred);
-        // 发送至服务端
-        boost::asio::async_write(socket_right, rqst.buffers(),
-                boost::bind(&session::right_write_handler, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred)); 
 
+        std::cout << "read data from client:";
+        _debug_print_data(this->data_left, char(), 0);
+        _debug_print_data(this->data_left, int(), ' ', std::hex);
+
+        // 封包
+        //auto&& rqst = pack_data(bytes_transferred);
+        // 发送至服务端
+        boost::asio::async_write(socket_right, 
+                pack_data(bytes_transferred).buffers(),
+                boost::bind(&session::right_write_handler, this, _1, _2));
+                    //boost::asio::placeholders::error,
+                    //boost::asio::placeholders::bytes_transferred)); 
+        // debug
+        std::cout << "and send to server." << std::endl;
     }
     else {
         std::cout << "delete this " << __LINE__ << '\n';
@@ -325,6 +361,8 @@ void session::right_write_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
+        // 每次异步读数据前，清空 data
+        this->data_left.assign(max_length, 0);
         socket_left.async_read_some(
                 boost::asio::buffer(this->data_left, max_length),
                 boost::bind(&session::left_read_handler, this, _1, _2));
@@ -346,6 +384,8 @@ void session::left_write_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
+        // 每次异步读数据前，清空 data
+        this->data_left.assign(max_length, 0);
         socket_right.async_read_some(boost::asio::buffer(data_left, max_length),
                 boost::bind(&session::right_read_handler, this, _1, _2));
                     //boost::asio::placeholders::error,
@@ -363,9 +403,10 @@ void session::left_write_handler(const boost::system::error_code& error,
 const request& session::pack_hello(void) {
     static const request hello(0x00, request::hello, 0, data_t());
     return hello;
+    //return this->lss_request.assign(0x00, request::hello, 0, data_t());
 };
 // 组装 exchange
-const request session::pack_exchange(const keysize_t& keysize, 
+const request& session::pack_exchange(const keysize_t& keysize, 
         const data_t& public_key) {
     // step 1 生成随机数
     this->random_str = lproxy::random_string::generate_number();
@@ -376,12 +417,26 @@ const request session::pack_exchange(const keysize_t& keysize,
     md5.encrypt(md5_auth_key, &auth_key[0], auth_key.size());
     // step 3 组装 data
     sdata_t&& data_ = md5_auth_key + this->random_str;
-    data_t data(data_.begin(), data_.end());
+    //data_t data(data_.begin(), data_.end());
+
+    // 用 keysize 和 public_key 构造 rsa 加密器
+    crypto::Encryptor rsa_encryptor(
+            new crypto::Rsa(
+                    (crypto::RsaKey::size)keysize, 
+                    &public_key[0], public_key.size()
+                ) // crypto::Rsa
+            ); // crypto::Encryptor
+    // 对数据加密
+    vdata_t cipher;
+    rsa_encryptor.encrypt(cipher, (const_byte_ptr)&data_[0], data_.size());
+
     // step 4 组装 lproxy::local::request
-    return request(0x00, request::exchange, data.size(), data);
+    //return request(0x00, request::exchange, cipher.size(), cipher);
+    return this->lss_request.assign(0x00, request::exchange, cipher.size(), 
+            data_t(cipher.begin(), cipher.end()));
 }
 // 组装 data
-const request session::pack_data(std::size_t data_len) {
+const request& session::pack_data(std::size_t data_len) {
     // 用 密文this->data_key 构造 this->aes_encryptor 加密器
     this->aes_encryptor = std::make_shared<crypto::Encryptor>(
             new crypto::Aes(this->data_key, crypto::Aes::raw256keysetting()));
@@ -393,11 +448,23 @@ const request session::pack_data(std::size_t data_len) {
         // TODO
         // 压缩 data
 
-        return request(0x00, request::zipdata, data_len, 
-            data_t(data.begin(), data.end()));
+        //return request(0x00, request::zipdata, data_len, 
+        //    data_t(data.begin(), data.end()));
+        return this->lss_request.assign(0x00, request::zipdata, data_len,
+                data_t(data.begin(), data.end()));
     }
 
-    return request(0x00, request::data, data_len, 
+    // debug
+    std::cout << "pack data/zipdata: ";
+    _debug_print_data(
+            get_vdata_from_lss_pack(
+                request(0x00, request::data, data_len,
+                    data_t(data.begin(), data.end()))), 
+                int(), ' ', std::hex);
+
+    //return request(0x00, request::data, data_len, 
+    //        data_t(data.begin(), data.end()));
+    return this->lss_request.assign(0x00, request::data, data_len,
             data_t(data.begin(), data.end()));
 }
 
@@ -405,6 +472,7 @@ const request session::pack_data(std::size_t data_len) {
 const request& session::pack_bad(void) {
     static const request bad(0x00, request::bad, 0x00, data_t());
     return bad;
+    //return this->lss_request.assign(0x00, request::bad, 0x00, data_t());
 }
 
 
@@ -443,8 +511,11 @@ void session::unpack_reply_exchange(sdata_t& reply_random_str) {
     const std::size_t data_len = this->lss_reply.data_len();
     // 用this->auth_key 构造aes 加解密器
     const sdata_t& auth_key = config::get_instance().get_auth_key();
+    auto&& md5 = crypto::Encryptor(new crypto::Md5());
+    sdata_t cipher_auth_key;
+    md5.encrypt(cipher_auth_key, (const_byte_ptr)&auth_key[0], auth_key.size());
     auto aes_encryptor = std::make_shared<crypto::Encryptor>(
-            new crypto::Aes(auth_key));
+            new crypto::Aes(cipher_auth_key, crypto::Aes::raw256keysetting()));
     vdata_t plaintext;
     // 解密data
     aes_encryptor->decrypt(plaintext, &data[0], data_len);
@@ -454,6 +525,14 @@ void session::unpack_reply_exchange(sdata_t& reply_random_str) {
 
     // 获取 server 端发来的随机数
     reply_random_str.assign(plaintext.begin() + 32, plaintext.end());
+
+    // debug
+    std::cout << "get data_key: " << std::endl;
+    _debug_print_data(this->data_key, int(), ' ', std::hex);
+    std::cout << "get reply_random_str:" << std::endl;
+    _debug_print_data(reply_random_str, char(), 0);
+    _debug_print_data(reply_random_str, int(), ' ', std::hex);
+    std::cout << "this->random_str = " << this->random_str << std::endl;
 }
 
 

@@ -64,6 +64,15 @@ public:
             data.assign(that.data.begin(), that.data.end());
         }
     }
+    __packet(__packet&& that) {
+        if (this != &that) {
+            version = that.version;
+            type    = that.type;
+            data_len_high_byte = that.data_len_high_byte;
+            data_len_low_byte  = that.data_len_low_byte;
+            data = std::move(that.data);
+        }
+    }
     __packet& operator= (const __packet& that) {
         if (this != &that) {
             version = that.version;
@@ -71,6 +80,16 @@ public:
             data_len_high_byte = that.data_len_high_byte;
             data_len_low_byte  = that.data_len_low_byte;
             data.assign(that.data.begin(), that.data.end());
+        }
+        return *this;
+    }
+    __packet& operator= (__packet&& that) {
+        if (this != &that) {
+            version = that.version;
+            type    = that.type;
+            data_len_high_byte = that.data_len_high_byte;
+            data_len_low_byte  = that.data_len_low_byte;
+            data = std::move(that.data);
         }
         return *this;
     }
@@ -114,6 +133,7 @@ namespace local {
 // local 端用来发给 server 端的数据包
 class request : public __request_type {
 public:
+    request(void) : pack() {}
     request(byte version,        byte pack_type, 
                data_len_t data_len, const data_t& data)
         : pack(version, pack_type, data_len, data) {}
@@ -130,8 +150,19 @@ public:
                byte data_len_low, data_t&& data)
         : pack(version, pack_type, data_len_high, 
                 data_len_low, std::move(data)) {}
-
     virtual ~request(void) {}
+
+    request& assign(byte version,   byte pack_type,
+            data_len_t data_len, const data_t& data) {
+        this->pack = __packet(version, pack_type, data_len, data);
+        return *this;
+    }
+    request& assign(byte version,   byte pack_type,
+            data_len_t data_len, data_t&& data) {
+        this->pack = __packet(version, pack_type, data_len, std::move(data));
+        return *this;
+    }
+
     virtual data_len_t data_len(void) const override {
         data_len_t len = pack.data_len_high_byte;
         return ((len << 8) & 0xff00) | pack.data_len_low_byte;
@@ -162,12 +193,17 @@ public:
     reply(void) : pack(), pack_data_size_setting(false) {}
     virtual ~reply(void) {}
 
-    void set_data_size(std::size_t size, char c = 0) {
+    void set_data_size(std::size_t size, byte c = 0) {
         pack.data.resize(size, c);
         pack_data_size_setting = true;
         //_data_size = size;
     }
+    void assign_data(std::size_t size, byte c = 0) {
+        pack.data.assign(size, c);
+        pack_data_size_setting = true;
+    }
 
+    // just for reading
     boost::array<boost::asio::mutable_buffer, 5> buffers(void) {
         assert(pack_data_size_setting);
         /*
@@ -225,12 +261,17 @@ public:
     request(void) : pack(), pack_data_size_setting(false) {}
     virtual ~request(void) {}
 
-    void set_data_size(std::size_t size, char c = 0) {
+    void set_data_size(std::size_t size, byte c = 0) {
         pack.data.resize(size, c);
         pack_data_size_setting = true;
         //_data_size = size;
     }
+    void assign_data(std::size_t size, byte c = 0) {
+        pack.data.assign(size, c);
+        pack_data_size_setting = true;
+    }
 
+    // just for reading
     boost::array<boost::asio::mutable_buffer, 5> buffers(void) {
         assert(pack_data_size_setting);
         /*
@@ -278,6 +319,7 @@ private:
 // server 端用来发给 local 端的数据
 class reply : public __reply_type {
 public:
+    reply(void) : pack() {}
     reply(byte version,        byte pack_type, 
                data_len_t data_len, const data_t& data)
         : pack(version, pack_type, data_len, data) {}
@@ -294,8 +336,19 @@ public:
                byte data_len_low, data_t&& data)
         : pack(version, pack_type, data_len_high, 
                 data_len_low, std::move(data)) {}
-
     virtual ~reply(void) {}
+
+    reply& assign(byte version,   byte pack_type,
+            data_len_t data_len, const data_t& data) {
+        this->pack = __packet(version, pack_type, data_len, data);
+        return *this;
+    }
+    reply& assign(byte version,   byte pack_type,
+            data_len_t data_len, data_t&& data) {
+        this->pack = __packet(version, pack_type, data_len, std::move(data));
+        return *this;
+    }
+
     virtual data_len_t data_len(void) const override {
         data_len_t len = pack.data_len_high_byte;
         return ((len << 8) & 0xff00) | pack.data_len_low_byte;

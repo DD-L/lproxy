@@ -128,11 +128,11 @@ private:
     // 组装 hello
     const request& pack_hello(void);
     // 组装 exchange
-    const request pack_exchange(const keysize_t& keysize, 
+    const request& pack_exchange(const keysize_t& keysize, 
             const data_t& public_key);
     
     // 组装 data / zipdata
-    const request pack_data(std::size_t data_len);
+    const request& pack_data(std::size_t data_len);
     
     // 组装 bad
     const request& pack_bad(void);
@@ -150,16 +150,18 @@ private:
     void delete_this(void);
 private:
     lproxy::local::reply    lss_reply; // server 端发来的原始数据
+    lproxy::local::request  lss_request;// 向server端发送的数据 (hello, bad 除外)
     sdata_t                  random_str; // local 端生成的随机数
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
     vdata_t                   data_key;  // server 端发来的 随机 key, 也是 数据传输 用的 key
-    enum             { max_length = 2048 };
+    //enum             { max_length = 2048 };
     vdata_t          data_left; //从 client 发来的数据（通常是 socks5 数据） 
 private:
     tcp::socket      socket_left;  // client 
     tcp::socket      socket_right; // remote
     tcp::resolver resolver_right;  // remote resolver
     std::atomic_flag delete_flag = ATOMIC_FLAG_INIT;
+
 }; // class lproxy::local::session
 
 } // namespace lproxy::local
