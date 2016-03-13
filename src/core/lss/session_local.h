@@ -78,7 +78,13 @@ private:
      *      }
      *      case (reply::zipdata or reply::data) {
      *          unpack_reply_data
-     *          async_write:socket_left [bind: left_write_handler]
+     *          cut_lss
+     *          if ('unprocessed data still in lss_reply') {
+     *              async_write:socket_left [bind: right_read_handler]
+     *          }
+     *          else {
+     *              async_write:socket_left [bind: left_write_handler]
+     *          }
      *      }
      *      case (reply::deny) { delete_this }
      *      case (reply::timeout) { delete_this }
@@ -144,18 +150,18 @@ private:
     void unpack_reply_exchange(sdata_t& reply_random_str);
 
     // 解包data.
-    void unpack_reply_data(data_t& data_right, bool is_zip = false);
+    const int unpack_reply_data(data_t& data_right, 
+            std::size_t lss_length, bool is_zip = false);
 
 private:
     void delete_this(void);
 private:
-    lproxy::local::reply    lss_reply; // server 端发来的原始数据
-    lproxy::local::request  lss_request;// 向server端发送的数据 (hello, bad 除外)
+    lproxy::local::reply   lss_reply; // server 端发来的原始数据
+    lproxy::local::request lss_request;// 向server端发送的数据 (hello, bad 除外)
     sdata_t                  random_str; // local 端生成的随机数
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
-    vdata_t                   data_key;  // server 端发来的 随机 key, 也是 数据传输 用的 key
-    //enum             { max_length = 2048 };
-    vdata_t          data_left; //从 client 发来的数据（通常是 socks5 数据） 
+    vdata_t     data_key;  // server 端发来的 随机 key, 也是 数据传输 用的 key
+    vdata_t     data_left; //从 client 发来的数据（通常是 socks5 数据） 
 private:
     tcp::socket      socket_left;  // client 
     tcp::socket      socket_right; // remote

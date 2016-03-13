@@ -38,7 +38,7 @@ public:
 
             : version(version_), type(pack_type_), 
               data_len_high_byte(data_len_high_),
-              data_len_low_byte(data_len_high_), data(data_) {}
+              data_len_low_byte(data_len_low_), data(data_) {}
 
     __packet(byte version_,  byte pack_type_, 
            data_len_t data_len_, data_t&& data_)
@@ -53,7 +53,7 @@ public:
 
             : version(version_), type(pack_type_), 
               data_len_high_byte(data_len_high_),
-              data_len_low_byte(data_len_high_), data(std::move(data_)) {}
+              data_len_low_byte(data_len_low_), data(std::move(data_)) {}
 
     __packet(const __packet& that) {
         if (this != &that) {
@@ -192,6 +192,24 @@ class reply : public __reply_type {
 public:
     reply(void) : pack(), pack_data_size_setting(false) {}
     virtual ~reply(void) {}
+    
+    explicit reply(const reply& that) : pack(that.pack) {}
+    explicit reply(reply&& that) : pack(std::move(that.pack)) {}
+    explicit reply(const __packet& _pack) : pack(_pack) {}
+    explicit reply(__packet&& _pack) : pack(std::move(_pack)) {}
+    reply& operator= (const reply& that) {
+        if (this != &that) {
+             pack = that.pack;   
+        }
+        return *this;
+    }
+    reply& operator= (reply&& that) {
+        if (this != &that) {
+            pack = std::move(that.pack);
+        }
+        return *this;
+    }
+
 
     void set_data_size(std::size_t size, byte c = 0) {
         pack.data.resize(size, c);
@@ -221,7 +239,6 @@ public:
                 boost::asio::buffer(&(pack.data_len_high_byte),  1), 
                 boost::asio::buffer(&(pack.data_len_low_byte),   1), 
                 boost::asio::buffer(&(pack.data[0]), pack.data.size()), 
-                
             }
         };
         return bufs;
@@ -260,6 +277,23 @@ class request : public __request_type {
 public:
     request(void) : pack(), pack_data_size_setting(false) {}
     virtual ~request(void) {}
+
+    explicit request(const request& that) : pack(that.pack) {}
+    explicit request(request&& that) : pack(std::move(that.pack)) {}
+    explicit request(const __packet& _pack) : pack(_pack) {}
+    explicit request(__packet&& _pack) : pack(std::move(_pack)) {}
+    request& operator= (const request& that) {
+        if (this != &that) {
+             pack = that.pack;   
+        }
+        return *this;
+    }
+    request& operator= (request&& that) {
+        if (this != &that) {
+            pack = std::move(that.pack);
+        }
+        return *this;
+    }
 
     void set_data_size(std::size_t size, byte c = 0) {
         pack.data.resize(size, c);

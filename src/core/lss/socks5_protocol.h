@@ -117,7 +117,6 @@ struct ident_resp {
 
 struct Domain_t {
     byte        Len;
-    //std::string Name;
     data_t      Name;
 };
 
@@ -125,27 +124,18 @@ struct Domain_t {
 template<std::size_t size>
 struct Ip_t {
     typedef byte _ip_t[size];
-    byte ip[size];
-    Ip_t() {
-        ::memset(ip, 0, size);
-    }
-    Ip_t(const Ip_t& that) {
-        ::memmove(ip, that.ip, size);
-    }
-    //Ip_t(const byte ip_[size]) {
-    Ip_t(const _ip_t ip_) {
-        ::memmove(ip, ip_, size);
-    }
+    _ip_t ip; // byte ip[size];
+
+    Ip_t() { ::memset(ip, 0, size); }
+    Ip_t(const Ip_t& that) { ::memmove(ip, that.ip, size); }
+    Ip_t(const _ip_t ip_) { ::memmove(ip, ip_, size); }
     Ip_t& operator= (const Ip_t& that) {
         if (this != &that) {
             ::memmove(this->ip, that.ip, size);
         }
         return *this;
     }
-    //Ip_t& operator= (const byte ip_[size]) {
-    Ip_t& operator= (const _ip_t ip_) {
-        *this = Ip_t(ip_);
-    }
+    Ip_t& operator= (const _ip_t ip_) { *this = Ip_t(ip_); }
 };
 
 typedef Ip_t<4>  Ipv4_t;
@@ -155,13 +145,9 @@ typedef Ip_t<16> Ipv6_t;
 // 客户端 发来的 request
 struct req {
     byte Version = 0x05;
-    //enum Version { V5 = 0x05 } version;
     byte Cmd;
-    //enum Cmd { CONNECT = 0x01, BIND = 0x02, UDP = 0x03 } cmd;
     byte Reserved = 0x00;
-    //enum Reserved { RESERVED = 0x00 } reserved;
     byte AddrType;
-    //enum AddrType {IPv4 = 0x01, DOMAIN = 0x03, IPV6 = 0x04} addrType;
 
     boost::variant<Ipv4_t, Domain_t, Ipv6_t> DestAddr;
     /*
@@ -178,7 +164,8 @@ struct req {
     uint16_t DestPort;
 
     req(const byte* data_p, std::size_t len) {
-        if (!(data_p && (len < 7))) {
+        //if (!(data_p && (len < 7))) {
+        if ((data_p == nullptr) || (len < 7)) {
             throw illegal_data_type();
         }
         Version         = *(data_p + 0);
@@ -213,10 +200,11 @@ struct req {
             DestAddr.Domain.name.assign(name, name + DestAddr.Domain.Len);
             */
             const byte domain_len = *(data_p + 4);
-            DestAddr = Domain_t({domain_len, data_t(data_p + 5, domain_len)});
+            DestAddr = Domain_t({domain_len, 
+                    data_t(data_p + 5, data_p + 5 + domain_len)});
 
-            port_high_byte_ = *(data_p + 6 + domain_len);
-            port_low_byte_  = *(data_p + 7 + domain_len);
+            port_high_byte_ = *(data_p + 5 + domain_len);
+            port_low_byte_  = *(data_p + 6 + domain_len);
             break;
         }
         case 0x04: 
@@ -280,6 +268,7 @@ struct resp {
         BindPort = port;
     }
 
+    // 必须设置完 Reply  Addr BindAddr BindPort 字段，才可以 执行 pack
     data_t& pack(data_t& data) {
 
         const std::size_t size = 4+1+256+2;
@@ -309,7 +298,7 @@ struct resp {
         switch (AddrType) {
         case 0x01: // ipv4
             //memmove(data_arr + 4, BindAddr.IPv4, 4);
-            memmove(data_arr + 4, boost::get<Ipv4_t>(BindAddr).ip, 4);
+            ::memmove(data_arr + 4, boost::get<Ipv4_t>(BindAddr).ip, 4);
             data_arr[8] = (BindPort >> 8) & 0xff;
             data_arr[9] = BindPort & 0xff;
 
@@ -337,7 +326,7 @@ struct resp {
             }
 
             data_arr[4] = domain.Len;
-            memmove(data_arr + 5, domain.Name.c_str(), domain.Len); 
+            ::memmove(data_arr + 5, domain.Name.c_str(), domain.Len); 
 
             data_arr[5 + domain.Len] = (BindPort >> 8) & 0xff;
             data_arr[6 + domain.Len] = BindPort & 0xff;

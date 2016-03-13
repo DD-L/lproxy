@@ -111,7 +111,7 @@ void session::hello_handler(const boost::system::error_code& error,
         // or
         //this->lss_reply.assign_data(max_length, 0);
 
-        socket_right.async_read_some(this->lss_reply.buffers(), 
+        this->socket_right.async_read_some(this->lss_reply.buffers(), 
                 boost::bind(&session::right_read_handler, this,
                     boost::asio::placeholders::error,
                     boost::asio::placeholders::bytes_transferred));
@@ -134,7 +134,7 @@ void session::exchange_handler(const boost::system::error_code& error,
     if (! error) {
         // 每次异步读数据前，清空 data
         this->lss_reply.assign_data(max_length, 0);
-        socket_right.async_read_some(this->lss_reply.buffers(), 
+        this->socket_right.async_read_some(this->lss_reply.buffers(), 
                 boost::bind(&session::right_read_handler, this, _1, _2));
                     //boost::asio::placeholders::error,
                     //boost::asio::placeholders::bytes_transferred));
@@ -149,7 +149,7 @@ void session::exchange_handler(const boost::system::error_code& error,
 }
 
 void session::right_read_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred) { 
     // <debug>
     std::cout << "right_read_handler \n<--- bytes_transferred = "
         << std::dec << bytes_transferred << '\n'; 
@@ -191,14 +191,6 @@ void session::right_read_handler(const boost::system::error_code& error,
                         pack_exchange(keysize, public_key).buffers(),
                         boost::bind(&session::exchange_handler, this, _1, _2));
 
-                // test
-                /*
-                // 发送给 server
-                boost::asio::async_write(socket_right, exchange.buffers(),
-                        boost::bind(&session::exchange_handler, this, _1, _2));
-                            //boost::asio:placeholders::error,
-                            //boost::asio::placeholders::bytes_transferred)); 
-                */
                 // debug
                 std::cout << "send exchange to server: " << std::endl;
                 _debug_print_data(get_vdata_from_lss_pack(this->lss_request), 
@@ -242,16 +234,55 @@ void session::right_read_handler(const boost::system::error_code& error,
                     if (status_data == status) {
                         // 解包
                         data_t data_right;
-                        unpack_reply_data(data_right, is_zip_data);
+                        const int rest_lss_data_len = unpack_reply_data(
+                                data_right, bytes_transferred, is_zip_data);
+
+                        /*
+                        std::cout << "after unpack_reply_data, data_right = \n";
+                        _debug_print_data(data_right, int(), ' ', std::hex);
+                        */
+
+                        if (rest_lss_data_len < 0) {
+                            throw incomplete_data(0 - rest_lss_data_len); 
+                        }
+
                         std::shared_ptr<data_t> data 
                             = std::make_shared<data_t>(data_right);
-                        // 将 data_right 发至 client
-                        boost::asio::async_write(socket_left,
-                             boost::asio::buffer(*data),
-                             boost::bind(&session::left_write_handler,
-                               this, _1, _2)); 
 
-                        std::cout << "\nsend plain data to client : ";
+                        // 裁剪 lss_reply 数据，（当前数据已缓存到*data）
+                        // 减掉当前lss数据。 (分包)
+                        bool is_continue = 
+                            cut_lss(bytes_transferred - rest_lss_data_len,
+                                bytes_transferred, this->lss_reply);
+                        // bytes_transferred - rest_lss_data_len 的意义是 
+                        // 新包在 旧包中 开始的位置（0开头）
+
+                        /*
+                        std::cout << "after cut_lss, *data = " << std::endl;
+                        _debug_print_data(*data, int(), ' ', std::hex);
+                        */
+
+                        // 将 data_right 发至 client
+                        if (rest_lss_data_len > 0 && is_continue) {
+                            // lss_reply 里还有未处理的数据
+                            std::cout << "unprocessed data still in lss_reply.."
+                                << std::endl;
+
+                            boost::asio::async_write(this->socket_left,
+                                boost::asio::buffer(*data),
+                                boost::bind(&session::right_read_handler, this,
+                                    boost::asio::placeholders::error,
+                                    std::size_t(rest_lss_data_len)));
+                        }
+                        else {
+                            // 最后一条不可再分割的数据再绑定 left_write_handler
+                            boost::asio::async_write(this->socket_left,
+                                 boost::asio::buffer(*data),
+                                 boost::bind(&session::left_write_handler,
+                                   this, _1, _2)); 
+                        }
+
+                        std::cout << "send plain data to client : ";
                         _debug_print_data(*data, int(), ' ', std::hex);
                     }
                     else {
@@ -366,8 +397,6 @@ void session::right_write_handler(const boost::system::error_code& error,
         socket_left.async_read_some(
                 boost::asio::buffer(this->data_left, max_length),
                 boost::bind(&session::left_read_handler, this, _1, _2));
-                    //boost::asio::placeholders::error,
-                    //boost::asio::placeholders::bytes_transferred));
     }
     else {
         // <debug>
@@ -385,11 +414,14 @@ void session::left_write_handler(const boost::system::error_code& error,
     // </debug>
     if (! error) {
         // 每次异步读数据前，清空 data
+        /*
         this->data_left.assign(max_length, 0);
         socket_right.async_read_some(boost::asio::buffer(data_left, max_length),
                 boost::bind(&session::right_read_handler, this, _1, _2));
-                    //boost::asio::placeholders::error,
-                    //boost::asio::placeholders::bytes_transferred));
+        */
+        this->lss_reply.assign_data(max_length, 0);
+        this->socket_right.async_read_some(this->lss_reply.buffers(),
+                boost::bind(&session::right_read_handler, this, _1, _2));
     }
     else {
         // <debug>
@@ -536,7 +568,20 @@ void session::unpack_reply_exchange(sdata_t& reply_random_str) {
 }
 
 
-void session::unpack_reply_data(data_t& data_right, bool is_zip/*=false*/) {
+/**
+ * @brief unpack_reply_data
+ * @param data_right [out]
+ * @param lss_length  当前尚未解包的 lss_reply 数据长度, 
+ *                      总是传入 bytes_trannsferred
+ * @param is_zip [bool, default false]
+ * @return [const int]     这次解包后（unpack 执行完），还剩
+ *                          未处理的 lss_reply 数据长度. 
+ *      = 0 数据已处理完毕
+ *      > 0 lss_reply 中还有未处理完的数据
+ *      < 0 当前 lss_reply 数据包不完整
+ */
+const int session::unpack_reply_data(data_t& data_right, 
+        std::size_t lss_length, bool is_zip/*=false*/) {
     const data_t&     data     = this->lss_reply.get_data(); // 当前是密文
     const std::size_t data_len = this->lss_reply.data_len();
     
@@ -552,16 +597,77 @@ void session::unpack_reply_data(data_t& data_right, bool is_zip/*=false*/) {
     vdata_t data_right_;
     this->aes_encryptor->decrypt(data_right_, &data[0], data_len);
     data_right.assign(data_right_.begin(), data_right_.end());
+
+    return lss_length - (4 + data_len); 
+    // (4 + data_len) 当前已经处理的lss包长度
 }
 
 
+/*
+void session::subpackage(std::shared_ptr<data_t> lss_data, std::size_t ) {
+
+}
+*/
 
 
-
-
-
-
-
+///**
+// * @brief cut_lss_reply
+// * @param start_pos  [std::size_t] 开始切割的位置
+// * @param lss_len    [std::size_t] 当前 lss 包有效长度
+// * @return  [bool] 切割后剩下的数据包是否完整。true 完整，false 不完整 
+// */
+////http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/buffer.html
+//bool session::cut_lss_reply(const std::size_t start_pos, 
+//        const std::size_t lss_len) {
+//    // step 1 
+//    //      如果 lss_len < start_pos + 4; 数据包不完整，但不能 throw
+//    //      if (lss_len < start_pos +4) {
+//    //          return false; // 终止切割，切割无意义 
+//    //          // 调用者，检查返回值，如果 false，切记要改用另外一个 write bind
+//    //      }
+//    // step 2 
+//    //      先把 lss_reply.buffers() arrary 复制一份，到
+//    //      并 缓存到 boost::asio::mutable_buffers_1 buf 中
+//    // step 3 
+//    //      构造 一个 lproxy::__packet obj = 
+//    //      lproxy::__packet(cb + start_pos, cb+start_pos+1,
+//    //      cb + start_pos +2, cb + start_pos +3,
+//    //      data_t(cb + start_pos +4, cb + lss_len));
+//    // this->lss_reply = lproxy::local::reply(obj);
+//    //
+//    // return true;
+//    
+//    if (lss_len < start_pos + 4) { // lss 包头部分长度为4
+//        return false; 
+//        // 如果切割后，剩下的数据包会不完整, 所以切割无意义，
+//        // 多余的丢掉不处理即可
+//    }
+//    /*
+//    lproxy::local::reply rply(this->lss_reply); // 复制一份
+//    auto& buf = boost::asio::buffer(rply.buffers());
+//    //std::size_t buf_size = boost::asio::buffer_size(buf);
+//    // 生成 新包
+//    auto&& pack = lproxy::__packet(
+//            *boost::asio::buffer_cast<byte*>(buf + start_pos), 
+//            *boost::asio::buffer_cast<byte*>(buf + start_pos + 1),
+//            *boost::asio::buffer_cast<byte*>(buf + start_pos + 2),
+//            *boost::asio::buffer_cast<byte*>(buf + start_pos + 3), // 包头部分
+//            data_t(boost::asio::buffer_cast<byte*>(cb + start_pos + 4), 
+//                boost::asio::buffer_cast<byte*>(cb + lss_len)));
+//    this->lss_reply = lproxy::local::reply(std::move(pack));
+//    return true;
+//    */
+//
+//    // 新算法
+//    vdata_t&& buf = lproxy::get_vdata_from_lss_pack(this->lss_reply);
+//    auto&& pack = lproxy::__packet(
+//            *(buf.begin() + start_pos),
+//            *(buf.begin() + start_pos + 1),
+//            *(buf.begin() + start_pos + 2),
+//            *(buf.begin() + start_pos + 3), // 包头部分结束
+//            data_t(buf.begin() + start_pos + 4, buf.begin() + lss_len));
+//    this->lss_reply = lproxy::local::reply(std::move(pack));
+//}
 
 
 /*

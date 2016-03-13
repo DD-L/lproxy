@@ -41,6 +41,7 @@ private:
      *      }
      *      case (request::zipdata or request::data) {
      *          unpack_data
+     *          cut_lss
      *          // sock5
      *          case (socks5::server::OPENING) {
      *             'VER NMETHODS METHODS' -> socks5::ident_req
@@ -51,25 +52,32 @@ private:
      *          case (socks5::server::CONNECTING) {
      *              'VER CMD RSV ATYP DST-ADDR DST-PROT' -> socks5::req rq
      *              socks5_request_processing(rq);
+     *              socket_left.async_read_some [bind: left_read_handler]
      *          }
      *          case (socks5::server::CONNECTED) {
      *              case (CMD_CONNECT) {
-     *                  async_write:this->socket_right_tcp {
-     *                      [bind: right_write_handler]
+     *                  if ('unprocessed data still in lss_request') {
+     *                      async_write:this->sock_right_tcp {
+     *                          [bind: left_read_handler]
+     *                      }
      *                  }
-     *                  socket_right_tcp.async_read_some {
-     *                      [bind: right_read_handler]
+     *                  else {
+     *                      async_write:this->socket_right_tcp {
+     *                          [bind: right_write_handler]
+     *                      }
      *                  }
      *              }
      *              case (CMD_BIND) {
      *                  // TODO
      *              }
      *              case (CMD_UDP) {
-     *                  socket_right_udp.async_send_to {
-     *                      [bind: right_write_handler]
+     *                  if ('unprocessed data still in lss_request') {
+     *                      socket_right_udp.async_send_to {
+     *                          [bind: left_read_handler]
      *                  }
-     *                  socket_right_udp.async_receive_from {
-     *                      [bind: right_read_handler]
+     *                  else {
+     *                      socket_right_udp.async_send_to {
+     *                          [bind: right_write_handler]
      *                  }
      *              }
      *          }
@@ -126,12 +134,20 @@ private:
      * function: right_write_handler {
      *      case (CMD_CONNECT) {
      *          socket_left.async_read_some [bind: left_read_handler]
+     *          
+     *          socket_right_tcp.async_read_some {
+     *              [bind: right_read_handler]
+     *          }
      *      }
      *      case (CMD_BIND) {
      *          // TODO
      *      }
      *      case (CMD_UDP) {
      *          socket_left.async_read_some [bind: left_read_handler]
+     *
+     *          socket_right_udp.async_receive_from {
+     *              [bind: right_read_handler]
+     *          }
      *      }
      *      default {
      *          async_write:socket_left (pack_bad().buffers()) {
@@ -188,7 +204,8 @@ private:
      *      }
      * }
      */
-    data_t& unpack_data(data_t& plain, bool is_zip = false);
+     const int unpack_data(data_t& plain, const std::size_t lss_length, 
+             bool is_zip = false);
 
     // socks5 [var cmd rsv atype dstaddr dstport] 处理流程
     /**
@@ -310,7 +327,10 @@ private:
     /**
      * function:socks5_resp_to_local {
      *      pack_socks5_resp
-     *      async_write:socket_left [bind: left_read_handler]
+     *      async_write:socket_left [bind: left_write_handler]
+     *      if (this->socks_resp_reply == 0x00) {
+     *          this->socks5_state = lproxy::socks5::server::CONNECTED;
+     *      }
      * }
      */
     void socks5_resp_to_local();
@@ -333,8 +353,6 @@ private:
 
     lproxy::server::request lss_request; // 从local端发来的原始数据
     lproxy::server::reply   lss_reply;   // 发向 local 的数据(hello, bad, timeout, deny 除外)
-    //std::string       data_right; // 从web 发来的原始数据
-    //enum             { max_length = 2048};
     data_t             data_right; // 从web 发来的原始数据, 
     //不用数组是为了减少lproxy::server::session的对象构造所用的时间
 

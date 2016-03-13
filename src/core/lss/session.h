@@ -6,9 +6,9 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2015/11/30 15:58:54
  ************************************************************************/
+#include <type_traits>
 #include <lss/typedefine.h>
 #include <lss/lss_packet.h>
-
 namespace lproxy {
 
 class session {
@@ -17,7 +17,8 @@ public:
     virtual tcp::socket& get_socket_left(void) = 0;
     virtual ~session(void) {}
 protected:
-    enum             { max_length = 2048};
+    //enum             { max_length = 2048};
+    enum             { max_length = 1024};
     enum {
         status_not_connected = 0,
         status_connected     = 1,
@@ -60,6 +61,59 @@ protected:
             throw incomplete_data(less);
         }
     }
+
+    // 裁剪 lss 包数据 (分包)
+    /**
+     * @brief cut_lss
+     * @param start_pos  [std::size_t] 开始切割的位置
+     * @param lss_len    [std::size_t] 当前 lss 包有效长度
+     * @param lss [lproxy::local::reply | lproxy::server::request] 要出里的 lss 
+     * @return  [bool] 切割后剩下的数据包是否完整。true 完整，false 不完整 
+     */
+    template<typename LSSTYPE> 
+    bool cut_lss(const std::size_t start_pos, 
+            const std::size_t lss_len, LSSTYPE& lss) {
+        static_assert(std::is_same<LSSTYPE, lproxy::local::reply>::value || 
+            std::is_same<LSSTYPE, lproxy::server::request>::value, 
+            "lss type must be 'lproxy::local::reply' "
+            "or 'lproxy::server::request' !");
+        
+        if (lss_len < start_pos + 4) { // lss 包头部分长度为4
+            return false; 
+            // 如果切割后，剩下的数据包会不完整, 所以切割无意义，
+            // 多余的丢掉不处理即可。
+            // 调用者需检查返回值，如果 false，
+            // 切记要改用另外一个 write bind handler
+        }
+        /*
+        lproxy::local::reply rply(this->lss_reply); // 复制一份
+        auto& buf = boost::asio::buffer(rply.buffers());
+        //std::size_t buf_size = boost::asio::buffer_size(buf);
+        // 生成 新包
+        auto&& pack = lproxy::__packet(
+                *boost::asio::buffer_cast<byte*>(buf + start_pos), 
+                *boost::asio::buffer_cast<byte*>(buf + start_pos + 1),
+                *boost::asio::buffer_cast<byte*>(buf + start_pos + 2),
+                *boost::asio::buffer_cast<byte*>(buf + start_pos + 3), 
+                // 包头部分结束
+                data_t(boost::asio::buffer_cast<byte*>(cb + start_pos + 4), 
+                    boost::asio::buffer_cast<byte*>(cb + lss_len)));
+        this->lss_reply = lproxy::local::reply(std::move(pack));
+        return true;
+        */
+
+        // 新算法
+        vdata_t&& buf = lproxy::get_vdata_from_lss_pack(lss);
+        auto&& pack = lproxy::__packet(
+                *(buf.begin() + start_pos),
+                *(buf.begin() + start_pos + 1),
+                *(buf.begin() + start_pos + 2),
+                *(buf.begin() + start_pos + 3), // 包头部分结束
+                data_t(buf.begin() + start_pos + 4, buf.begin() + lss_len));
+        lss = LSSTYPE(std::move(pack));
+        return true;
+    }
+
 }; // class lproxy::session
 
 

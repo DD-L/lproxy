@@ -56,12 +56,10 @@ void _debug_print_data(const DATA_TYPE& data, VTYPE,
 
 template <typename T>
 vdata_t get_vdata_from_lss_pack(T&& lss) {
-#ifdef LSS_DEBUG
     vdata_t _test(boost::asio::buffer_size(std::forward<T>(lss).buffers()));
     boost::asio::buffer_copy(boost::asio::buffer(_test), 
             std::forward<T>(lss).buffers());
     return _test;
-#endif
 }
 
 } // namespace lproxy
