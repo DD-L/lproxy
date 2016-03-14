@@ -119,8 +119,8 @@ try {
             return 2;
         }
         //
-        data_t data_receive(2048, 0);
-        sock.read_some(buffer(&data_receive[0], 2048), ec);
+        data_t data_receive(1024, 0);
+        sock.read_some(buffer(&data_receive[0], 1024), ec);
         if (ec) {
             cout << ec.message() << endl;
             return 3;
