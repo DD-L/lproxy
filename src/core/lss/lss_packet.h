@@ -150,7 +150,24 @@ public:
                byte data_len_low, data_t&& data)
         : pack(version, pack_type, data_len_high, 
                 data_len_low, std::move(data)) {}
+
+    request(const request& that) : pack(that.pack) {}
+    request(request&& that) : pack(std::move(that.pack)) {}
+
     virtual ~request(void) {}
+
+    request& operator= (const request& that) {
+        if (this != &that) {
+             pack = that.pack;   
+        }
+        return *this;
+    }
+    request& operator= (request&& that) {
+        if (this != &that) {
+            pack = std::move(that.pack);
+        }
+        return *this;
+    }
 
     request& assign(byte version,   byte pack_type,
             data_len_t data_len, const data_t& data) {
@@ -384,7 +401,26 @@ public:
                byte data_len_low, data_t&& data)
         : pack(version, pack_type, data_len_high, 
                 data_len_low, std::move(data)) {}
+
+
+    reply(const reply& that) : pack(that.pack) {}
+    reply(reply&& that) : pack(std::move(that.pack)) {}
+
     virtual ~reply(void) {}
+
+    reply& operator= (const reply& that) {
+        if (this != &that) {
+             pack = that.pack;   
+        }
+        return *this;
+    }
+    reply& operator= (reply&& that) {
+        if (this != &that) {
+            pack = std::move(that.pack);
+        }
+        return *this;
+    }
+
 
     reply& assign(byte version,   byte pack_type,
             data_len_t data_len, const data_t& data) {

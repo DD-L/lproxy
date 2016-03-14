@@ -34,22 +34,21 @@ void session::start(void) {
 
     std::cout << "start read msg from local.." << std::endl;
     // 第一次 用 this->lss_request 读数据, 需要开辟空间
-    this->lss_request.set_data_size(max_length);            
+    //this->lss_request.set_data_size(max_length);            
     // or
     //this->lss_request.assign_data(max_length, 0);
 
-    socket_left.async_read_some(this->lss_request.buffers(),
-            boost::bind(&session::left_read_handler, this, _1, _2));
+    auto&& lss_request = make_shared_request();
+    socket_left.async_read_some(lss_request->buffers(),
+            boost::bind(&session::left_read_handler, 
+                shared_from_this(), _1, _2, lss_request));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::bytes_transferred));
     status = status_hello;
 }
-tcp::socket& session::get_socket_left(void) {
-    return this->socket_left; 
-}
 
-void session::delete_this(void) {
-    if (! delete_flag.test_and_set()) {
+void session::close(void) {
+    if (! close_flag.test_and_set()) {
         // TODO
         // step 1
         // cancel session 上所有的异步
@@ -59,35 +58,39 @@ void session::delete_this(void) {
         socket_right_udp.close();
 
         // step 2
-        delete this;
+        //delete this;
     }
 }
 
+tcp::socket& session::get_socket_left(void) {
+    return this->socket_left; 
+}
+
 void session::left_read_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_request_type lss_request) {
     // <debug>
     std::cout << "left_read_handler \n<--- bytes_transferred = "
         << std::dec << bytes_transferred << '\n'; 
-    std::cout << "this->lss_request.version() = " 
-        << (int)this->lss_request.version() << '\n';
-    std::cout << "this->lss_request.type() = " 
-        << (int)this->lss_request.type() << '\n';
-    std::cout << "this->lss_request.data_len() = " 
-        << this->lss_request.data_len() << '\n';
-    _debug_print_data(get_vdata_from_lss_pack(this->lss_request), 
+    std::cout << "lss_request->version() = " 
+        << (int)lss_request->version() << '\n';
+    std::cout << "lss_request->type() = " 
+        << (int)lss_request->type() << '\n';
+    std::cout << "lss_request->data_len() = " 
+        << lss_request->data_len() << '\n';
+    _debug_print_data(get_vdata_from_lss_pack(*lss_request), 
             int(), ' ', std::hex);
     // </debug>
 
     if (! error) {
-    //switch (this->lss_request.version()) {
+    //switch (lss_request->version()) {
     //case 0x00:}
         try {
             bool is_zip_data = false;
 
             // lss包完整性检查
-            lss_pack_integrity_check(bytes_transferred, this->lss_request);
+            lss_pack_integrity_check(bytes_transferred, *lss_request);
 
-            switch (this->lss_request.type()) {
+            switch (lss_request->type()) {
             case request::hello: { // 0x00
                 // 验证 hello 包是否正确
                 /*
@@ -95,7 +98,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                     throw wrong_packet_type();
                 }
                 */
-                if (this->lss_request.data_len()) {
+                if (lss_request->data_len()) {
                     throw wrong_packet_type();
                 }
                 // 把模长和公钥 打包发送给 local
@@ -104,7 +107,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                 // 发送给 local
                 boost::asio::async_write(this->socket_left, 
                         pack_hello().buffers(),
-                        boost::bind(&session::hello_handler, this, _1, _2));
+                        boost::bind(&session::hello_handler, 
+                            shared_from_this(), _1, _2));
                             //boost::asio::placeholders::error,
                             //boost::asio::placeholders::bytes_transferred));
                 std::cout << "send hello to local:" << std::endl;
@@ -116,7 +120,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                 // step 0. 判断状态是否为
                 // step 1. 解包，得到 密文的auth_key 和 随机数
                 // step 2. 验证 auth_key
-                // step 2.1 如果验证失败,发送 0x00, 0x04, 0x00, 0x00,delete_this
+                // step 2.1 如果验证失败,发送 0x00, 0x04, 0x00, 0x00, close_this
                 // step 2.2 如果验证通过
                 //          1. 生成随机 key (data_key)
                 //          2. 打包 随机key + 随机数
@@ -130,7 +134,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                 */
 
                 data_t auth_key, random_str;
-                unpack_request_exchange(auth_key, random_str);
+                unpack_request_exchange(auth_key, random_str, *lss_request);
 
                 std::cout << "auth_key = ";
                 _debug_print_data(auth_key, char(), 0);
@@ -141,10 +145,10 @@ void session::left_read_handler(const boost::system::error_code& error,
                 const auto& key_set 
                     = config::get_instance().get_cipher_auth_key_set();
                 if (key_set.find(auth_key) == key_set.end()) {
-                    // 将打包好的"认证失败"数据 发送至 local, 然后再delete_this
+                    // 将打包好的"认证失败"数据 发送至 local, 然后再close this
                     //auto& rply_deny = pack_deny();
                     boost::asio::async_write(socket_left, pack_deny().buffers(),
-                            boost::bind(&session::delete_this, this));
+                            boost::bind(&session::close, shared_from_this()));
 
                     std::cout << "认证失败" << std::endl;
                     std::cout << "send deny to local:" << std::endl;
@@ -156,14 +160,17 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 验证通过
                     // 组装 reply::exchange 发给 local
                     //auto&& exchange = pack_exchange(auth_key, random_str);
+                    auto&& exchange_reply = make_shared_reply(
+                            pack_exchange(auth_key, random_str));
                     boost::asio::async_write(this->socket_left, 
-                        pack_exchange(auth_key, random_str).buffers(),
-                        boost::bind(&session::exchange_handler, this, _1, _2));
+                        exchange_reply->buffers(),
+                        boost::bind(&session::exchange_handler, 
+                            shared_from_this(), _1, _2, exchange_reply));
                             //boost::asio::placeholders::error,
                             //boost::asio::placeholders::bytes_transferred));
                     // 
                     std::cout << "send exchange to local:" << std::endl;
-                    _debug_print_data(get_vdata_from_lss_pack(this->lss_reply),
+                    _debug_print_data(get_vdata_from_lss_pack(*exchange_reply),
                             int(), ' ', std::hex);
                     break;
                 }
@@ -182,7 +189,8 @@ void session::left_read_handler(const boost::system::error_code& error,
 
                 data_t plain_data;
                 const int rest_lss_data_len = unpack_data(
-                        plain_data, bytes_transferred, is_zip_data);
+                        plain_data, bytes_transferred, 
+                        *lss_request, is_zip_data);
 
                 if (rest_lss_data_len < 0) {
                     throw incomplete_data(0 - rest_lss_data_len); 
@@ -209,14 +217,17 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 将 package 加密封包
                     //auto&& rply_data = pack_data(package, package.size());
                     // 发给 local
+                    auto&& data_reply = make_shared_reply(
+                            pack_data(package, package.size()));
                     boost::asio::async_write(this->socket_left, 
-                      pack_data(package, package.size()).buffers(),
-                      boost::bind(&session::left_write_handler, this, _1, _2));
+                      data_reply->buffers(),
+                      boost::bind(&session::left_write_handler, 
+                          shared_from_this(), _1, _2, data_reply));
 
                     this->socks5_state = lproxy::socks5::server::CONNECTING; 
 
                     std::cout << "send data to local (socks5::ident_resp) ";
-                    _debug_print_data(get_vdata_from_lss_pack(this->lss_reply),
+                    _debug_print_data(get_vdata_from_lss_pack(*data_reply),
                             int(), ' ', std::hex);
 
                     break;
@@ -230,13 +241,14 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 分析 rq , 该干啥干啥...
                     socks5_request_processing(rq);
 
-                    // this->lss_request 已缓存到 plain_data, 所以可已清空
+                    // lss_request 已缓存到 plain_data, 所以可已清空
                     // 每次异步读数据之前，清空 data
-                    this->lss_request.assign_data(max_length, 0);
+                    //this->lss_request.assign_data(max_length, 0);
+                    auto&& lss_request = make_shared_request();
                     this->socket_left.async_read_some(
-                            this->lss_request.buffers(),
+                            lss_request->buffers(),
                             boost::bind(&session::left_read_handler, 
-                                this, _1, _2)); 
+                                shared_from_this(), _1, _2, lss_request)); 
                     std::cout << "start async_read local..." << std::endl;
                     
                     break;
@@ -249,7 +261,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 减掉当前lss数据。(分包)
                     bool is_continue = 
                         cut_lss(bytes_transferred - rest_lss_data_len,
-                            bytes_transferred, this->lss_request);
+                            bytes_transferred, *lss_request);
                     // bytes_transferred - rest_lss_data_len 的意义是 
                     // 新包在 旧包中 开始的位置（0开头）
 
@@ -264,15 +276,17 @@ void session::left_read_handler(const boost::system::error_code& error,
                             boost::asio::async_write(this->socket_right_tcp, 
                                 boost::asio::buffer(*plain_data_ptr),
                                 boost::bind(&session::left_read_handler, 
-                                    this, boost::asio::placeholders::error,
-                                    std::size_t(rest_lss_data_len)));
+                                    shared_from_this(), 
+                                    boost::asio::placeholders::error,
+                                    std::size_t(rest_lss_data_len), 
+                                    lss_request));
                         }
                         else {
                             //最后一条不可再分割的数据再绑定right_write_handler
                             boost::asio::async_write(this->socket_right_tcp, 
                                 boost::asio::buffer(*plain_data_ptr),
                                 boost::bind(&session::right_write_handler, 
-                                    this, _1, _2));
+                                    shared_from_this(), _1, _2));
                         }
 
                         std::cout << "write data to remote: ";
@@ -287,8 +301,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                         //
                         std::cout << "Unsuported socks5_cmd [CMD_BIND]\n";
                         boost::asio::async_write(this->socket_left, 
-                                pack_bad().buffers(),
-                                boost::bind(&session::delete_this, this));
+                             pack_bad().buffers(),
+                             boost::bind(&session::close, shared_from_this()));
                         break;
                     case CMD_UDP: {
 
@@ -305,8 +319,10 @@ void session::left_read_handler(const boost::system::error_code& error,
                                  boost::asio::buffer(*plain_data_ptr), 
                                  destination,
                                  boost::bind(&session::left_read_handler, 
-                                    this, boost::asio::placeholders::error,
-                                    std::size_t(rest_lss_data_len)));
+                                    shared_from_this(), 
+                                    boost::asio::placeholders::error,
+                                    std::size_t(rest_lss_data_len),
+                                    lss_request));
                         }
                         else {
                             //最后一条不可再分割的数据再绑定right_write_handler
@@ -314,7 +330,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                                  boost::asio::buffer(*plain_data_ptr), 
                                  destination,
                                  boost::bind(&session::right_write_handler, 
-                                     this, _1, _2));
+                                     shared_from_this(), _1, _2));
                         }
 
                         std::cout << "write data to remote: ";
@@ -326,8 +342,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                         //发送给 local 让其关闭它的session, lss_pack_type::0xff
                         //auto& rply_data = pack_bad();
                         boost::asio::async_write(this->socket_left, 
-                                pack_bad().buffers(),
-                                boost::bind(&session::delete_this, this));
+                            pack_bad().buffers(),
+                            boost::bind(&session::close, shared_from_this()));
                     }
                     } // switch (this->socks5_cmd)
                     break;
@@ -341,16 +357,16 @@ void session::left_read_handler(const boost::system::error_code& error,
             case request::bad: // 0xff
             default:
                 std::cout << "数据包 bad\n";
-                delete_this();
+                this->close();
                 break;
-            } // switch (this->lss_request.type())
+            } // switch (lss_request->type())
         }
         catch (wrong_packet_type&) {
             // 临时解决方案
             std::cout << "wrong_packet_type" << std::endl;
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::delete_this, this));
+                    boost::bind(&session::close, shared_from_this()));
         }
         catch (incomplete_data& ec) {
             // 不完整数据
@@ -359,15 +375,15 @@ void session::left_read_handler(const boost::system::error_code& error,
             std::cout << "incomplete_data" << std::endl;
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::delete_this, this));
+                    boost::bind(&session::close, shared_from_this()));
         }
         catch (lproxy::socks5::illegal_data_type&) { // 非法的socks5数据
-            // delete_this 
+            // close this 
             // 临时解决方案
             std::cout << "lproxy::socks5::illegal_data_type" << std::endl;
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::delete_this, this));
+                    boost::bind(&session::close, shared_from_this()));
         }
         catch (lproxy::socks5::unsupported_version&) { // 不支持的 socks5 版本
             // deny
@@ -375,26 +391,30 @@ void session::left_read_handler(const boost::system::error_code& error,
             std::cout << "lproxy::socks5::unsupported_version" << std::endl;
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::delete_this, this));
+                    boost::bind(&session::close, shared_from_this()));
         }
         catch (EncryptException& ec) {
             std::cout << ec.what() << std::endl; 
-            std::cout << __LINE__ << " Error read_left_handler, delete.\n";
-            delete_this(); 
+            std::cout << __LINE__ << " Error read_left_handler, close.\n";
+            //delete_this(); 
+            this->close();
         }
         catch (DecryptException& ec) {
             std::cout << ec.what() << std::endl; 
-            std::cout << __LINE__ << " Error read_left_handler, delete.\n";
-            delete_this(); 
+            std::cout << __LINE__ << " Error read_left_handler, close.\n";
+            //delete_this(); 
+            this->close();
         }
         catch (...) {
-            std::cout << __LINE__ << " Error read_left_handler, delete.\n";
-            delete_this(); 
+            std::cout << __LINE__ << " Error read_left_handler, close.\n";
+            //delete_this(); 
+            this->close();
         }
     } 
     else { // error
-        std::cout << __LINE__ << " Error read_left_handler, delete.\n";
-        delete_this(); 
+        std::cout << __LINE__ << " Error read_left_handler, close.\n";
+        //delete_this(); 
+        this->close();
     }
 }
 
@@ -407,9 +427,11 @@ void session::hello_handler(const boost::system::error_code& error,
     // </debug>
     if (! error) {
         // 每次异步读数据之前，清空 data
-        this->lss_request.assign_data(max_length, 0);
-        this->socket_left.async_read_some(this->lss_request.buffers(), 
-                boost::bind(&session::left_read_handler, this, _1, _2));
+        //this->lss_request.assign_data(max_length, 0);
+        auto&& lss_request = make_shared_request();
+        this->socket_left.async_read_some(lss_request->buffers(), 
+                boost::bind(&session::left_read_handler, 
+                    shared_from_this(), _1, _2, lss_request));
                     //boost::asio::placeholders::error,
                     //boost::asio::placeholders::bytes_transferred));
         this->status = status_auth;
@@ -418,41 +440,46 @@ void session::hello_handler(const boost::system::error_code& error,
         // <debug>
         std::cout << "session::hello_handler Failed. " 
             << error.message() << '\n';
-        std::cout << "delete this " << __LINE__ << '\n';
+        std::cout << "close this " << __LINE__ << '\n';
         // </debug>
-        delete_this();
+        //delete_this();
+        this->close();
     }
     
 }
 
 
 void session::exchange_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_reply_type lss_reply) {
+    (void)lss_reply;
     // <debug>
     std::cout << "exchange_handler \n---> bytes_transferred = "
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
         // 每次异步读数据之前，清空 data
-        this->lss_request.assign_data(max_length, 0);
-        this->socket_left.async_read_some(this->lss_request.buffers(), 
-                boost::bind(&session::left_read_handler, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
+        //this->lss_request.assign_data(max_length, 0);
+        auto&& lss_request = make_shared_request();
+        this->socket_left.async_read_some(lss_request->buffers(), 
+                boost::bind(&session::left_read_handler, 
+                    shared_from_this(), _1, _2, lss_request));
+                    //boost::asio::placeholders::error,
+                    //boost::asio::placeholders::bytes_transferred));
         status = status_data;
     }
     else {
         // <debug>
-        std::cout << "delete this " << __LINE__ << '\n';
+        std::cout << "close this " << __LINE__ << '\n';
         // </debug>
-        delete_this();
+        //delete_this();
+        this->close();
     }
 
 }
 
-
 void session::left_write_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_reply_type lss_reply) {
+    (void)lss_reply;
     // <debug>
     std::cout << "left_write_handler \n---> bytes_transferred = "
         << std::dec << bytes_transferred << '\n';
@@ -468,7 +495,8 @@ void session::left_write_handler(const boost::system::error_code& error,
 
                 socket_right_tcp.async_read_some(
                     boost::asio::buffer(&this->data_right[0], max_length), 
-                    boost::bind(&session::right_read_handler, this, _1, _2));
+                    boost::bind(&session::right_read_handler, 
+                        shared_from_this(), _1, _2));
                 break;
             case CMD_UDP: {
 
@@ -479,7 +507,8 @@ void session::left_write_handler(const boost::system::error_code& error,
                 socket_right_udp.async_receive_from(
                     boost::asio::buffer(&this->data_right[0], max_length), 
                     destination,
-                    boost::bind(&session::right_read_handler, this, _1, _2));
+                    boost::bind(&session::right_read_handler, 
+                        shared_from_this(), _1, _2));
                 break;
             }
             case CMD_BIND:
@@ -488,21 +517,24 @@ void session::left_write_handler(const boost::system::error_code& error,
             default:
                 boost::asio::async_write(this->socket_left,
                         pack_bad().buffers(),
-                        boost::bind(&session::delete_this, this));
+                        boost::bind(&session::close, shared_from_this()));
             } // switch (this->socks5_cmd)
         }
         else { 
             // 每次异步读数据之前，清空 data
-            this->lss_request.assign_data(max_length, 0);
-            this->socket_left.async_read_some(this->lss_request.buffers(),
-                    boost::bind(&session::left_read_handler, this, _1, _2)); 
+            //this->lss_request.assign_data(max_length, 0);
+            auto&& lss_request = make_shared_request();
+            this->socket_left.async_read_some(lss_request->buffers(),
+                    boost::bind(&session::left_read_handler, 
+                        shared_from_this(), _1, _2, lss_request)); 
         }
     }
     else {
         // <debug>
-        std::cout << "delete this " << __LINE__ << '\n';
+        std::cout << "close this " << __LINE__ << '\n';
         // </debug>
-        delete_this();
+        //delete_this();
+        this->close();
     }
 } 
 
@@ -514,12 +546,14 @@ void session::right_write_handler(const boost::system::error_code& error,
     // </debug>
     if (! error) {
         switch (this->socks5_cmd) {
-        case CMD_CONNECT:
+        case CMD_CONNECT: {
 
             // 每次异步读数据之前，清空 data
-            this->lss_request.assign_data(max_length, 0);
-            this->socket_left.async_read_some(this->lss_request.buffers(),
-                    boost::bind(&session::left_read_handler, this, _1, _2));
+            //this->lss_request.assign_data(max_length, 0);
+            auto&& lss_request = make_shared_request();
+            this->socket_left.async_read_some(lss_request->buffers(),
+                    boost::bind(&session::left_read_handler, 
+                        shared_from_this(), _1, _2, lss_request));
 
             std::cout << "begin to async-read data from local\n";
 
@@ -527,15 +561,19 @@ void session::right_write_handler(const boost::system::error_code& error,
             this->data_right.assign(max_length, 0);
             this->socket_right_tcp.async_read_some(
                 boost::asio::buffer(&this->data_right[0], max_length), 
-                boost::bind(&session::right_read_handler, this, _1, _2));
+                boost::bind(&session::right_read_handler, 
+                    shared_from_this(), _1, _2));
 
             std::cout << "begin to async-read data from remote\n";
             break;
+        }
         case CMD_UDP: {
             // 每次异步读数据之前，清空 data
-            this->lss_request.assign_data(max_length, 0);
-            this->socket_left.async_read_some(this->lss_request.buffers(),
-                    boost::bind(&session::left_read_handler, this, _1, _2));
+            //this->lss_request.assign_data(max_length, 0);
+            auto&& lss_request = make_shared_request();
+            this->socket_left.async_read_some(lss_request->buffers(),
+                    boost::bind(&session::left_read_handler, 
+                        shared_from_this(), _1, _2, lss_request));
 
             std::cout << "begin to read data from local\n";
 
@@ -549,7 +587,8 @@ void session::right_write_handler(const boost::system::error_code& error,
             this->socket_right_udp.async_receive_from(
                 boost::asio::buffer(&this->data_right[0], max_length), 
                 destination,
-                boost::bind(&session::right_read_handler, this, _1, _2));
+                boost::bind(&session::right_read_handler, 
+                    shared_from_this(), _1, _2));
 
             std::cout << "begin to async-read data from remote\n";
 
@@ -560,17 +599,17 @@ void session::right_write_handler(const boost::system::error_code& error,
         case CMD_UNSUPPORT:
         default:
             boost::asio::async_write(this->socket_left, pack_bad().buffers(),
-                    boost::bind(&session::delete_this, this));
+                    boost::bind(&session::close, shared_from_this()));
             break;
         } // switch (this->socks5_cmd)
     }
     else {
         // <debug>
-        std::cout << "delete this " << __LINE__ << '\n';
+        std::cout << "close this " << __LINE__ << '\n';
         // </debug>
         boost::asio::async_write(this->socket_left, 
                 pack_bad().buffers(),
-                boost::bind(&session::delete_this, this));
+                boost::bind(&session::close, shared_from_this()));
     }
 }
 
@@ -584,9 +623,12 @@ void session::right_read_handler(const boost::system::error_code& error,
         // step 1, 将读来的数据，加密打包
         //auto&& data = pack_data(this->data_right, bytes_transferred);
         // step 2, 发给 local 端
+        auto&& data_reply = make_shared_reply(
+                pack_data(this->data_right, bytes_transferred));
         boost::asio::async_write(this->socket_left, 
-                pack_data(this->data_right, bytes_transferred).buffers(),
-                boost::bind(&session::left_write_handler, this, _1, _2));
+                data_reply->buffers(),
+                boost::bind(&session::left_write_handler, 
+                    shared_from_this(), _1, _2, data_reply));
 
         std::cout << "write data to local: \n";
 
@@ -596,17 +638,17 @@ void session::right_read_handler(const boost::system::error_code& error,
                             char(), 0);
 
         std::cout << "cipher lss_data: ";
-        _debug_print_data(get_vdata_from_lss_pack(this->lss_reply), 
+        _debug_print_data(get_vdata_from_lss_pack(*data_reply), 
                 int(), ' ', std::hex);
     }
     else {
         // <debug>
         std::cout << "right_read failed.[write data to local]" << std::endl;
-        std::cout << "delete this " << __LINE__ << '\n';
+        std::cout << "close this " << __LINE__ << '\n';
         // </debug>
         boost::asio::async_write(this->socket_left, 
                 pack_bad().buffers(),
-                boost::bind(&session::delete_this, this));
+                boost::bind(&session::close, shared_from_this()));
     }
 }
 
@@ -639,7 +681,7 @@ const reply& session::pack_deny(void) {
 }
 
 
-const reply& session::pack_exchange(const data_t& auth_key,
+const reply session::pack_exchange(const data_t& auth_key,
         const data_t& random_str) {
 
     assert(auth_key.size() == 32);
@@ -657,7 +699,7 @@ const reply& session::pack_exchange(const data_t& auth_key,
             new crypto::Aes(data_key, crypto::Aes::raw256keysetting()));
 
     // 2. 打包 随机key + 随机数
-    data_t plain = &data_key[0] + random_str;
+    data_t plain = data_t(data_key.begin(), data_key.end()) + random_str;
     vdata_t cipher;
     // 3. 将打包后的数据 用 auth_key 进行aes加密。
     crypto::Encryptor aescryptor(new crypto::Aes(
@@ -666,23 +708,27 @@ const reply& session::pack_exchange(const data_t& auth_key,
     
     //data_t cipher_(cipher.begin(), cipher.end());
     //return reply(0x00, reply::exchange, cipher_.size(), cipher_);
+    /*
     return this->lss_reply.assign(0x00, reply::exchange, cipher.size(),
+            data_t(cipher.begin(), cipher.end()));
+    */
+    return reply(0x00, reply::exchange, cipher.size(),
             data_t(cipher.begin(), cipher.end()));
 }
 
-const reply& session::pack_data(const std::string& data, std::size_t data_len) {
+const reply session::pack_data(const std::string& data, std::size_t data_len) {
     data_t data_(data.begin(), data.begin() + data_len);
-    return pack_data(data_, data_len);
+    return std::move(pack_data(data_, data_len));
 }
-const reply& session::pack_data(const data_t& data, std::size_t data_len) {
+const reply session::pack_data(const data_t& data, std::size_t data_len) {
     if (! this->aes_encryptor) {
         // this->aes_encrytor 未被赋值
         std::cout << "this->aes_encrytor 未被赋值" << std::endl;
 
-        //发送 deny, 并 delete_this
+        //发送 deny, 并 close_this
         //auto& deny = pack_deny();
         boost::asio::async_write(this->socket_left, pack_deny().buffers(),
-                boost::bind(&session::delete_this, this));
+                boost::bind(&session::close, shared_from_this()));
         return pack_deny();
     }
     else {
@@ -696,13 +742,21 @@ const reply& session::pack_data(const data_t& data, std::size_t data_len) {
             // TODO 
 
             //return reply(0x00, reply::zipdata, data_.size(), data_);
+            /*
             return this->lss_reply.assign(0x00, reply::zipdata, cipher.size(), 
+                    data_t(cipher.begin(), cipher.end()));
+            */
+            return reply(0x00, reply::zipdata, cipher.size(),
                     data_t(cipher.begin(), cipher.end()));
         }
 
         // 封包
         //return reply(0x00, reply::data, data_.size(), data_);
+        /*
         return this->lss_reply.assign(0x00, reply::data, cipher.size(), 
+                data_t(cipher.begin(), cipher.end()));
+        */
+        return reply(0x00, reply::data, cipher.size(),
                 data_t(cipher.begin(), cipher.end()));
     }
 }
@@ -719,12 +773,13 @@ const data_t session::gen_hello_data() {
     return data_t(data.begin(), data.end());
 }
 
-void session::unpack_request_exchange(data_t& auth_key, data_t& random_str) {
+void session::unpack_request_exchange(data_t& auth_key, data_t& random_str,
+        const request& request) {
     // 对包解密
     crypto::Encryptor rsa_encryptor(
             new crypto::Rsa(config::get_instance().get_rsakey()));
-    auto& cipher = this->lss_request.get_data();
-    std::size_t cipher_len = this->lss_request.data_len();
+    auto&           cipher = request.get_data();
+    std::size_t cipher_len = request.data_len();
     vdata_t plain;
     rsa_encryptor.decrypt(plain, &cipher[0], cipher_len);
 
@@ -745,19 +800,20 @@ void session::unpack_request_exchange(data_t& auth_key, data_t& random_str) {
  *      > 0 lss_request 中还有未处理完的数据
  *      < 0 当前 lss_request 数据包不完整
  */
-const int session::unpack_data(data_t& plain, const std::size_t lss_length,
-        bool is_zip/*=false*/) {
+const int session::unpack_data(data_t& plain, 
+        const std::size_t lss_reply_length,
+        const request& request, bool is_zip/*=false*/) {
     if (! this->aes_encryptor) {
         // this->aes_encrytor 未被赋值
         std::cout << "this->aes_encrytor 未被赋值" << std::endl;
 
-        //发送 deny, 并 delete_this
+        //发送 deny, 并 close this
         //auto& deny = pack_deny();
         boost::asio::async_write(this->socket_left, pack_deny().buffers(),
-                boost::bind(&session::delete_this, this));
+                boost::bind(&session::close, shared_from_this()));
     }
-    const data_t&         cipher = this->lss_request.get_data();
-    const std::size_t cipher_len = this->lss_request.data_len();
+    const data_t&         cipher = request.get_data();
+    const std::size_t cipher_len = request.data_len();
     // 解压数据
     if (is_zip) {
         // TODO 
@@ -766,29 +822,8 @@ const int session::unpack_data(data_t& plain, const std::size_t lss_length,
     vdata_t plain_;
     this->aes_encryptor->decrypt(plain_, &cipher[0], cipher_len);
 
-    {
-    std::cout << "\n---test aes-----\n";
-    data_t k = (const_byte_ptr)"12345678901234567890123456789012";
-    vdata_t key(k.begin(), k.begin() + 32);
-    vdata_t plain = {0x05, 0x01, 0x00}, cipher, resovle;
-    crypto::Encryptor aes(new crypto::Aes(key, 
-                crypto::Aes::raw256keysetting())); 
-    aes.encrypt(cipher, &plain[0], plain.size());
-    _debug_print_data(cipher, int(), ' ', std::hex);
-
-    aes.decrypt(resovle, &cipher[0], cipher.size());
-    _debug_print_data(resovle, int(), ' ', std::hex);
-    std::cout << "\n---test aes-----\n";    
-    }
-
-    std::cout << "cipher data from local = ";
-    for (std::size_t i = 0; i < cipher_len; ++i) {
-        std::cout << std::hex << (int)cipher[i] << " ";
-    }
-
-
     plain.assign(plain_.begin(), plain_.end());
-    return lss_length - (4 + cipher_len); 
+    return lss_reply_length - (4 + cipher_len); 
     // (4 + cipher_len) 当前已经处理的lss包长度
 }
 
@@ -899,7 +934,8 @@ void session::resovle_connect_tcp(const char* name, uint16_t port) {
 
     // async_resolve
     this->resolver_right_tcp->async_resolve(qry, 
-            boost::bind(&session::tcp_resolve_handler, this, _1, _2));
+            boost::bind(&session::tcp_resolve_handler, 
+                shared_from_this(), _1, _2));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::iterator));
 }
@@ -910,7 +946,8 @@ void session::resovle_open_udp(const char* name, uint16_t port) {
 
     // async_resolve
     this->resolver_right_udp->async_resolve(qry, 
-            boost::bind(&session::udp_resolve_handler, this, _1, _2));
+            boost::bind(&session::udp_resolve_handler, 
+                shared_from_this(), _1, _2));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::iterator));
 }
@@ -923,7 +960,7 @@ void session::tcp_resolve_handler(const boost::system::error_code& err,
         // will be tried until we successfully establish a connection.
         tcp::endpoint endpoint = *endpoint_iterator;
         this->socket_right_tcp.async_connect(endpoint,
-                boost::bind(&session::tcp_connect_handler, this,
+                boost::bind(&session::tcp_connect_handler, shared_from_this(),
                     boost::asio::placeholders::error, ++endpoint_iterator));
     }
     else {
@@ -940,7 +977,7 @@ void session::udp_resolve_handler(const boost::system::error_code& err,
         // will be tried until we successfully establish a connection.
         udp::endpoint endpoint = *endpoint_iterator;
         this->socket_right_udp.async_connect(endpoint,
-                boost::bind(&session::udp_connect_handler, this,
+                boost::bind(&session::udp_connect_handler, shared_from_this(),
                     boost::asio::placeholders::error, ++endpoint_iterator));
     }
     else {
@@ -968,7 +1005,7 @@ void session::tcp_connect_handler(const boost::system::error_code& err,
         this->socket_right_tcp.close();
         tcp::endpoint endpoint = *endpoint_iterator;
         this->socket_right_tcp.async_connect(endpoint,
-                boost::bind(&session::tcp_connect_handler, this,
+                boost::bind(&session::tcp_connect_handler, shared_from_this(),
                     boost::asio::placeholders::error, ++endpoint_iterator));
     }
     else {
@@ -1018,7 +1055,7 @@ void session::udp_connect_handler(const boost::system::error_code& err,
         this->socket_right_udp.close();
         udp::endpoint endpoint = *endpoint_iterator;
         socket_right_udp.async_connect(endpoint,
-                boost::bind(&session::udp_connect_handler, this,
+                boost::bind(&session::udp_connect_handler, shared_from_this(),
                     boost::asio::placeholders::error, ++endpoint_iterator));
     }
     else {
@@ -1076,12 +1113,13 @@ void session::socks5_resp_to_local() {
     //auto& rply_data = pack_data(data, data.size());
     // 异步发给 local
 
-    boost::asio::async_write(this->socket_left, 
-            pack_data(data, data.size()).buffers(),
-                boost::bind(&session::left_write_handler, this, _1, _2));
+    auto&& data_reply = make_shared_reply(pack_data(data, data.size()));
+    boost::asio::async_write(this->socket_left, data_reply->buffers(),
+                boost::bind(&session::left_write_handler, 
+                    shared_from_this(), _1, _2, data_reply));
 
     std::cout << "send pack to local: ";
-    _debug_print_data(get_vdata_from_lss_pack(this->lss_reply), 
+    _debug_print_data(get_vdata_from_lss_pack(*data_reply), 
             int(), ' ', std::hex);
 
     if (this->socks5_resp_reply == 0x00) {
@@ -1091,7 +1129,8 @@ void session::socks5_resp_to_local() {
     else {
         // socks5 服务器  不能响应 客户端请求命令
         // TODO
-        delete_this();
+        //delete_this();
+        this->close();
         // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
     }
 }

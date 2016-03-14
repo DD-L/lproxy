@@ -35,24 +35,34 @@ public:
         sig_right.async_wait(boost::bind(&config::signal_handler, 
                     &io_service_right(), _1, _2));
     }
-
 private:
     void start_accept() {
+        /*
         session* new_session = 
             new SESSION(io_service_left(), io_service_right());
+        */
+        /*
+        session::pointer new_session = 
+            new SESSION(io_service_left(), io_service_right());
+        */
+        session::pointer new_session = 
+            std::make_shared<SESSION>(io_service_left(), io_service_right());
         acceptor_.async_accept(new_session->get_socket_left(),
                 boost::bind(&lss_server::handle_accept, this, new_session,
                     boost::asio::placeholders::error));
     }
 
-    void handle_accept(session* new_session,
+    void handle_accept(session::pointer new_session,
             const boost::system::error_code& error) {
         if (! error) {
             new_session->start();
         }
         else {
+            /*
             delete new_session;
             new_session = nullptr;
+            */
+            new_session->close();
         }
 
         start_accept();

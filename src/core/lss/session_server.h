@@ -13,7 +13,11 @@
 namespace lproxy {
 namespace server {
 
-class session : public lproxy::session {
+class session : 
+    public lproxy::session, public std::enable_shared_from_this<session> {
+public:
+    typedef std::shared_ptr<request> shared_request_type;
+    typedef std::shared_ptr<reply>   shared_reply_type;
 public:
     session(boost::asio::io_service& io_service_left,
             boost::asio::io_service& io_service_right);
@@ -21,6 +25,7 @@ public:
      * function:start {socket_left.async_read_some [bind: left_read_handler]}
      */
     virtual void start(void) override;
+    virtual void close(void) override;
     virtual tcp::socket& get_socket_left(void) override;
 private:
     /**
@@ -31,7 +36,7 @@ private:
      *      case (request::exchange) {
      *          unpack_request_exchange
      *          case ('authenticate key' failed) {
-     *              async_write:socket_left (reply::deny) [bind: delete_this]
+     *              async_write:socket_left (reply::deny) [bind: close]
      *          }
      *          case ('authenticate key' succeeded) {
      *              async_write:socket_left (reply::exchange) {
@@ -85,7 +90,7 @@ private:
      * }
      */
     void left_read_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
+            std::size_t bytes_transferred, shared_request_type lss_reply);
     /**
      * function:hello_handler {
      *  socket_left.async_read_some [bind: left_read_handler]
@@ -100,7 +105,7 @@ private:
      * }
      */
     void exchange_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
+            std::size_t bytes_transferred, shared_reply_type lss_reply);
 
     /**
      * function:left_write_handler {
@@ -118,7 +123,7 @@ private:
      *          }
      *          default {
      *              async_write:socket_left (pack_bad().buffers()) {
-     *                  [bind: delete_this]
+     *                  [bind: close]
      *              }
      *          }
      *      }
@@ -128,7 +133,7 @@ private:
      * }
      */
     void left_write_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred); 
+            std::size_t bytes_transferred, shared_reply_type lss_reply); 
     
     /**
      * function: right_write_handler {
@@ -151,7 +156,7 @@ private:
      *      }
      *      default {
      *          async_write:socket_left (pack_bad().buffers()) {
-     *              [bind: delete_this]
+     *              [bind: close]
      *          }
      *      }
      * }
@@ -169,19 +174,16 @@ private:
             std::size_t bytes_transferred);
 
 private:
-    void delete_this(void);
-
-private:
     // 组装 hello
     const reply& pack_hello(void);
     // 组装 deny
     const reply& pack_deny(void);
     // 组装 exchange
-    const reply& pack_exchange(const data_t& auth_key, 
+    const reply pack_exchange(const data_t& auth_key, 
             const data_t& random_str);
     // 组装 data
-    const reply& pack_data(const std::string& data, std::size_t data_len);
-    const reply& pack_data(const data_t& data, std::size_t data_len);
+    const reply pack_data(const std::string& data, std::size_t data_len);
+    const reply pack_data(const data_t& data, std::size_t data_len);
     // 组装 bad
     const reply& pack_bad(void);
     // 组装 timeout
@@ -189,13 +191,14 @@ private:
 
 private:
     const data_t gen_hello_data(void);
-    void unpack_request_exchange(data_t& auth_key, data_t& random_str);
+    void unpack_request_exchange(data_t& auth_key, data_t& random_str,
+            const request& request);
 
     /**
      * function:unpack_data {
      *      if ('this->aes_encryptor not initialized') {
      *          async_write:socket_left (deny.buffers()) {
-     *              [bind: delete_this]
+     *              [bind: close]
      *          }
      *      }
      *      else {
@@ -204,8 +207,8 @@ private:
      *      }
      * }
      */
-     const int unpack_data(data_t& plain, const std::size_t lss_length, 
-             bool is_zip = false);
+     const int unpack_data(data_t& plain, const std::size_t lss_reply_length, 
+             const request& request, bool is_zip = false);
 
     // socks5 [var cmd rsv atype dstaddr dstport] 处理流程
     /**
@@ -335,6 +338,13 @@ private:
      */
     void socks5_resp_to_local();
 private:
+    inline shared_request_type make_shared_request(void) {
+        return std::make_shared<request>(max_length);
+    }
+    inline shared_reply_type make_shared_reply(const reply& lss_reply) {
+        return std::make_shared<reply>(std::move(lss_reply));
+    }
+private:
     tcp::socket       socket_left; // local
     tcp::socket       socket_right_tcp; // remote tcp
     udp::socket       socket_right_udp; // remote udp
@@ -351,15 +361,17 @@ private:
     uint16_t       dest_port; // 目标端口
     uint8_t        socks5_resp_reply; // socks5::resq::Reply
 
-    lproxy::server::request lss_request; // 从local端发来的原始数据
-    lproxy::server::reply   lss_reply;   // 发向 local 的数据(hello, bad, timeout, deny 除外)
+    // 消灭 全局lss_request
+    //lproxy::server::request lss_request; // 从local端发来的原始数据
+    // 消灭 全局lss_reply
+    //lproxy::server::reply   lss_reply;   // 发向 local 的数据(hello, bad, timeout, deny 除外)
     data_t             data_right; // 从web 发来的原始数据, 
     //不用数组是为了减少lproxy::server::session的对象构造所用的时间
 
     lproxy::socks5::server::state socks5_state = lproxy::socks5::server::OPENING;
 
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
-    std::atomic_flag  delete_flag = ATOMIC_FLAG_INIT;
+    std::atomic_flag                   close_flag = ATOMIC_FLAG_INIT;
 }; // class lproxy::server::session
 } // namespace lproxy::server
 } // namespace lproxy

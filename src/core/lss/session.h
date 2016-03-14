@@ -13,9 +13,15 @@ namespace lproxy {
 
 class session {
 public:
+    typedef std::shared_ptr<session>  pointer;
+public:
     virtual void start(void) = 0;
+    virtual void close(void) = 0;
     virtual tcp::socket& get_socket_left(void) = 0;
-    virtual ~session(void) {}
+    virtual ~session(void) {
+        // debug
+        std::cout << "session::~session() this = " << this << std::endl;
+    }
 protected:
     //enum             { max_length = 2048};
     enum             { max_length = 1024};
@@ -42,7 +48,6 @@ protected:
             return "incomplete_data";
         }
         const int less(void) const {
-            //return const_cast<decltype(this)>(this)->less();
             return less_;
         }
     private:
@@ -85,24 +90,6 @@ protected:
             // 调用者需检查返回值，如果 false，
             // 切记要改用另外一个 write bind handler
         }
-        /*
-        lproxy::local::reply rply(this->lss_reply); // 复制一份
-        auto& buf = boost::asio::buffer(rply.buffers());
-        //std::size_t buf_size = boost::asio::buffer_size(buf);
-        // 生成 新包
-        auto&& pack = lproxy::__packet(
-                *boost::asio::buffer_cast<byte*>(buf + start_pos), 
-                *boost::asio::buffer_cast<byte*>(buf + start_pos + 1),
-                *boost::asio::buffer_cast<byte*>(buf + start_pos + 2),
-                *boost::asio::buffer_cast<byte*>(buf + start_pos + 3), 
-                // 包头部分结束
-                data_t(boost::asio::buffer_cast<byte*>(cb + start_pos + 4), 
-                    boost::asio::buffer_cast<byte*>(cb + lss_len)));
-        this->lss_reply = lproxy::local::reply(std::move(pack));
-        return true;
-        */
-
-        // 新算法
         vdata_t&& buf = lproxy::get_vdata_from_lss_pack(lss);
         auto&& pack = lproxy::__packet(
                 *(buf.begin() + start_pos),
