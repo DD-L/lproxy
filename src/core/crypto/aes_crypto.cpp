@@ -51,7 +51,8 @@ Aes::Aes(const std::vector<uint8_t>& _raw256key, Aes::raw256keysetting)
     assert(_raw256key.size() == aes_key_len);
     aes_key.Assign(&_raw256key[0], aes_key_len);
 
-    initialize_counter(std::string((const char*)&_raw256key[0]));
+    std::string something(_raw256key.begin(), _raw256key.end());
+    initialize_counter(something);
 }
 
 
