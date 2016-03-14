@@ -18,6 +18,8 @@ namespace local {
  */ 
 class session : public lproxy::session {
 public:
+    typedef std::shared_ptr<reply> shared_reply_type;
+public:
     session(boost::asio::io_service& io_service_left,
                   boost::asio::io_service& io_service_right);
 
@@ -93,7 +95,7 @@ private:
      * }
      */
     void right_read_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
+            std::size_t bytes_transferred, shared_reply_type lss_reply);
 
 private:
     /**
@@ -144,19 +146,25 @@ private:
     const request& pack_bad(void);
 private:
     // 解包hello. 获取pack.data中的 keysize 与 public_key
-    void unpack_reply_hello(keysize_t& keysize, data_t& public_key);
+    void unpack_reply_hello(keysize_t& keysize, 
+            data_t& public_key, const reply& reply);
 
     // 解包exchange. 获取 随机key 和 随机数
-    void unpack_reply_exchange(sdata_t& reply_random_str);
+    void unpack_reply_exchange(sdata_t& reply_random_str, 
+            const reply& reply);
 
     // 解包data.
-    const int unpack_reply_data(data_t& data_right, 
-            std::size_t lss_length, bool is_zip = false);
+    const int unpack_reply_data(data_t& data_right, std::size_t lss_length, 
+            const reply& reply, bool is_zip = false);
 
 private:
     void delete_this(void);
+    shared_reply_type make_lss_reply(void) {
+        return std::make_shared<reply>(max_length);
+    }
 private:
-    lproxy::local::reply   lss_reply; // server 端发来的原始数据
+    // 消灭 全局reply
+    //lproxy::local::reply   lss_reply; // server 端发来的原始数据
     lproxy::local::request lss_request;// 向server端发送的数据 (hello, bad 除外)
     sdata_t                  random_str; // local 端生成的随机数
     std::shared_ptr<crypto::Encryptor> aes_encryptor;

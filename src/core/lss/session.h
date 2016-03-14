@@ -51,7 +51,7 @@ protected:
 protected:
     // 包完整性检查
     void lss_pack_integrity_check(std::size_t bytes_transferred, 
-            const request_or_reply_base_class& lss_data) 
+            const request_and_reply_base_class& lss_data) 
                 throw (incomplete_data) {
         if (bytes_transferred < 4) {
             throw incomplete_data(0xffffffff);

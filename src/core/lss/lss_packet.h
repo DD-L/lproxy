@@ -99,13 +99,13 @@ public:
     
 }; // struct lproxy::__packet
 
-class request_or_reply_base_class {
+class request_and_reply_base_class {
 public:
     virtual data_len_t data_len(void) const = 0;
-    virtual ~request_or_reply_base_class() {}
+    virtual ~request_and_reply_base_class() {}
 };
 
-struct __request_type : request_or_reply_base_class {
+struct __request_type : request_and_reply_base_class {
     enum PackType {
         hello    = 0x00,
         exchange = 0x02,
@@ -115,7 +115,7 @@ struct __request_type : request_or_reply_base_class {
     };
 }; // struct lproxy::__request_type
 
-struct __reply_type : request_or_reply_base_class {
+struct __reply_type : request_and_reply_base_class {
     enum PackType {
         hello    = 0x01,
         exchange = 0x03,
@@ -191,6 +191,10 @@ private:
 class reply : public __reply_type {
 public:
     reply(void) : pack(), pack_data_size_setting(false) {}
+    explicit reply(const std::size_t data_initial_length) 
+        : pack(__packet(0xff, 0xff, 0x00, 0x00, 
+                    data_t(data_initial_length, 0))), 
+          pack_data_size_setting(true) {} 
     virtual ~reply(void) {}
     
     explicit reply(const reply& that) : pack(that.pack) {}
@@ -260,6 +264,9 @@ public:
     data_t& get_data(void) {
         return pack.data;
     }
+    const data_t& get_data(void) const {
+        return const_cast<reply*>(this)->get_data();
+    }
     
 private:
     __packet pack;
@@ -276,6 +283,10 @@ namespace server {
 class request : public __request_type {
 public:
     request(void) : pack(), pack_data_size_setting(false) {}
+    explicit request(const std::size_t data_initial_length) 
+        : pack(__packet(0xff, 0xff, 0x00, 0x00, 
+                    data_t(data_initial_length, 0))),
+          pack_data_size_setting(true) {} 
     virtual ~request(void) {}
 
     explicit request(const request& that) : pack(that.pack) {}
@@ -343,6 +354,9 @@ public:
 
     data_t& get_data(void) {
         return pack.data;
+    }
+    const data_t& get_data(void) const {
+        return const_cast<request*>(this)->get_data();
     }
 private:
     __packet pack;

@@ -764,7 +764,29 @@ const int session::unpack_data(data_t& plain, const std::size_t lss_length,
     }
     // 对包解密
     vdata_t plain_;
-    aes_encryptor->decrypt(plain_, cipher.c_str(), cipher_len);
+    this->aes_encryptor->decrypt(plain_, &cipher[0], cipher_len);
+
+    {
+    std::cout << "\n---test aes-----\n";
+    data_t k = (const_byte_ptr)"12345678901234567890123456789012";
+    vdata_t key(k.begin(), k.begin() + 32);
+    vdata_t plain = {0x05, 0x01, 0x00}, cipher, resovle;
+    crypto::Encryptor aes(new crypto::Aes(key, 
+                crypto::Aes::raw256keysetting())); 
+    aes.encrypt(cipher, &plain[0], plain.size());
+    _debug_print_data(cipher, int(), ' ', std::hex);
+
+    aes.decrypt(resovle, &cipher[0], cipher.size());
+    _debug_print_data(resovle, int(), ' ', std::hex);
+    std::cout << "\n---test aes-----\n";    
+    }
+
+    std::cout << "cipher data from local = ";
+    for (std::size_t i = 0; i < cipher_len; ++i) {
+        std::cout << std::hex << (int)cipher[i] << " ";
+    }
+
+
     plain.assign(plain_.begin(), plain_.end());
     return lss_length - (4 + cipher_len); 
     // (4 + cipher_len) 当前已经处理的lss包长度
