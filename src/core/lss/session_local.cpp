@@ -36,7 +36,8 @@ void session::start(void) {
     const auto& server_name = config::get_instance().get_server_name();
     const auto& server_port = config::get_instance().get_server_port();
 
-    std::cout << "async_resolve: " << server_name << ":" << server_port << std::endl;
+    std::cout << "async_resolve: " << server_name << ":" << server_port 
+        << std::endl;
     this->resolver_right.async_resolve({server_name, server_port}, 
             boost::bind(&session::resolve_handler, shared_from_this(), _1, _2));
 }
@@ -202,11 +203,8 @@ void session::right_read_handler(const boost::system::error_code& error,
             switch (lss_reply->type()) {
             case reply::hello: { // 0x01
                 // 状态检查
-                /*
-                if (status_hello != this->status) {
-                    throw wrong_packet_type(); 
-                }
-                */
+                assert_status(status_hello);
+
                 // 在lss_reply->data 中取出模长和公钥
                 keysize_t   keysize = 0;
                 data_t      public_key;
@@ -229,11 +227,8 @@ void session::right_read_handler(const boost::system::error_code& error,
                 break;
             } 
             case reply::exchange: { // 0x03
-                /*
-                if (status_auth != this->status) {
-                    throw wrong_packet_type(); 
-                }
-                */
+                assert_status(status_auth);
+
                 sdata_t reply_random_str;
                 // 解包，获取 随机数 和 随机key
                 unpack_reply_exchange(reply_random_str, *lss_reply);
@@ -248,8 +243,9 @@ void session::right_read_handler(const boost::system::error_code& error,
                 std::cout << "验证通过" << std::endl;
 
                 // 验证通过
-                status = status_data;
                 transport(); 
+
+                status = status_data;
                 break;
             }
             case reply::deny: // 0x04
@@ -265,69 +261,64 @@ void session::right_read_handler(const boost::system::error_code& error,
             case reply::zipdata:// 0x17
                 is_zip_data = true;
             case reply::data: { // 0x06
-                    if (status_data == status) {
-                        // 解包
-                        data_t data_right;
-                        const int rest_lss_data_len = 
-                            unpack_reply_data(data_right, bytes_transferred, 
-                                    *lss_reply, is_zip_data);
+                assert_status(status_data);
+                // 解包
+                data_t data_right;
+                const int rest_lss_data_len = 
+                    unpack_reply_data(data_right, bytes_transferred, 
+                            *lss_reply, is_zip_data);
 
-                        /*
-                        std::cout << "after unpack_reply_data, data_right = \n";
-                        _debug_print_data(data_right, int(), ' ', std::hex);
-                        */
+                /*
+                std::cout << "after unpack_reply_data, data_right = \n";
+                _debug_print_data(data_right, int(), ' ', std::hex);
+                */
 
-                        if (rest_lss_data_len < 0) {
-                            throw incomplete_data(0 - rest_lss_data_len); 
-                        }
+                if (rest_lss_data_len < 0) {
+                    throw incomplete_data(0 - rest_lss_data_len); 
+                }
 
-                        auto&& data = lproxy::make_shared_data(
-                                std::move(data_right));
+                auto&& data = lproxy::make_shared_data(
+                        std::move(data_right));
 
-                        // 裁剪 lss_reply 数据，（当前数据已缓存到*data）
-                        // 减掉当前lss数据。 (分包)
-                        bool is_continue = 
-                            cut_lss(bytes_transferred - rest_lss_data_len,
-                                bytes_transferred, *lss_reply);
-                        // bytes_transferred - rest_lss_data_len 的意义是 
-                        // 新包在 旧包中 开始的位置（0开头）
+                // 裁剪 lss_reply 数据，（当前数据已缓存到*data）
+                // 减掉当前lss数据。 (分包)
+                bool is_continue = 
+                    cut_lss(bytes_transferred - rest_lss_data_len,
+                        bytes_transferred, *lss_reply);
+                // bytes_transferred - rest_lss_data_len 的意义是 
+                // 新包在 旧包中 开始的位置（0开头）
 
-                        /*
-                        std::cout << "after cut_lss, *data = " << std::endl;
-                        _debug_print_data(*data, int(), ' ', std::hex);
-                        */
+                /*
+                std::cout << "after cut_lss, *data = " << std::endl;
+                _debug_print_data(*data, int(), ' ', std::hex);
+                */
 
-                        // 将 data_right 发至 client
-                        if (rest_lss_data_len > 0 && is_continue) {
-                            // lss_reply 里还有未处理的数据
-                            std::cout << "unprocessed data still in lss_reply.."
-                                << std::endl;
+                // 将 data_right 发至 client
+                if (rest_lss_data_len > 0 && is_continue) {
+                    // lss_reply 里还有未处理的数据
+                    std::cout << "unprocessed data still in lss_reply.."
+                        << std::endl;
 
-                            boost::asio::async_write(this->socket_left,
-                                boost::asio::buffer(*data),
-                                boost::bind(&session::right_read_handler, 
-                                    shared_from_this(),
-                                    boost::asio::placeholders::error,
-                                    std::size_t(rest_lss_data_len), 
-                                    lss_reply, data));
-                        }
-                        else {
-                            // 最后一条不可再分割的数据再绑定 left_write_handler
-                            boost::asio::async_write(this->socket_left,
-                                 boost::asio::buffer(*data),
-                                 boost::bind(&session::left_write_handler,
-                                   shared_from_this(), _1, _2, data)); 
-                        }
+                    boost::asio::async_write(this->socket_left,
+                        boost::asio::buffer(*data),
+                        boost::bind(&session::right_read_handler, 
+                            shared_from_this(),
+                            boost::asio::placeholders::error,
+                            std::size_t(rest_lss_data_len), 
+                            lss_reply, data));
+                }
+                else {
+                    // 最后一条不可再分割的数据再绑定 left_write_handler
+                    boost::asio::async_write(this->socket_left,
+                         boost::asio::buffer(*data),
+                         boost::bind(&session::left_write_handler,
+                           shared_from_this(), _1, _2, data)); 
+                }
 
-                        std::cout << "send plain data to client : ";
-                        _debug_print_data(*data, int(), ' ', std::hex);
-                        _debug_print_data(*data, char(), 0);
-                        std::cout << std::endl;
-                    }
-                    else {
-                        std:: cout << "reply::data: status Wrong" << std::endl;
-                        throw wrong_packet_type();
-                    }
+                std::cout << "send plain data to client : ";
+                _debug_print_data(*data, int(), ' ', std::hex);
+                _debug_print_data(*data, char(), 0);
+                std::cout << std::endl;
                 break;
             }
             case reply::bad: // 0xff
@@ -355,6 +346,11 @@ void session::right_read_handler(const boost::system::error_code& error,
             //delete_this();
             this->close();
         }
+        catch (wrong_lss_status& ec) {
+            std::cout << ec.what() << std::endl;
+            std::cout << __LINE__ << " Error right_read_handler, close.\n";
+            this->close();
+        }
         catch (EncryptException& ec) {
             std::cout << ec.what() << std::endl; 
             std::cout << __LINE__ << " Error right_read_handler, close.\n";
@@ -365,6 +361,11 @@ void session::right_read_handler(const boost::system::error_code& error,
             std::cout << ec.what() << std::endl; 
             std::cout << __LINE__ << " Error right_read_handler, close.\n";
             //delete_this(); 
+            this->close();
+        }
+        catch (std::exception& ec) {
+            std::cout << ec.what() << std::endl; 
+            std::cout << __LINE__ << " Error right_read_handler, close.\n";
             this->close();
         }
         catch (...) {

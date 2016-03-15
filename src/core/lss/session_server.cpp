@@ -95,12 +95,9 @@ void session::left_read_handler(const boost::system::error_code& error,
 
             switch (lss_request->type()) {
             case request::hello: { // 0x00
-                // 验证 hello 包是否正确
-                /*
-                if (status_hello != status) {
-                    throw wrong_packet_type();
-                }
-                */
+                // 断言 hello
+                assert_status(status_hello);
+
                 if (lss_request->data_len()) {
                     throw wrong_packet_type();
                 }
@@ -130,11 +127,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                 //          3. 将打包后的数据 用 auth_key 进行aes加密。
                 //          4. 将加密后的数据发送至local, 状态设置为 status_data
                 //          5. 在write handler里将状态设置为 status_data
-                /*
-                if (status_auth != status) {
-                    throw wrong_packet_type();
-                }
-                */
+
+                assert_status(status_auth);
 
                 data_t auth_key, random_str;
                 unpack_request_exchange(auth_key, random_str, *lss_request);
@@ -182,9 +176,7 @@ void session::left_read_handler(const boost::system::error_code& error,
             case request::zipdata: // 0x17
                 is_zip_data = true;
             case request::data: {  // 0x06
-                if (status_data != status) {
-                    throw wrong_packet_type();
-                }
+                assert_status(status_data);
                 // step 1
                 //  解包 得到 plain_data , plain_data 通常是 socks5 数据 
                 //std::string data;
@@ -402,6 +394,11 @@ void session::left_read_handler(const boost::system::error_code& error,
                     pack_bad().buffers(),
                     boost::bind(&session::close, shared_from_this()));
         }
+        catch (wrong_lss_status& ec) {
+            std::cout << ec.what() << std::endl;
+            std::cout << __LINE__ << " Error read_left_handler, close.\n";
+            this->close();
+        }
         catch (EncryptException& ec) {
             std::cout << ec.what() << std::endl; 
             std::cout << __LINE__ << " Error read_left_handler, close.\n";
@@ -412,6 +409,11 @@ void session::left_read_handler(const boost::system::error_code& error,
             std::cout << ec.what() << std::endl; 
             std::cout << __LINE__ << " Error read_left_handler, close.\n";
             //delete_this(); 
+            this->close();
+        }
+        catch (std::exception& ec) {
+            std::cout << ec.what() << std::endl; 
+            std::cout << __LINE__ << " Error read_left_handler, close.\n";
             this->close();
         }
         catch (...) {

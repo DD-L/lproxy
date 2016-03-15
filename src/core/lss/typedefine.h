@@ -147,6 +147,12 @@ static auto&& shared_data = make_shared_data();
 
 } // namespace lproxy::placeholders
 
+// lproxy::readbuffer
+namespace readbuffer {
+    // lproxy::readbuffer::max_length
+    enum             { max_length = 1024 };
+} // namespace lproxy::readbuffer
+
 
 } // namespace lproxy
 

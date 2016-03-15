@@ -10,6 +10,7 @@
 #include <lss/typedefine.h>
 #include <lss/lss_packet.h>
 namespace lproxy {
+using lproxy::readbuffer::max_length;
 
 class session {
 public:
@@ -23,15 +24,43 @@ public:
         std::cout << "session::~session() this = " << this << std::endl;
     }
 protected:
-    //enum             { max_length = 2048};
-    enum             { max_length = 1024};
-    enum {
+    //enum             { max_length = 1024 };
+    // session 状态
+    enum status_t {
         status_not_connected = 0,
         status_connected     = 1,
         status_hello         = 2,
         status_auth          = 3,
         status_data          = 4
     } status; 
+
+protected:
+    class wrong_lss_status : public std::exception {
+    public:
+        wrong_lss_status(status_t wrong_status, 
+                status_t current_status) noexcept 
+            : std::exception(), 
+            m_wrong_status(wrong_status),
+            m_current_status(current_status) {}
+        virtual ~wrong_lss_status(void) noexcept {}
+        virtual const char* what(void) const noexcept {
+            static sdata_t map_status[5] = {
+                "status_not_connected",
+                "status_connected",
+                "status_hello",
+                "status_auth",
+                "status_data"
+            };
+            const_cast<wrong_lss_status*>(this)->m_message =
+                "wrong_lss_status: '" + map_status[m_wrong_status]
+                + "', current status = '" + map_status[m_current_status] + "'";
+            return m_message.c_str() ;
+        } 
+    private:
+        status_t m_wrong_status;
+        status_t m_current_status;
+        sdata_t  m_message;
+    };
     class wrong_packet_type : public std::exception {
     public:
         wrong_packet_type(void) noexcept : std::exception() {}
@@ -54,7 +83,7 @@ protected:
         int   less_;
     };
 protected:
-    // 包完整性检查
+    // lss 包完整性检查
     void lss_pack_integrity_check(std::size_t bytes_transferred, 
             const request_and_reply_base_class& lss_data) 
                 throw (incomplete_data) {
@@ -64,6 +93,13 @@ protected:
         int less = lss_data.data_len() + 4 - bytes_transferred;
         if (less > 0) {
             throw incomplete_data(less);
+        }
+    }
+
+    // 当前 session 状态断言
+    void assert_status(status_t _status) {
+        if (this->status != _status) {
+            throw wrong_lss_status(_status, this->status);
         }
     }
 
