@@ -11,7 +11,8 @@ override CFLAGS   += -Wall $(GDB)
 override CXXFLAGS += -Wall $(MACROS) $(GDB) -std=c++1y
 override LIBS     += $(LIBPATH) -lpthread -lrt
 
-override INCPATH  +=  -I$(CORE_DIR) -I$(BOOST) -I$(CRYPTOPP) -I. 
+override INCPATH  +=  -I$(CORE_DIR) -I$(BOOST) -I$(CRYPTOPP) \
+	-I$(LOG_MODULE_DIR) -I. 
 
 
 include ./Makefile.COMMON

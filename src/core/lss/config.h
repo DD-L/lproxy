@@ -67,6 +67,9 @@ public:
     uint16_t get_local_bind_port(void) {
         return m_local_bind_port;
     }
+    sdata_t get_logfilename(void) {
+        return "";
+    }
 private:
     virtual void configure() override {
         // read data from local configure file
@@ -134,6 +137,9 @@ public:
     }
     uint16_t get_bind_port(void) {
         return m_bind_port;
+    }
+    sdata_t get_logfilename(void) {
+        return "";
     }
 private:
     virtual void configure() override {
