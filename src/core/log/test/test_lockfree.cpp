@@ -64,9 +64,10 @@ void test() {
 			std::make_shared<LogValExtraExample>("test4", 400)
 	));
 	// output
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		LogVal* val = NULL;
-		logstore.pop(val);
+        // 当仓库为空时, logstore.pop(val), 不阻塞, 并返回 false
+		if (! logstore.pop(val)) break;
 		std::cout << log_tools::time2string(val->now)
 			<< " [" << val->log_type 
 			<< "] " << val->msg << " [p:" 
