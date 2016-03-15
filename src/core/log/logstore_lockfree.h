@@ -9,6 +9,8 @@
 
 #include "log/logstoreinterface.h"
 #include "store/store.h"
+#include <thread>
+#include <chrono>
 
 class LogStore_lockfree : public LogStoreInterface {
 public:
@@ -24,7 +26,16 @@ public:
 	virtual void pop(std::shared_ptr<LogVal>& val) override {
 		//assert(val);
 		LogVal* value = nullptr;
-		m_logstore.pop(value);
+        // 如果仓库为空, 就阻塞等待, 直到不为空
+		while (! m_logstore.pop(value)) {
+            //std::this_thread::yield();
+
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            // sleep 1 / 1000 second
+            std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+            // sleep 10 * 1 / 1000,000,000 second
+            // 初步测试的结果是及时 sleep 1 纳秒, CPU 百分比 也几乎是 0
+        }
 		assert(value);
 		val.reset(value);
 	}
