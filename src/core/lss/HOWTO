@@ -1,0 +1,13 @@
+1. Build
+
+    target:
+        ./bin/lsslocal.exe
+        ./bin/lssserver.exe
+
+    Command:
+        Build in linux:
+        $ make -f Makefile -j 4
+
+        Build in Cygwin:
+        $ make -f Makefile.Cygwin -j 4
+        
