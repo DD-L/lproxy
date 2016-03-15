@@ -34,7 +34,7 @@ class LogStore_lockfree : public LogStoreInterface {
                 // sleep 1 / 1000 second
                 std::this_thread::sleep_for(std::chrono::nanoseconds(10));
                 // sleep 10 * 1 / 1000,000,000 second
-                // 初步测试的结果是及时 sleep 1 纳秒, CPU 百分比 也几乎是 0
+                // 初步测试的结果是即使 sleep 1 纳秒, CPU 百分比 也几乎是 0
             }
             assert(value);
             val.reset(value);
