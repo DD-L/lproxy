@@ -41,7 +41,8 @@ void session::start(void) {
     auto&& lss_request = make_shared_request();
     socket_left.async_read_some(lss_request->buffers(),
             boost::bind(&session::left_read_handler, 
-                shared_from_this(), _1, _2, lss_request));
+                shared_from_this(), _1, _2, lss_request,
+                lproxy::placeholders::shared_data));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::bytes_transferred));
     status = status_hello;
@@ -67,7 +68,9 @@ tcp::socket& session::get_socket_left(void) {
 }
 
 void session::left_read_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred, shared_request_type lss_request) {
+        std::size_t bytes_transferred, shared_request_type lss_request,
+        shared_data_type __data /*= lproxy::placeholders::shared_data*/) {
+    (void)__data;
     // <debug>
     std::cout << "left_read_handler \n<--- bytes_transferred = "
         << std::dec << bytes_transferred << '\n'; 
@@ -248,15 +251,19 @@ void session::left_read_handler(const boost::system::error_code& error,
                     this->socket_left.async_read_some(
                             lss_request->buffers(),
                             boost::bind(&session::left_read_handler, 
-                                shared_from_this(), _1, _2, lss_request)); 
+                                shared_from_this(), _1, _2, lss_request,
+                                lproxy::placeholders::shared_data)); 
                     std::cout << "start async_read local..." << std::endl;
                     
                     break;
                 }
                 case lproxy::socks5::server::CONNECTED: {
+                    /*
                     std::shared_ptr<data_t> plain_data_ptr = 
                         std::make_shared<data_t>(plain_data);
-
+                    */
+                    auto&& plain_data_ptr = lproxy::make_shared_data(
+                            std::move(plain_data));
                     // 裁剪 lss_request 数据，当前数据已缓存到*plain_data_ptr
                     // 减掉当前lss数据。(分包)
                     bool is_continue = 
@@ -279,14 +286,15 @@ void session::left_read_handler(const boost::system::error_code& error,
                                     shared_from_this(), 
                                     boost::asio::placeholders::error,
                                     std::size_t(rest_lss_data_len), 
-                                    lss_request));
+                                    lss_request, plain_data_ptr));
                         }
                         else {
                             //最后一条不可再分割的数据再绑定right_write_handler
                             boost::asio::async_write(this->socket_right_tcp, 
                                 boost::asio::buffer(*plain_data_ptr),
                                 boost::bind(&session::right_write_handler, 
-                                    shared_from_this(), _1, _2));
+                                    shared_from_this(), _1, _2, 
+                                    plain_data_ptr));
                         }
 
                         std::cout << "write data to remote: ";
@@ -322,7 +330,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                                     shared_from_this(), 
                                     boost::asio::placeholders::error,
                                     std::size_t(rest_lss_data_len),
-                                    lss_request));
+                                    lss_request, plain_data_ptr));
                         }
                         else {
                             //最后一条不可再分割的数据再绑定right_write_handler
@@ -330,7 +338,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                                  boost::asio::buffer(*plain_data_ptr), 
                                  destination,
                                  boost::bind(&session::right_write_handler, 
-                                     shared_from_this(), _1, _2));
+                                     shared_from_this(), _1, _2, 
+                                     plain_data_ptr));
                         }
 
                         std::cout << "write data to remote: ";
@@ -431,9 +440,8 @@ void session::hello_handler(const boost::system::error_code& error,
         auto&& lss_request = make_shared_request();
         this->socket_left.async_read_some(lss_request->buffers(), 
                 boost::bind(&session::left_read_handler, 
-                    shared_from_this(), _1, _2, lss_request));
-                    //boost::asio::placeholders::error,
-                    //boost::asio::placeholders::bytes_transferred));
+                    shared_from_this(), _1, _2, lss_request,
+                    lproxy::placeholders::shared_data));
         this->status = status_auth;
     }
     else {
@@ -462,7 +470,8 @@ void session::exchange_handler(const boost::system::error_code& error,
         auto&& lss_request = make_shared_request();
         this->socket_left.async_read_some(lss_request->buffers(), 
                 boost::bind(&session::left_read_handler, 
-                    shared_from_this(), _1, _2, lss_request));
+                    shared_from_this(), _1, _2, lss_request,
+                    lproxy::placeholders::shared_data));
                     //boost::asio::placeholders::error,
                     //boost::asio::placeholders::bytes_transferred));
         status = status_data;
@@ -486,29 +495,32 @@ void session::left_write_handler(const boost::system::error_code& error,
     // </debug>
     if (! error) {
         if (lproxy::socks5::server::CONNECTED == this->socks5_state) {
+            /*
             // 每次异步读数据之前，清空 data
             this->data_right.assign(max_length, 0);
+            */
+            auto&& data_right = lproxy::make_shared_data(max_length, 0);
             switch (this->socks5_cmd) {
             case CMD_CONNECT:
 
                 std::cout << "start async_read_some from socket_right_tcp\n";
 
                 socket_right_tcp.async_read_some(
-                    boost::asio::buffer(&this->data_right[0], max_length), 
+                    boost::asio::buffer(&(*data_right)[0], max_length), 
                     boost::bind(&session::right_read_handler, 
-                        shared_from_this(), _1, _2));
+                        shared_from_this(), _1, _2, data_right));
                 break;
             case CMD_UDP: {
 
-                std::cout << "start async_receive_from from socket_right_udp\n";
+                std::cout <<"start async_receive_from from socket_right_udp\n";
 
                 ip::udp::endpoint destination(
                     ip::address::from_string(this->dest_name), this->dest_port);
                 socket_right_udp.async_receive_from(
-                    boost::asio::buffer(&this->data_right[0], max_length), 
+                    boost::asio::buffer(&(*data_right)[0], max_length), 
                     destination,
                     boost::bind(&session::right_read_handler, 
-                        shared_from_this(), _1, _2));
+                        shared_from_this(), _1, _2, data_right));
                 break;
             }
             case CMD_BIND:
@@ -526,7 +538,8 @@ void session::left_write_handler(const boost::system::error_code& error,
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
-                        shared_from_this(), _1, _2, lss_request)); 
+                        shared_from_this(), _1, _2, lss_request,
+                        lproxy::placeholders::shared_data)); 
         }
     }
     else {
@@ -539,7 +552,8 @@ void session::left_write_handler(const boost::system::error_code& error,
 } 
 
 void session::right_write_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_data_type __data) {
+    (void)__data;
     // <debug>
     std::cout << "right_write_handler \n---> bytes_transferred = "
         << std::dec << bytes_transferred << '\n';
@@ -553,16 +567,20 @@ void session::right_write_handler(const boost::system::error_code& error,
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
-                        shared_from_this(), _1, _2, lss_request));
+                        shared_from_this(), _1, _2, lss_request,
+                        lproxy::placeholders::shared_data));
 
             std::cout << "begin to async-read data from local\n";
 
+            /*
             // 异步读之前， data 要清零
             this->data_right.assign(max_length, 0);
+            */
+            auto&& data_right = make_shared_data(max_length, 0);
             this->socket_right_tcp.async_read_some(
-                boost::asio::buffer(&this->data_right[0], max_length), 
+                boost::asio::buffer(&(*data_right)[0], max_length), 
                 boost::bind(&session::right_read_handler, 
-                    shared_from_this(), _1, _2));
+                    shared_from_this(), _1, _2, data_right));
 
             std::cout << "begin to async-read data from remote\n";
             break;
@@ -573,7 +591,8 @@ void session::right_write_handler(const boost::system::error_code& error,
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
-                        shared_from_this(), _1, _2, lss_request));
+                        shared_from_this(), _1, _2, lss_request,
+                        lproxy::placeholders::shared_data));
 
             std::cout << "begin to read data from local\n";
 
@@ -582,13 +601,16 @@ void session::right_write_handler(const boost::system::error_code& error,
                  ip::address::from_string(this->dest_name), 
                  this->dest_port);
 
+            /*
             // 异步读之前， data 要清零
             this->data_right.assign(max_length, 0);
+            */
+            auto&& data_right = make_shared_data(max_length, 0);
             this->socket_right_udp.async_receive_from(
-                boost::asio::buffer(&this->data_right[0], max_length), 
+                boost::asio::buffer(&(*data_right)[0], max_length), 
                 destination,
                 boost::bind(&session::right_read_handler, 
-                    shared_from_this(), _1, _2));
+                    shared_from_this(), _1, _2, data_right));
 
             std::cout << "begin to async-read data from remote\n";
 
@@ -614,17 +636,17 @@ void session::right_write_handler(const boost::system::error_code& error,
 }
 
 void session::right_read_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_data_type data_right) {
     // <debug>
     std::cout << "right_read_handler \n---> bytes_transferred = "
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
         // step 1, 将读来的数据，加密打包
-        //auto&& data = pack_data(this->data_right, bytes_transferred);
+        //auto&& data = pack_data(*data_right, bytes_transferred);
         // step 2, 发给 local 端
         auto&& data_reply = make_shared_reply(
-                pack_data(this->data_right, bytes_transferred));
+                pack_data(*data_right, bytes_transferred));
         boost::asio::async_write(this->socket_left, 
                 data_reply->buffers(),
                 boost::bind(&session::left_write_handler, 
@@ -633,8 +655,8 @@ void session::right_read_handler(const boost::system::error_code& error,
         std::cout << "write data to local: \n";
 
         std::cout << "plain data: ";
-        _debug_print_data(data_t(this->data_right.begin(), 
-                                this->data_right.begin() + bytes_transferred), 
+        _debug_print_data(data_t(data_right->begin(), 
+                                data_right->begin() + bytes_transferred), 
                             char(), 0);
 
         std::cout << "cipher lss_data: ";

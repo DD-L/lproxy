@@ -120,12 +120,13 @@ try {
         }
         //
         data_t data_receive(1024, 0);
-        sock.read_some(buffer(&data_receive[0], 1024), ec);
+        std::size_t bytes_transferred 
+            = sock.read_some(buffer(&data_receive[0], 1024), ec);
         if (ec) {
             cout << ec.message() << endl;
             return 3;
         }
-        cout << "receive: ";
+        cout << "received: " << bytes_transferred << " byte:\n";
         lproxy::_debug_print_data(data_receive, char(), 0);
         lproxy::_debug_print_data(data_receive, int(), ' ', std::hex);
     }

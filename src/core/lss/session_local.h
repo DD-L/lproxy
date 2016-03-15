@@ -98,7 +98,8 @@ private:
      * }
      */
     void right_read_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred, shared_reply_type lss_reply);
+            std::size_t bytes_transferred, shared_reply_type lss_reply,
+            shared_data_type __data/*=lproxy::placeholders::shared_data*/);
 
 private:
     /**
@@ -117,7 +118,7 @@ private:
      * }
      */
     void left_read_handler(const boost::system::error_code& error,
-            size_t bytes_transferred);
+            std::size_t bytes_transferred, shared_data_type data_left);
 
     /**
      * function:right_write_handler {
@@ -133,7 +134,8 @@ private:
      * }
      */
     void left_write_handler(const boost::system::error_code& error,
-            std::size_t bytes_trannsferred);
+            std::size_t bytes_trannsferred, 
+            shared_data_type __data/*=lproxy::placeholders::shared_data*/);
 
 private:
     // 组装 hello
@@ -143,7 +145,8 @@ private:
             const data_t& public_key);
     
     // 组装 data / zipdata
-    const request pack_data(std::size_t data_len);
+    const request pack_data(const data_t& data_left, 
+            const std::size_t data_len);
     
     // 组装 bad
     const request& pack_bad(void);
@@ -175,11 +178,12 @@ private:
     sdata_t                  random_str; // local 端生成的随机数
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
     vdata_t     data_key;  // server 端发来的 随机 key, 也是 数据传输 用的 key
-    vdata_t     data_left; //从 client 发来的数据（通常是 socks5 数据） 
+    // 消灭全局 data_left
+    //vdata_t     data_left; //从 client 发来的数据（通常是 socks5 数据） 
 private:
-    tcp::socket      socket_left;  // client 
-    tcp::socket      socket_right; // remote
-    tcp::resolver resolver_right;  // remote resolver
+    tcp::socket      socket_left;     // client socket
+    tcp::socket      socket_right;    // server socket
+    tcp::resolver    resolver_right;  // server resolver
     std::atomic_flag close_flag = ATOMIC_FLAG_INIT;
 
 }; // class lproxy::local::session

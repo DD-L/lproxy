@@ -90,7 +90,8 @@ private:
      * }
      */
     void left_read_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred, shared_request_type lss_reply);
+            std::size_t bytes_transferred, shared_request_type lss_reply,
+            shared_data_type __data/*=lproxy::placeholders::shared_data*/);
     /**
      * function:hello_handler {
      *  socket_left.async_read_some [bind: left_read_handler]
@@ -162,7 +163,8 @@ private:
      * }
      */
     void right_write_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
+            std::size_t bytes_transferred, 
+            shared_data_type __data/* = lproxy::placeholders::shared_data*/);
 
     /**
      * function:right_read_handler {
@@ -171,7 +173,7 @@ private:
      * }
      */
     void right_read_handler(const boost::system::error_code& error,
-            std::size_t bytes_transferred);
+            std::size_t bytes_transferred, shared_data_type data_right);
 
 private:
     // 组装 hello
@@ -365,7 +367,8 @@ private:
     //lproxy::server::request lss_request; // 从local端发来的原始数据
     // 消灭 全局lss_reply
     //lproxy::server::reply   lss_reply;   // 发向 local 的数据(hello, bad, timeout, deny 除外)
-    data_t             data_right; // 从web 发来的原始数据, 
+    // 消灭全局 data_right
+    //data_t             data_right; // 从web 发来的原始数据, 
     //不用数组是为了减少lproxy::server::session的对象构造所用的时间
 
     lproxy::socks5::server::state socks5_state = lproxy::socks5::server::OPENING;

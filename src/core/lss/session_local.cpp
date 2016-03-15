@@ -135,7 +135,7 @@ void session::hello_handler(const boost::system::error_code& error,
 
         this->socket_right.async_read_some(lss_reply->buffers(), 
                 boost::bind(&session::right_read_handler, shared_from_this(),
-                    _1, _2, lss_reply));
+                    _1, _2, lss_reply, lproxy::placeholders::shared_data));
                     //boost::asio::placeholders::error,
                     //boost::asio::placeholders::bytes_transferred));
         this->status = status_hello;
@@ -162,9 +162,7 @@ void session::exchange_handler(const boost::system::error_code& error,
         auto&& lss_reply = make_shared_reply();
         this->socket_right.async_read_some(lss_reply->buffers(), 
                 boost::bind(&session::right_read_handler, shared_from_this(), 
-                    _1, _2, lss_reply));
-                    //boost::asio::placeholders::error,
-                    //boost::asio::placeholders::bytes_transferred));
+                    _1, _2, lss_reply, lproxy::placeholders::shared_data));
         status = status_auth;
     }
     else {
@@ -177,7 +175,9 @@ void session::exchange_handler(const boost::system::error_code& error,
 }
 
 void session::right_read_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred, shared_reply_type lss_reply) { 
+        std::size_t bytes_transferred, shared_reply_type lss_reply, 
+        shared_data_type __data /* = lproxy::placeholders::shared_data */) {
+    (void)__data;
     // <debug>
     std::cout << "right_read_handler \n<--- bytes_transferred = "
         << std::dec << bytes_transferred << '\n'; 
@@ -281,8 +281,8 @@ void session::right_read_handler(const boost::system::error_code& error,
                             throw incomplete_data(0 - rest_lss_data_len); 
                         }
 
-                        std::shared_ptr<data_t> data 
-                            = std::make_shared<data_t>(data_right);
+                        auto&& data = lproxy::make_shared_data(
+                                std::move(data_right));
 
                         // 裁剪 lss_reply 数据，（当前数据已缓存到*data）
                         // 减掉当前lss数据。 (分包)
@@ -308,14 +308,15 @@ void session::right_read_handler(const boost::system::error_code& error,
                                 boost::bind(&session::right_read_handler, 
                                     shared_from_this(),
                                     boost::asio::placeholders::error,
-                                    std::size_t(rest_lss_data_len), lss_reply));
+                                    std::size_t(rest_lss_data_len), 
+                                    lss_reply, data));
                         }
                         else {
                             // 最后一条不可再分割的数据再绑定 left_write_handler
                             boost::asio::async_write(this->socket_left,
                                  boost::asio::buffer(*data),
                                  boost::bind(&session::left_write_handler,
-                                   shared_from_this(), _1, _2)); 
+                                   shared_from_this(), _1, _2, data)); 
                         }
 
                         std::cout << "send plain data to client : ";
@@ -385,12 +386,15 @@ void session::right_read_handler(const boost::system::error_code& error,
 }
 
 void session::transport(void) {
+    /*
     // 第一次 用 data_left 读数据
     this->data_left.resize(max_length, 0);
+    */
+    auto&& data_left = lproxy::make_shared_data(max_length, 0);
     this->socket_left.async_read_some(
-            boost::asio::buffer(this->data_left, max_length),
+            boost::asio::buffer(&(*data_left)[0], max_length),
             boost::bind(&session::left_read_handler, 
-                shared_from_this(), _1, _2));
+                shared_from_this(), _1, _2, data_left));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::bytes_transferred));
 
@@ -399,11 +403,13 @@ void session::transport(void) {
     auto&& lss_reply = make_shared_reply();
     this->socket_right.async_read_some(lss_reply->buffers(), 
             boost::bind(&session::right_read_handler, 
-                shared_from_this(), _1, _2, lss_reply));
+                shared_from_this(), _1, _2, 
+                lss_reply, lproxy::placeholders::shared_data));
 }
 
 void session::left_read_handler(const boost::system::error_code& error,
-        size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_data_type data_left) {
+    //(void)shared_data;
     std::cout << "left_read_handler\n";
     std::cout << "---> bytes_transferred = " 
         << std::dec << bytes_transferred << "\n";
@@ -411,13 +417,14 @@ void session::left_read_handler(const boost::system::error_code& error,
     if (! error) {
 
         std::cout << "read data from client:";
-        _debug_print_data(this->data_left, char(), 0);
-        _debug_print_data(this->data_left, int(), ' ', std::hex);
+        _debug_print_data(*data_left, char(), 0);
+        _debug_print_data(*data_left, int(), ' ', std::hex);
 
         // 封包
         //auto&& rqst = pack_data(bytes_transferred);
         // 发送至服务端
-        auto&& data_request = make_shared_request(pack_data(bytes_transferred));
+        auto&& data_request = make_shared_request(
+                pack_data(*data_left, bytes_transferred));
         boost::asio::async_write(socket_right, 
                 data_request->buffers(),
                 boost::bind(&session::right_write_handler, 
@@ -442,12 +449,15 @@ void session::right_write_handler(const boost::system::error_code& error,
         << std::dec << bytes_transferred << '\n';
     // </debug>
     if (! error) {
+        /*
         // 每次异步读数据前，清空 data
         this->data_left.assign(max_length, 0);
+        */
+        auto&& data_left = lproxy::make_shared_data(max_length, 0);
         socket_left.async_read_some(
-                boost::asio::buffer(this->data_left, max_length),
+                boost::asio::buffer(&(*data_left)[0], max_length),
                 boost::bind(&session::left_read_handler, 
-                    shared_from_this(), _1, _2));
+                    shared_from_this(), _1, _2, data_left));
     }
     else {
         // <debug>
@@ -459,7 +469,8 @@ void session::right_write_handler(const boost::system::error_code& error,
 }
 
 void session::left_write_handler(const boost::system::error_code& error,
-        std::size_t bytes_transferred) {
+        std::size_t bytes_transferred, shared_data_type __data) {
+    (void)__data;
     // <debug>
     std::cout << "left_write_handler\n---> bytes_transferred = "
         << std::dec << bytes_transferred << '\n';
@@ -474,7 +485,7 @@ void session::left_write_handler(const boost::system::error_code& error,
         auto&& lss_reply = make_shared_reply();
         this->socket_right.async_read_some(lss_reply->buffers(),
                 boost::bind(&session::right_read_handler, shared_from_this(), 
-                    _1, _2, lss_reply));
+                    _1, _2, lss_reply, lproxy::placeholders::shared_data));
     }
     else {
         // <debug>
@@ -526,15 +537,16 @@ const request session::pack_exchange(const keysize_t& keysize,
             data_t(cipher.begin(), cipher.end()));
 }
 // 组装 data
-const request session::pack_data(std::size_t data_len) {
+const request session::pack_data(const data_t& data_left, 
+        const std::size_t data_len) {
     // 用 密文this->data_key 构造 this->aes_encryptor 加密器
     if (! this->aes_encryptor) {
         this->aes_encryptor = std::make_shared<crypto::Encryptor>(
-                new crypto::Aes(this->data_key, crypto::Aes::raw256keysetting()));
+              new crypto::Aes(this->data_key, crypto::Aes::raw256keysetting()));
     }
     // 加密
     vdata_t data;
-    this->aes_encryptor->encrypt(data, &(this->data_left[0]), data_len);
+    this->aes_encryptor->encrypt(data, &data_left[0], data_len);
 
     std::cout << "packing data: \nthis->data_key = ";
     _debug_print_data(this->data_key, int(), ' ', std::hex);
