@@ -65,7 +65,8 @@ init:
 	[ -d '$(BIN)' ] || mkdir $(BIN)
 	#cd $(BOOST_BUILD); make -j
 	cd $(CRYPTO_SRC); make
-	cd $(LOG_MODULE_DIR); make loglib Container_Type=$(Log_Container_Type) 
+	#cd $(LOG_MODULE_DIR); make clean 
+	cd $(LOG_MODULE_DIR);  make loglib Container_Type=$(Log_Container_Type) 
 ifneq ('$(LIBCRYPTOPPEXIST)', 'exist')
 	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
 endif

@@ -13,7 +13,8 @@ int main(int argc, char* argv[])
 try {
     _print_s("start log output thread...\n");
     // 启动日志输出线程
-    std::thread thread_logoutput(lproxy::log::output, lproxy::log::LOCAL);
+    std::thread thread_logoutput(lproxy::log::output_thread, 
+            lproxy::log::LOCAL);
     (void)thread_logoutput;
 
 // test
