@@ -28,12 +28,13 @@ before_install:
 install:
     - PROJECT_ROOT=`pwd`
     - cd $PROJECT_ROOT/src/core/crypto; make test 
-    - cd $PROJECT_ROOT/src/core/log; make test 
     - Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE'
     - cd $PROJECT_ROOT/src/core/log; make demo Container_Type=$Container_Type; make demo2 Container_Type=$Container_Type 
     - cd $PROJECT_ROOT/src/core/log; make clean
     - Container_Type=-DLOG_LOCKFREE_QUEUE # or '-DLOG_PRIORITY_QUEUE'
     - cd $PROJECT_ROOT/src/core/log; make demo Container_Type=$Container_Type; make demo2 Container_Type=$Container_Type 
+    - cd $PROJECT_ROOT/src/core/log; make clean
+    - cd $PROJECT_ROOT/src/core/log; make test 
     - cd $PROJECT_ROOT/src/core/logrotate/demo; make PYTHON_INCLUDE=$PROJECT_ROOT/contrib/Python-2.7.11/include/python2.7 PYTHON_LIB_PATH=$PROJECT_ROOT/contrib/Python-2.7.11/lib PYTHON_LIB=-lpython2.7 
     - cd $PROJECT_ROOT
 before_script:
