@@ -20,7 +20,7 @@ EXCEPT_DIR := $(CORE_DIR)/except
 EXCEPT_LINK_DIR := $(EXCEPT_DIR)/link
 
 LOG_MODULE_DIR  := $(CORE_DIR)/log
-LIB_STATIC_LIB  := $(LOG_MODULE_DIR)/lib/liblog.a
+LOG_STATIC_LIB  := $(LOG_MODULE_DIR)/lib/liblog.a
 LIB_DYNAMIC_LIB := $(LOG_MODULE_DIR)/lib/liblog.so
 
 BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
@@ -29,10 +29,10 @@ BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 
 
 COMMON_LINKS = $(BOOSTLINK) $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) \
-			   $(LIB_STATIC_LIB)
+			   $(LOG_STATIC_LIB) 
 
-LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o    $(COMMON_LINKS)
-SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(COMMON_LINKS)
+LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o $(TMP)/log.o $(COMMON_LINKS)
+SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(TMP)/log.o $(COMMON_LINKS)
 
 
 CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
