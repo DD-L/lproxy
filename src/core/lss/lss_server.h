@@ -10,6 +10,8 @@
 #include <thread>
 #include <lss/config.h>
 #include <lss/session.h>
+#include <lss/log.h>
+
 
 namespace lproxy {
 
@@ -75,17 +77,15 @@ private:
         static boost::asio::io_service io_service;
         return io_service;
     }
+    // thread function
     static void handle_thread_right(boost::asio::io_service& io_service) {
-        std::thread::id this_id = std::this_thread::get_id();
-        // <debug>
-        std::cout << "thread id = " << this_id << " start..\n";
-        // </debug>
+        lsslogdebug("thread io_service_right start..");
+
         // 为了不使"ios没有任务, ios.run就立刻返回"
         boost::asio::io_service::work work(io_service); 
         io_service.run(); 
-        // <debug>
-        std::cout << "thread id = " << this_id << " exit!\n";
-        // </debug>
+
+        lsslogdebug("thread io_service_right exit!");
     }
 private:
     boost::asio::io_service& io_service_;

@@ -4,7 +4,6 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2015/11/30 4:46:47
  ************************************************************************/
-#include <iostream> // for std::cerr
 #include <lss/config.h>
 #include <lss/lss_server.h>
 #include <thread>
@@ -17,15 +16,10 @@ try {
             lproxy::log::LOCAL);
     (void)thread_logoutput;
 
-// test
-    loginfo("this is a test...");
-
-    // step 0
     // 获取配置
     uint16_t local_bind_port 
         = lproxy::local::config::get_instance().get_local_bind_port(); 
 
-    // step 1
     // 启动lss_server
     boost::asio::io_service io_service;
 
@@ -33,15 +27,13 @@ try {
     lproxy::local::lss_server s(io_service, local_bind_port);
     io_service.run();
 
-    _print_s("Exit");
+    _print_s("Exit\n");
     return 0;
 }
 catch (const std::exception& e) {
-    //std::cerr << "Exception: " << e.what() << std::endl;
     _print_s_err("Exception: " << e.what() << std::endl);
 }
 catch (...) {
-    //std::cerr << "An error has occurred" << std::endl; 
     _print_s_err("An error has occurred" << std::endl);
 }
 

@@ -1,3 +1,5 @@
+LSS_DEBUG = -DLSS_DEBUG
+
 PWD := $(shell pwd)
 ROOT := $(PWD)/../../../
 SRC_DIR := $(ROOT)/src

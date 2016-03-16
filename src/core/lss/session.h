@@ -9,6 +9,8 @@
 #include <type_traits>
 #include <lss/typedefine.h>
 #include <lss/lss_packet.h>
+#include <lss/log.h>
+
 namespace lproxy {
 using lproxy::readbuffer::max_length;
 
@@ -20,8 +22,7 @@ public:
     virtual void close(void) = 0;
     virtual tcp::socket& get_socket_left(void) = 0;
     virtual ~session(void) {
-        // debug
-        std::cout << "session::~session() this = " << this << std::endl;
+        lsslogdebug("session::~session() this = " << this);
     }
 protected:
     //enum             { max_length = 1024 };

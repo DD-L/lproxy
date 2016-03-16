@@ -40,7 +40,7 @@ data_t& read_input(data_t& data) {
     flag.assign(buff.begin(), buff.begin() + 3);
     if (flag == "str") {
         data.assign(buff.begin() + 4, buff.end()); 
-        lproxy::_debug_print_data(data, char(), 0);
+        std::cout << lproxy::_debug_format_data(data, char(), 0) << std::endl;
     }
     else if (flag == "hex" || flag == "dec") {
         string buf(buff.begin() + 4, buff.end());
@@ -72,7 +72,8 @@ data_t& read_input(data_t& data) {
         data = data_t();
         return read_input(data);
     }
-    lproxy::_debug_print_data(data, int(), ' ', std::hex);
+    std::cout << lproxy::_debug_format_data(data, int(), ' ', std::hex) 
+        << std::endl;
     return data; 
 }
 
@@ -127,8 +128,10 @@ try {
             return 3;
         }
         cout << "received: " << bytes_transferred << " byte:\n";
-        lproxy::_debug_print_data(data_receive, char(), 0);
-        lproxy::_debug_print_data(data_receive, int(), ' ', std::hex);
+        std::cout << lproxy::_debug_format_data(data_receive, char(), 0) 
+            << std::endl;
+        std::cout << lproxy::_debug_format_data(
+                data_receive, int(), ' ', std::hex) << std::endl;
     }
     return 0;
 }

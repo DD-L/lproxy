@@ -8,12 +8,13 @@
  ************************************************************************/
 
 // TODO
-#define LSS_DEBUG
+//#define LSS_DEBUG
 
 #include <lss/macros.h>
 #include <iostream>
 #include <stdint.h>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <set>
 #include <type_traits> 
@@ -85,38 +86,29 @@ inline shared_data_type make_shared_data(void) {
 
 
 /**
- * @brief _debug_print_data 打印一组数据
+ * @brief _debug_format_data 格式化一组数据
  * @param data        要打印的容器
  * //@param data_length 能打印容器的最大长度
  * @param VTYPE       容器元素打印的强制转换类型
  * @param c           容器元素之间输出间隔符; 默认值char(' '), c = 0 时无间隔符
  * @param f           流输出控制函数; 默认值 std::dec
- * @return void
+ * @return 返回一个 sdata_t 的临时对象
  */
 template <typename DATA_TYPE, typename VTYPE, typename F = decltype(std::dec)>
-void _debug_print_data(const DATA_TYPE& data, VTYPE, 
+//std::ostringstream& _debug_format_data(const DATA_TYPE& data, VTYPE, 
+sdata_t _debug_format_data(const DATA_TYPE& data, VTYPE, 
         char c = ' ', F f = std::dec) {
 #ifdef LSS_DEBUG
+    std::ostringstream oss;
+    //oss.flush();
     for (auto& v : data) {
-        std::cout << f << VTYPE(v) << c;
+        oss << f << VTYPE(v) << c;
     }
-    std::cout << std::dec << std::endl;
+    return oss.str();
 #endif
+    return "";
 }
 
-/*
-template <typename DATA_TYPE, typename VTYPE, typename F = decltype(std::dec)>
-void _debug_print_data(const DATA_TYPE& data, const std::size_t data_length, 
-        VTYPE, char c = ' ', F f = std::dec) {
-#ifdef LSS_DEBUG
-    for (auto i = data.cbegin(); i != data.cbegin() + data_length; ++i) {
-        if (i == data.cend()) break;
-        std::cout << f << VTYPE(*i) << c;
-    }
-    std::cout << std::dec << std::endl;
-#endif
-}
-*/
 
 /**
  * @brief get_vdata_from_lss_pack: 将 'lss_pack' 里的数据 转换为 vdata_t 类型 

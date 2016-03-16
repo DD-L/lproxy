@@ -9,6 +9,7 @@
 #include <crypto/encryptor.h>
 #include <crypto/rsa_crypto.h>
 #include <lss/typedefine.h>
+#include <lss/log.h>
 #include <thread>
 #include <chrono>
 
@@ -25,7 +26,7 @@ public:
         switch (signal) {
             case SIGINT:
             case SIGTERM:
-                std::cout << "Exit..\n";
+                _print_s("Exit..");
                 ios->stop();
                 while (! ios->stopped()) {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
