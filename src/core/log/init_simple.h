@@ -28,14 +28,33 @@
 
 // logout
 #include "log/logoutput.h"
+#include "log/logoutput2.h"
 // log_tools::UseLock<true> : 
 //     日志输出目的地时使用互斥锁, 避免多线程下对同一输出目标的争抢
 // log_tools::UseLock<false>: 
 //     日志输出目的地时, 除std::cout和std::cerr外, 不使用互斥锁
 #ifdef LOG_USE_LOCK
 	typedef LogOutput<log_tools::UseLock<true> > LogOutput_t; 
+	typedef LogOutput2<log_tools::UseLock<true> > LogOutput2_t; 
 #else
 	typedef LogOutput<log_tools::UseLock<false> > LogOutput_t; 
+	typedef LogOutput2<log_tools::UseLock<false> > LogOutput2_t; 
 #endif // LOG_USE_LOCK
+// !!!! IMPORTANT notice !!!!
+//
+// 注意:
+//
+// 1. LogOutput_t 的 bind 接口, 只能绑定 最小日志级别. 
+//    即日志输出时, 只能输出"大于等于"该绑定级别的日志
+//
+// 2. LogOutput2_t 的 bind 接口, 绑定的是 日志级别集合. 
+//    即日志输出时, 只能输出该集合内"存在"的级别的日志 
+//
+// 3. LogOutput_t 和 LogOutput2_t 被特意设计成不能在同一进程中同时使用. 
+//      如果试图在同一进程中同时使用 LogOutput_t 和 LogOutput2_t 的 bind
+//      接口, 会在程序运行时，引发 断言失败:
+//      assertion "is_unique_subclass_working(this)" failed
+//
+// !!!! IMPORTANT notice !!!!
 
 #endif // _INIT_SIMPLE_H_1
