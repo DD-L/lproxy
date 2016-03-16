@@ -53,16 +53,16 @@ private:
 		boost::mutex*     plock;
         std::set<LogType> loglevel_set;
 		Format_t          format;
+        /*
 		os_property(boost::mutex* plock_ = NULL, 
 				const std::set<LogType>& loglevel_set_ = { 
-                /*
-                    makelevel(TRACE), makelevel(DEBUG),
-                    makelevel(INFO),  makelevel(WARN),
-                    makelevel(ERROR), makelevel(FATAL) 
-                */
+                //    makelevel(TRACE), makelevel(DEBUG),
+                //    makelevel(INFO),  makelevel(WARN),
+                //    makelevel(ERROR), makelevel(FATAL) 
                     },
 				const Format_t& format_ = default_format()) :
 				 plock(plock_), loglevel_set(loglevel_set_), format(format_) {} 
+        */
 		os_property(boost::mutex* plock_ = NULL, 
 				std::set<LogType>&& loglevel_set_ = { 
                 /*
