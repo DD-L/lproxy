@@ -6,7 +6,7 @@ BIN = ./bin
 
 MACROS = -D_REENTRANT -DBOOST_REGEX_NO_LIB \
 		 -DBOOST_DATE_TIME_SOURCE -DBOOST_SYSTEM_NO_LIB \
-		 $(Log_Container_Type) $(LSS_DEBUG)
+		 $(Log_Container_Type) $(LSS_DEBUG) $(ASIO_DEBUG)
 
 override CFLAGS   += -Wall $(GDB)
 override CXXFLAGS += -Wall $(MACROS) $(GDB) -std=c++1y

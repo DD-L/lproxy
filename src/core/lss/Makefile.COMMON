@@ -1,4 +1,5 @@
 LSS_DEBUG = -DLSS_DEBUG
+#ASIO_DEBUG = -DBOOST_ASIO_ENABLE_HANDLER_TRACKING
 
 PWD := $(shell pwd)
 ROOT := $(PWD)/../../../
