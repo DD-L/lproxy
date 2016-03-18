@@ -28,13 +28,18 @@ class LogStore_lockfree : public LogStoreInterface {
             LogVal* value = nullptr;
             // 如果仓库为空, 就阻塞等待, 直到不为空
             while (! m_logstore.pop(value)) {
-                //std::this_thread::yield();
+                // TODO
+                std::this_thread::yield();
 
-                //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                // sleep 1 / 1000 second
-                std::this_thread::sleep_for(std::chrono::nanoseconds(50));
-                // sleep 50 * 1 / 1000,000,000 second
-                // 初步测试的结果是即使 sleep 1 纳秒, CPU 百分比 也几乎是 0
+                std::this_thread::sleep_for(std::chrono::milliseconds(29));
+                // sleep 29 / 1000 sec
+                //std::this_thread::sleep_for(std::chrono::nanoseconds(50));
+                // sleep 50 * 1 / 1000,000,000 sec
+                // 初步测试的结果是, [可能结果并不可靠, 遗留 TODO ]
+                // 1. 在4核CPU主机 + Cygwin, 即使 sleep 1 纳秒, 
+                //      CPU 百分比 也几乎是 0
+                // 2. 在2核CPU主机 + linux, 需 sleep 29 milliseconds, 
+                //      CPU 占用比较可观 (0.3%上下浮动)
             }
             assert(value);
             val.reset(value);
