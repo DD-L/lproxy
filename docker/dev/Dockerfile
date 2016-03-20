@@ -10,7 +10,7 @@ MAINTAINER deel deel@d-l.top
 #EXPONSE 8087
 #EXPONSE 8088
 
-COPY ../../../lproxy /opt/
+COPY ../../* /opt/lproxy
 WORKDIR /opt
 
 RUN WORKDIR=$PWD \
