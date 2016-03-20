@@ -581,7 +581,8 @@ void session::right_read_handler(const boost::system::error_code& error,
 
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " value = " << error.value() 
+                << " close this");
         boost::asio::async_write(this->socket_left, 
                 pack_bad().buffers(),
                 boost::bind(&session::close, shared_from_this()));
