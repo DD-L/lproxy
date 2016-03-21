@@ -99,7 +99,8 @@ private:
      */
     void right_read_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred, shared_reply_type lss_reply,
-            shared_data_type __data/*=lproxy::placeholders::shared_data*/);
+            shared_data_type __data_right_rest, // 分包后，遗留的数据
+            shared_data_type __write_data); // left_write 数据
 
 private:
     /**
@@ -136,6 +137,11 @@ private:
     void left_write_handler(const boost::system::error_code& error,
             std::size_t bytes_trannsferred, 
             shared_data_type __data/*=lproxy::placeholders::shared_data*/);
+
+    /**
+     * function:left_read_timeout_handler { this->close } 
+     */
+    void left_read_timeout_handler(const boost::system::error_code& error);
 
 private:
     // 组装 hello

@@ -118,7 +118,8 @@ void session::hello_handler(const boost::system::error_code& error,
 
         this->socket_right.async_read_some(lss_reply->buffers(), 
                 boost::bind(&session::right_read_handler, shared_from_this(),
-                    _1, _2, lss_reply, lproxy::placeholders::shared_data));
+                    _1, _2, lss_reply, lproxy::placeholders::shared_data,
+                    lproxy::placeholders::shared_data));
                     //boost::asio::placeholders::error,
                     //boost::asio::placeholders::bytes_transferred));
         this->status = status_hello;
@@ -137,7 +138,8 @@ void session::exchange_handler(const boost::system::error_code& error,
         auto&& lss_reply = make_shared_reply();
         this->socket_right.async_read_some(lss_reply->buffers(), 
                 boost::bind(&session::right_read_handler, shared_from_this(), 
-                    _1, _2, lss_reply, lproxy::placeholders::shared_data));
+                    _1, _2, lss_reply, lproxy::placeholders::shared_data,
+                    lproxy::placeholders::shared_data));
         status = status_auth;
     }
     else {
@@ -148,8 +150,20 @@ void session::exchange_handler(const boost::system::error_code& error,
 
 void session::right_read_handler(const boost::system::error_code& error,
         std::size_t bytes_transferred, shared_reply_type lss_reply, 
-        shared_data_type __data /* = lproxy::placeholders::shared_data */) {
-    (void)__data;
+        shared_data_type __data_right_rest, shared_data_type __write_data) {
+    (void)__write_data;
+    if (__data_right_rest->size() > 0) {
+        // 先修正 bytes_transferred
+        // bytes_transferred += 上一次的bytes_transferred
+        bytes_transferred += lss_reply->get_data().size() + 4; // lss 包头长度为4
+        // 分包处理后，遗留的数据
+        // append 追加数据__data_right_rest
+        // 修正 lss_reply
+        lss_reply->get_data().insert(lss_reply->get_data().end(), 
+                __data_right_rest->begin(), __data_right_rest->end());
+        lsslogdebug("lss_reply - rectified");
+
+    }
     lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
 
     lsslogdebug("lss_reply->version() = " << (int)lss_reply->version());
@@ -262,7 +276,8 @@ void session::right_read_handler(const boost::system::error_code& error,
                             shared_from_this(),
                             boost::asio::placeholders::error,
                             std::size_t(rest_lss_data_len), 
-                            lss_reply, data));
+                            lss_reply, lproxy::placeholders::shared_data,
+                            data));
                 }
                 else {
                     // 最后一条不可再分割的数据再绑定 left_write_handler
@@ -274,8 +289,9 @@ void session::right_read_handler(const boost::system::error_code& error,
 
                 lsslogdebug("send plain data to client : "
                         << _debug_format_data(*data, int(), ' ', std::hex)
-                        << std::endl
-                        << _debug_format_data(*data, char(), 0));
+                        //<< std::endl
+                        //<< _debug_format_data(*data, char(), 0)
+                        );
                 break;
             }
             case reply::bad: // 0xff
@@ -296,10 +312,27 @@ void session::right_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            // 临时方案
-            logerror("incomplete_data. ec.less() = " << ec.less() 
-                    << " byte. close this");
-            this->close();
+            // 有可能是右边的数据，分包遗留的未读数据
+            logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
+            if (ec.less() > 0) {
+                //  
+                auto&& data_right_rest = lproxy::make_shared_data(
+                        (std::size_t)ec.less(), 0);
+
+                lsslogdebug("incomplete_data. start to async-read " 
+                        << ec.less() << " byte data from socket_right");
+                this->socket_right.async_read_some(
+                        boost::asio::buffer(&(*data_right_rest)[0], 
+                            (std::size_t)ec.less()), 
+                        boost::bind(&session::right_read_handler, 
+                            shared_from_this(), 
+                            _1, _2, lss_reply, data_right_rest,
+                            lproxy::placeholders::shared_data));
+            }
+            else {
+                logwarn("close this");
+                this->close();
+            }
         }
         catch (wrong_lss_status& ec) {
             logerror(ec.what() << ". close this");
@@ -342,7 +375,8 @@ void session::transport(void) {
     this->socket_right.async_read_some(lss_reply->buffers(), 
             boost::bind(&session::right_read_handler, 
                 shared_from_this(), _1, _2, 
-                lss_reply, lproxy::placeholders::shared_data));
+                lss_reply, lproxy::placeholders::shared_data,
+                lproxy::placeholders::shared_data));
 }
 
 void session::left_read_handler(const boost::system::error_code& error,
@@ -352,8 +386,8 @@ void session::left_read_handler(const boost::system::error_code& error,
     if (! error) {
 
         lsslogdebug("read data from client: " 
-                << _debug_format_data(*data_left, char(), 0)
-                << std::endl
+                //<< _debug_format_data(*data_left, char(), 0)
+                //<< std::endl
                 << _debug_format_data(*data_left, int(), ' ', std::hex));
 
         // 封包
@@ -370,9 +404,41 @@ void session::left_read_handler(const boost::system::error_code& error,
         lsslogdebug("and send to server.");
     }
     else {
-        logerror(error.message() << " close this");
-        this->close();
+        if (error == boost::asio::error::eof) {
+            // for HTTP Connection: Keep-Alive
+            logerror(error.message() << " value = " << error.value() 
+                    << ". Restart async-read-left with timeout");
+            auto&& data_left = lproxy::make_shared_data(max_length, 0);
+            this->socket_left.async_read_some(
+                    boost::asio::buffer(&(*data_left)[0], max_length),
+                    boost::bind(&session::left_read_handler, 
+                        shared_from_this(), _1, _2, data_left));
+            deadline_timer t(this->socket_left.get_io_service(),
+                    boost::posix_time::seconds(
+                        config::get_instance().get_timeout()));
+            t.async_wait(boost::bind(
+                        &session::left_read_timeout_handler,
+                        shared_from_this(), _1));
+        }
+        else {
+            logerror(error.message() << " value = " << error.value()
+                    << " close this");
+            this->close();
+        }
     }
+}
+
+
+void session::left_read_timeout_handler(const boost::system::error_code& error) {
+    logerror(error.message() << " value = " << error.value() 
+            << " close this");
+    /*
+    if (error != boost::asio::error::operation_aborted) {
+    }
+    else {
+    }
+    */
+    this->close();
 }
 
 void session::right_write_handler(const boost::system::error_code& error,
@@ -400,7 +466,8 @@ void session::left_write_handler(const boost::system::error_code& error,
         auto&& lss_reply = make_shared_reply();
         this->socket_right.async_read_some(lss_reply->buffers(),
                 boost::bind(&session::right_read_handler, shared_from_this(), 
-                    _1, _2, lss_reply, lproxy::placeholders::shared_data));
+                    _1, _2, lss_reply, lproxy::placeholders::shared_data,
+                    lproxy::placeholders::shared_data));
     }
     else {
         logerror(error.message() << " close this");

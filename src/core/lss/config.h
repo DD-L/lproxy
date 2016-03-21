@@ -71,6 +71,9 @@ public:
     sdata_t get_logfilename(void) {
         return "";
     }
+    uint32_t get_timeout(void) {
+        return m_timeout;
+    }
 private:
     virtual void configure() override {
         // read data from local configure file
@@ -82,6 +85,7 @@ private:
         m_auth_key    = /*(const_byte_ptr)*/"xxxxxxxxx";
         m_zip_on      = false;
         m_local_bind_port = 8087;
+        m_timeout  = 30; // in sec
     }
 private:
     sdata_t m_server_name; /* server ipv4/ipv6/domain */
@@ -89,9 +93,9 @@ private:
     sdata_t m_auth_key;    /* auth_key */
 
     bool                 m_zip_on = false;
-    /*timeout in sec*/
 
     uint16_t m_local_bind_port;
+    uint32_t m_timeout = 30; /* in sec*/
 }; 
 
 } // namespace lproxy::local
@@ -142,6 +146,9 @@ public:
     sdata_t get_logfilename(void) {
         return "";
     }
+    uint32_t get_timeout(void) {
+        return m_timeout;
+    }
 private:
     virtual void configure() override {
         // read data from server configure file
@@ -156,6 +163,7 @@ private:
         m_bind_addr = "127.0.0.1";
         m_bind_addr_type = "ipv4";
         m_bind_port = 8088;
+        m_timeout  = 30; // in sec
     }
 private:
     static const 
@@ -169,7 +177,7 @@ private:
     sdata_t  m_bind_addr_type;
     uint16_t m_bind_port;
 
-    /*timeout in sec*/
+    uint32_t m_timeout = 30; /* in sec*/
 
 }; // lproxy::server::config
 

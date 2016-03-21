@@ -91,7 +91,7 @@ private:
      */
     void left_read_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred, shared_request_type lss_reply,
-            shared_data_type __data/*=lproxy::placeholders::shared_data*/);
+            shared_data_type __data_left_rest, shared_data_type __write_data);
     /**
      * function:hello_handler {
      *  socket_left.async_read_some [bind: left_read_handler]
@@ -175,6 +175,17 @@ private:
     void right_read_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred, shared_data_type data_right);
 
+    /**
+     * funciton:right_read_timeout_handler {
+     *      if (error != boost::asio::error::operation_aborted) {
+     *          async_write:this->socket_left [bind: close]
+     *      }
+     *      else {
+     *          this->close();
+     *      }
+     * }
+     */
+    void right_read_timeout_handler(const boost::system::error_code& error);
 private:
     // 组装 hello
     const reply& pack_hello(void);

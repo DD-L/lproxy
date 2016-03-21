@@ -35,6 +35,7 @@ void session::start(void) {
     socket_left.async_read_some(lss_request->buffers(),
             boost::bind(&session::left_read_handler, 
                 shared_from_this(), _1, _2, lss_request,
+                lproxy::placeholders::shared_data,
                 lproxy::placeholders::shared_data));
                 //boost::asio::placeholders::error,
                 //boost::asio::placeholders::bytes_transferred));
@@ -62,8 +63,20 @@ tcp::socket& session::get_socket_left(void) {
 
 void session::left_read_handler(const boost::system::error_code& error,
         std::size_t bytes_transferred, shared_request_type lss_request,
-        shared_data_type __data /*= lproxy::placeholders::shared_data*/) {
-    (void)__data;
+        shared_data_type __data_left_rest, shared_data_type __write_data) {
+    (void)__write_data;
+    if (__data_left_rest->size() > 0 ) {
+        // 先修正 bytes_transferred
+        // bytes_transferred += 上一次的bytes_transferred
+        bytes_transferred += lss_request->get_data().size() + 4; // lss 包头长度为4
+        // 分包处理后，遗留的数据
+        // append 追加数据__data_left_rest
+        // 修正 lss_request
+        lss_request->get_data().insert(lss_request->get_data().end(), 
+                __data_left_rest->begin(), __data_left_rest->end());
+        lsslogdebug("lss_request - rectified");
+    
+    }
     lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
     lsslogdebug("lss_request->version() = " << (int)lss_request->version());
     lsslogdebug("lss_request->type() = " << (int)lss_request->type());
@@ -219,6 +232,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                             lss_request->buffers(),
                             boost::bind(&session::left_read_handler, 
                                 shared_from_this(), _1, _2, lss_request,
+                                lproxy::placeholders::shared_data,
                                 lproxy::placeholders::shared_data)); 
 
                     lsslogdebug("start async_read local...");
@@ -249,7 +263,9 @@ void session::left_read_handler(const boost::system::error_code& error,
                                     shared_from_this(), 
                                     boost::asio::placeholders::error,
                                     std::size_t(rest_lss_data_len), 
-                                    lss_request, plain_data_ptr));
+                                    lss_request, 
+                                    lproxy::placeholders::shared_data, 
+                                    plain_data_ptr));
                         }
                         else {
                             //最后一条不可再分割的数据再绑定right_write_handler
@@ -261,8 +277,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                         }
 
                         lsslogdebug("write data to remote: "
-                            << _debug_format_data(*plain_data_ptr, char(), 0)
-                            << std::endl
+                            //<< _debug_format_data(*plain_data_ptr, char(), 0)
+                            //<< std::endl
                             << _debug_format_data(*plain_data_ptr, 
                                 int(), ' ', std::hex));
 
@@ -294,7 +310,9 @@ void session::left_read_handler(const boost::system::error_code& error,
                                     shared_from_this(), 
                                     boost::asio::placeholders::error,
                                     std::size_t(rest_lss_data_len),
-                                    lss_request, plain_data_ptr));
+                                    lss_request, 
+                                    lproxy::placeholders::shared_data, 
+                                    plain_data_ptr));
                         }
                         else {
                             //最后一条不可再分割的数据再绑定right_write_handler
@@ -307,8 +325,8 @@ void session::left_read_handler(const boost::system::error_code& error,
                         }
 
                         lsslogdebug("write data to remote: "
-                            << _debug_format_data(*plain_data_ptr, char(), 0)
-                            << std::endl
+                            //<< _debug_format_data(*plain_data_ptr, char(), 0)
+                            //<< std::endl
                             << _debug_format_data(*plain_data_ptr, 
                                 int(), ' ', std::hex));
                         break;
@@ -316,6 +334,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                     default: {
                         //发送给 local 让其关闭它的session, lss_pack_type::0xff
                         //auto& rply_data = pack_bad();
+                        logwarn("Unsuported socks5_cmd");
                         boost::asio::async_write(this->socket_left, 
                             pack_bad().buffers(),
                             boost::bind(&session::close, shared_from_this()));
@@ -347,11 +366,28 @@ void session::left_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            // 临时解决方案
-            logerror("incomplete_data. ec.less() = " << ec.less() << " byte.");
-            boost::asio::async_write(this->socket_left, 
-                    pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+            // 有可能是左边的数据，分包遗留的未读数据
+            logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
+
+            if (ec.less() > 0) {
+                auto&& data_left_rest = lproxy::make_shared_data(
+                        (std::size_t)ec.less(), 0);
+                lsslogdebug("incomplete_data. start to async-read " 
+                        << ec.less() << " byte data from socket_left");
+                this->socket_left.async_read_some(
+                        boost::asio::buffer(&(*data_left_rest)[0],
+                            (std::size_t)ec.less()),
+                        boost::bind(&session::left_read_handler, 
+                            shared_from_this(), _1, _2, lss_request, 
+                            data_left_rest,
+                            lproxy::placeholders::shared_data));
+            }
+            else {
+                logwarn("send lss_bad to local");
+                boost::asio::async_write(this->socket_left, 
+                        pack_bad().buffers(),
+                        boost::bind(&session::close, shared_from_this()));
+            }
         }
         catch (lproxy::socks5::illegal_data_type&) { // 非法的socks5数据
             // close this 
@@ -404,6 +440,7 @@ void session::hello_handler(const boost::system::error_code& error,
         this->socket_left.async_read_some(lss_request->buffers(), 
                 boost::bind(&session::left_read_handler, 
                     shared_from_this(), _1, _2, lss_request,
+                    lproxy::placeholders::shared_data,
                     lproxy::placeholders::shared_data));
         this->status = status_auth;
     }
@@ -422,6 +459,7 @@ void session::exchange_handler(const boost::system::error_code& error,
         this->socket_left.async_read_some(lss_request->buffers(), 
                 boost::bind(&session::left_read_handler, 
                     shared_from_this(), _1, _2, lss_request,
+                    lproxy::placeholders::shared_data,
                     lproxy::placeholders::shared_data));
                     //boost::asio::placeholders::error,
                     //boost::asio::placeholders::bytes_transferred));
@@ -468,6 +506,7 @@ void session::left_write_handler(const boost::system::error_code& error,
                 /* TODO */
             case CMD_UNSUPPORT:
             default:
+                logwarn("Unsuported socks5_cmd");
                 boost::asio::async_write(this->socket_left,
                         pack_bad().buffers(),
                         boost::bind(&session::close, shared_from_this()));
@@ -478,6 +517,7 @@ void session::left_write_handler(const boost::system::error_code& error,
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
+                        lproxy::placeholders::shared_data,
                         lproxy::placeholders::shared_data)); 
         }
     }
@@ -499,6 +539,7 @@ void session::right_write_handler(const boost::system::error_code& error,
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
+                        lproxy::placeholders::shared_data,
                         lproxy::placeholders::shared_data));
 
             lsslogdebug("begin to async-read data from local");
@@ -519,6 +560,7 @@ void session::right_write_handler(const boost::system::error_code& error,
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
+                        lproxy::placeholders::shared_data,
                         lproxy::placeholders::shared_data));
 
             lsslogdebug("begin to read data from local");
@@ -542,6 +584,7 @@ void session::right_write_handler(const boost::system::error_code& error,
             // TODO
         case CMD_UNSUPPORT:
         default:
+            logwarn("Unsuported socks5_cmd");
             boost::asio::async_write(this->socket_left, pack_bad().buffers(),
                     boost::bind(&session::close, shared_from_this()));
             break;
@@ -570,25 +613,82 @@ void session::right_read_handler(const boost::system::error_code& error,
                     shared_from_this(), _1, _2, data_reply));
 
         lsslogdebug("write data to local:\n"
-                << "plain data: "
-                << _debug_format_data(data_t(data_right->begin(), 
-                                data_right->begin() + bytes_transferred), 
-                            char(), 0)
-                << std::endl
+                //<< "plain data: "
+                //<< _debug_format_data(data_t(data_right->begin(), 
+                //                data_right->begin() + bytes_transferred), 
+                //            char(), 0)
+                //<< std::endl
                 << "cipher lss_data: "
                 << _debug_format_data(get_vdata_from_lss_pack(*data_reply), 
                 int(), ' ', std::hex));
 
     }
     else {
-        logerror(error.message() << " value = " << error.value() 
-                << " close this");
-        boost::asio::async_write(this->socket_left, 
-                pack_bad().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+        if (error == boost::asio::error::eof) {
+            // for HTTP Connection: Keep-Alive
+            logerror(error.message() << " value = " << error.value() 
+                    << ". Restart async-read-right with timeout");
+
+            switch (this->socks5_cmd) {
+                case CMD_CONNECT: {
+                    auto&& data_right = make_shared_data(max_length, 0);
+                    this->socket_right_tcp.async_read_some(
+                        boost::asio::buffer(&(*data_right)[0], max_length), 
+                        boost::bind(&session::right_read_handler, 
+                            shared_from_this(), _1, _2, data_right));
+                    deadline_timer t(this->socket_right_tcp.get_io_service(),
+                            boost::posix_time::seconds(
+                                config::get_instance().get_timeout()));
+                    t.async_wait(boost::bind(
+                                &session::right_read_timeout_handler,
+                                shared_from_this(), _1));
+
+                    break;
+                }
+                case CMD_UDP: {
+                    ip::udp::endpoint destination(
+                        ip::address::from_string(this->dest_name), 
+                        this->dest_port);
+                    auto&& data_right = make_shared_data(max_length, 0);
+                    this->socket_right_udp.async_receive_from(
+                        boost::asio::buffer(&(*data_right)[0], max_length), 
+                        destination,
+                        boost::bind(&session::right_read_handler, 
+                            shared_from_this(), _1, _2, data_right));
+                    deadline_timer t(this->socket_right_udp.get_io_service(),
+                            boost::posix_time::seconds(
+                                config::get_instance().get_timeout()));
+                    t.async_wait(boost::bind(
+                                &session::right_read_timeout_handler,
+                                shared_from_this(), _1));
+                
+                    break;
+                }
+                default: /*TODO*/break;
+            }
+        }
+        else {
+            logerror(error.message() << " value = " << error.value() 
+                    << " close this");
+            boost::asio::async_write(this->socket_left, 
+                    pack_bad().buffers(),
+                    boost::bind(&session::close, shared_from_this()));
+        }
     }
 }
 
+void session::right_read_timeout_handler(const boost::system::error_code& error) {
+    logerror(error.message() << " value = " << error.value() 
+            << " close this");
+    if (error != boost::asio::error::operation_aborted) {
+        boost::asio::async_write(this->socket_left, 
+                pack_timeout().buffers(),
+                boost::bind(&session::close, shared_from_this()));
+    }
+    else {
+        this->close();
+    }
+}
 
 const reply& session::pack_hello(void) {
     static const data_t&& data = gen_hello_data();
