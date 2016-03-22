@@ -433,7 +433,7 @@ void session::left_read_timeout_handler(const boost::system::error_code& error) 
     logerror(error.message() << " value = " << error.value() 
             << " close this");
     /*
-    if (error != boost::asio::error::operation_aborted) {
+    if (error == boost::asio::error::operation_aborted) {
     }
     else {
     }

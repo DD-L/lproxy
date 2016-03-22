@@ -669,7 +669,7 @@ void session::right_read_handler(const boost::system::error_code& error,
         }
         else {
             logerror(error.message() << " value = " << error.value() 
-                    << " close this");
+                    << "send lss_bad to local, then close this");
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
                     boost::bind(&session::close, shared_from_this()));
@@ -677,16 +677,24 @@ void session::right_read_handler(const boost::system::error_code& error,
     }
 }
 
-void session::right_read_timeout_handler(const boost::system::error_code& error) {
-    logerror(error.message() << " value = " << error.value() 
-            << " close this");
-    if (error != boost::asio::error::operation_aborted) {
+void session::right_read_timeout_handler(
+        const boost::system::error_code& error) {
+    if (error == boost::asio::error::operation_aborted) {
+        // t.cancel() called
+        // 被 cancel 有多种方式: 
+        // 1. 直接调用 cancel 
+        // 2. 或者调用 expires_at, expires_from_now 重新设置超时时间
+        logerror(error.message() << " value = " << error.value() 
+                << " close this");
+        this->close();
+    }
+    else {
+        // timeout
+        logerror(error.message() << " value = " << error.value() 
+                << " send lss_timeout to local, then close this");
         boost::asio::async_write(this->socket_left, 
                 pack_timeout().buffers(),
                 boost::bind(&session::close, shared_from_this()));
-    }
-    else {
-        this->close();
     }
 }
 
@@ -1071,14 +1079,14 @@ lproxy::data_t& session::pack_socks5_resp(data_t& data) {
     // 应答字段
     resp.Reply = this->socks5_resp_reply;
     // TODO
-    const sdata_t& type = config::get_instance().get_bind_addr_type();
+    const sdata_t& type = config::get_instance().get_bind_addr_type_socks5();
     if (type == "ipv4") { resp.AddrType = 0x01; }
     else if (type == "ipv6") { resp.AddrType = 0x04; }
     else if (type == "domain") { resp.AddrType = 0x03; }
     else { resp.AddrType = 0x01; }
     
-    const sdata_t& bind_addr = config::get_instance().get_bind_addr();
-    uint16_t bindport = config::get_instance().get_bind_port();
+    const sdata_t& bind_addr = config::get_instance().get_bind_addr_socks5();
+    uint16_t bindport = config::get_instance().get_bind_port_socks5();
 
     ip::address addr;
     addr = ip::address::from_string(&bind_addr[0]);

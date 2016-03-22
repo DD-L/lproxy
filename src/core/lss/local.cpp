@@ -17,14 +17,16 @@ try {
     (void)thread_logoutput;
 
     // 获取配置
-    uint16_t local_bind_port 
-        = lproxy::local::config::get_instance().get_local_bind_port(); 
+    auto& bind_addr
+        = lproxy::local::config::get_instance().get_bind_addr();
+    uint16_t bind_port 
+        = lproxy::local::config::get_instance().get_bind_port(); 
 
     // 启动lss_server
     boost::asio::io_service io_service;
 
     //using namespace std; // for atoi
-    lproxy::local::lss_server s(io_service, local_bind_port);
+    lproxy::local::lss_server s(io_service, bind_addr, bind_port);
     io_service.run();
 
     _print_s("Exit\n");

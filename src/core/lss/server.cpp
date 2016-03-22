@@ -15,19 +15,20 @@ try {
     _print_s("start log output thread...\n");
     // 启动日志输出线程
     std::thread thread_logoutput(lproxy::log::output_thread, 
-            lproxy::log::LOCAL);
+            lproxy::log::SERVER);
     (void)thread_logoutput;
 
     // 获取配置
+    auto& bind_addr
+        = lproxy::server::config::get_instance().get_bind_addr();
     uint16_t bind_port 
         = lproxy::server::config::get_instance().get_bind_port(); 
 
-    // step 1
     // 启动lss_server
     boost::asio::io_service io_service;
 
     //using namespace std; // for atoi
-    lproxy::server::lss_server s(io_service, bind_port);
+    lproxy::server::lss_server s(io_service, bind_addr, bind_port);
     io_service.run();
 
     _print_s("Exit\n");
