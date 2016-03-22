@@ -915,12 +915,12 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
     case 0x03: {// UDP转发
         this->socks5_cmd = CMD_UDP;
 
-        // 此时的 this->dest_name, port 为发送UDP报文时的源IP、源端口,
-        // 而不是UDP转发目的地, 如果UDP ASSOCIATE命令时无法提供
-        // DST.ADDR与DST.PORT，则必须将这两个域置零
-
         // 判断是否为 全0 ip.
         if (this->dest_name == "0.0.0.0") {
+            // 此时的 this->dest_name, port 为发送UDP报文时的源IP、源端口,
+            // 而不是UDP转发目的地, 如果UDP ASSOCIATE命令时无法提供
+            // DST.ADDR与DST.PORT，则必须将这两个域置零
+            //
             // http://www.ietf.org/rfc/rfc1928.txt
             // http://www.cnblogs.com/zahuifan/articles/2816789.html
             //
@@ -948,11 +948,11 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
             }
         }
         else {
-            // 所以下面处理方式应该是错误的
             // TODO
+            // 非 全 0 ip 的工作方式:
             resovle_open_udp(&this->dest_name[0], this->dest_port);
             // 异步完成才可打包 socks5::resp 发给 local
-            // 如果不是全0ip, 必须异步connect 执行结束后才能 打包
+            // 如果不是全0 ip, 必须异步connect 执行结束后才能 打包
             return;
         }
         break;
@@ -966,11 +966,22 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
     //if ((rq.Cmd != 0x01) && (rq.Cmd != 0x03)) { 
     if (rq.Cmd != 0x01) { 
         // CMD_CONNECT 必须异步connect 执行结束后才能 打包
-        
-        socks5_resp_to_local();
+        if (rq.Cmd == 0x03 /*&& this->dest_name == "0.0.0.0"*/) {
+            // UDP 全0 ip 的工作方式
+            // TODO
+            //      +----+------+------+----------+----------+----------+
+            //      |RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
+            //      +----+------+------+----------+----------+----------+
+            //      | 2  |  1   |  1   | Variable |    2     | Variable |
+            //      +----+------+------+----------+----------+----------+
+            // 临时的处理方式: (此处理方式是不正确的)
+            socks5_resp_to_local();
+        }
+        else {
+            socks5_resp_to_local();
+        }
     }
 }
-
 
 
 // http://www.boost.org/doc/libs/1_36_0/doc/html/boost_asio/example/http/client/async_client.cpp
