@@ -914,9 +914,47 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
         break;
     case 0x03: {// UDP转发
         this->socks5_cmd = CMD_UDP;
-        resovle_open_udp(&this->dest_name[0], this->dest_port);
-        // 异步完成才可打包 socks5::resp 发给 local
 
+        // 此时的 this->dest_name, port 为发送UDP报文时的源IP、源端口,
+        // 而不是UDP转发目的地, 如果UDP ASSOCIATE命令时无法提供
+        // DST.ADDR与DST.PORT，则必须将这两个域置零
+
+        // 判断是否为 全0 ip.
+        if (this->dest_name == "0.0.0.0") {
+            // http://www.ietf.org/rfc/rfc1928.txt
+            // http://www.cnblogs.com/zahuifan/articles/2816789.html
+            //
+            // TODO 尚未处理
+            //      +----+------+------+----------+----------+----------+
+            //      |RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
+            //      +----+------+------+----------+----------+----------+
+            //      | 2  |  1   |  1   | Variable |    2     | Variable |
+            //      +----+------+------+----------+----------+----------+
+
+            // 
+            auto&& upd_open_ip_protocol = ip::udp::v4();
+            // TODO
+            // if (config::get_instance().udp_open_ip_protocal() == "ipv6") {
+            //  upd_open_ip_protocol = ip::udp::v6();
+            // }
+            //
+            boost::system::error_code ec;
+            this->socket_right_udp.open(upd_open_ip_protocol, ec);
+            if (ec) { // An error occurred.
+                this->socks5_resp_reply = 0x01; // 普通SOCKS服务器连接失败
+            }
+            else {
+                this->socks5_resp_reply = 0x00; //  成功
+            }
+        }
+        else {
+            // 所以下面处理方式应该是错误的
+            // TODO
+            resovle_open_udp(&this->dest_name[0], this->dest_port);
+            // 异步完成才可打包 socks5::resp 发给 local
+            // 如果不是全0ip, 必须异步connect 执行结束后才能 打包
+            return;
+        }
         break;
     }
     default:
@@ -925,9 +963,10 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
     }
 
     // 打包 socks5::resp 发给 local
-    if ((rq.Cmd != 0x01) && (rq.Cmd != 0x03)) { 
+    //if ((rq.Cmd != 0x01) && (rq.Cmd != 0x03)) { 
+    if (rq.Cmd != 0x01) { 
         // CMD_CONNECT 必须异步connect 执行结束后才能 打包
-        // CMD_UDP     也必须异步connect 执行结束后才能 打包
+        
         socks5_resp_to_local();
     }
 }
