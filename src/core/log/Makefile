@@ -13,6 +13,7 @@ LOGLIB = ./lib
 
 TESTDIR = ./test
 DEMODIR = ./demo
+DEMO2DIR = ./demo2
 
 PWD = $(shell pwd)
 ROOT = $(PWD)/../
@@ -36,7 +37,8 @@ BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 
 EXCEPTLINK = $(EXCEPT_LINK_DIR)/except.o
 
-LOGLINK = $(LINK)/loglevel.o $(LINK)/log_types.o $(LINK)/logging.o
+LOGLINK = $(LINK)/loglevel.o $(LINK)/log_types.o $(LINK)/logging.o \
+		  $(LINK)/logoutput_if.o
 
 ALL_LINK = $(BOOSTLINK) $(EXCEPTLINK) $(LOGLINK)
 
@@ -54,6 +56,13 @@ else
 	cd $(DEMODIR); make Container_Type=$(Container_Type)
 endif
 
+demo2: empty 
+	@echo "Compiling Log-demo2 ..."
+ifdef USE_LOCK
+	cd $(DEMO2DIR); make Container_Type=$(Container_Type) USE_LOCK=$(USE_LOCK)
+else
+	cd $(DEMO2DIR); make Container_Type=$(Container_Type)
+endif
 
 empty:
 	@echo
@@ -129,4 +138,5 @@ TestLogManager:
 clean:
 	cd $(TESTDIR); make clean
 	cd $(DEMODIR); make clean
+	cd $(DEMO2DIR); make clean
 	$(RM) $(LINK) $(LOGLIB)

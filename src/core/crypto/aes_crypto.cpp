@@ -38,6 +38,24 @@ Aes::Aes(const std::string& _key)
     initialize_counter(_key);
 }
 
+Aes::Aes(const std::string& _raw256key, Aes::raw256keysetting)
+        : aes_key(0x00, aes_key_len) {
+    assert(_raw256key.size() == aes_key_len);
+    aes_key.Assign((const byte*)_raw256key.c_str(), aes_key_len);
+
+    initialize_counter(_raw256key);
+}
+
+Aes::Aes(const std::vector<uint8_t>& _raw256key, Aes::raw256keysetting)
+        : aes_key(0x00, aes_key_len) {
+    assert(_raw256key.size() == aes_key_len);
+    aes_key.Assign(&_raw256key[0], aes_key_len);
+
+    std::string something(_raw256key.begin(), _raw256key.end());
+    initialize_counter(something);
+}
+
+
 void Aes::initialize_counter(const std::string& something) {
     //CryptoPP::AutoSeededRandomPool rnd;
     //rnd.GenerateBlock(ctr, CryptoPP::AES::BLOCKSIZE);
