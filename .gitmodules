@@ -1,0 +1,3 @@
+[submodule "contrib/cryptopp/cryptopp"]
+	path = contrib/cryptopp/cryptopp
+	url = https://github.com/DD-L/cryptopp

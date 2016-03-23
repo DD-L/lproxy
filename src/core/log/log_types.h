@@ -55,7 +55,9 @@
 
 
 #include <boost/thread.hpp>
+#ifndef BOOST_DATE_TIME_SOURCE
 #define BOOST_DATE_TIME_SOURCE
+#endif
 //#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 //using namespace boost::gregorian;

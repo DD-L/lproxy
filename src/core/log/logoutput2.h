@@ -1,11 +1,11 @@
-#ifndef _LOGOUTPUT_H_1
-#define _LOGOUTPUT_H_1
+#ifndef _LOGOUTPUT2_H_1
+#define _LOGOUTPUT2_H_1
 
 
 #include "log/logoutput_if.h"
 
 // 
-// class LogOutput
+// class LogOutput2
 // 
 // log_tools::UseLock<true> : 
 //     日志输出目的地时使用互斥锁, 避免多线程下对同一输出目标的争抢
@@ -13,18 +13,18 @@
 //     日志输出目的地时, 除std::cout和std::cerr外, 不使用互斥锁
 //
 template <typename UseLock = log_tools::UseLock<true> >
-class LogOutput : public LogOutput_if {
+class LogOutput2 : public LogOutput_if {
 public:
     // scoped lock
     class scoped_lock {
     public:
         scoped_lock(const std::ostream& os, boost::mutex& lock)
-                : _lock(lock), _os_is_std_outerr(LogOutput::is_std_outerr(os)) {
+                : _lock(lock), _os_is_std_outerr(LogOutput2::is_std_outerr(os)) {
             if (_os_is_std_outerr) {
                 _lock.lock();
                 return;	
             }
-            if (LogOutput::_is_uselock()) {				
+            if (LogOutput2::_is_uselock()) {				
                 _lock.lock();
                 return;
             }
@@ -34,7 +34,7 @@ public:
                 _lock.unlock();
                 return;
             }
-            if (LogOutput::_is_uselock()) {				
+            if (LogOutput2::_is_uselock()) {				
                 _lock.unlock();
                 return;
             }
@@ -50,25 +50,40 @@ private:
 	//     value => os_property
 	//
 	struct os_property {
-		boost::mutex* plock;
-		LogType       min_loglevel;
-		Format_t      format;
+		boost::mutex*     plock;
+        std::set<LogType> loglevel_set;
+		Format_t          format;
+        /*
 		os_property(boost::mutex* plock_ = NULL, 
-				const LogType& min_loglevel_ = makelevel(TRACE),
+				const std::set<LogType>& loglevel_set_ = { 
+                //    makelevel(TRACE), makelevel(DEBUG),
+                //    makelevel(INFO),  makelevel(WARN),
+                //    makelevel(ERROR), makelevel(FATAL) 
+                    },
 				const Format_t& format_ = default_format()) :
-				 plock(plock_), min_loglevel(min_loglevel_), format(format_) {} 
+				 plock(plock_), loglevel_set(loglevel_set_), format(format_) {} 
+        */
+		os_property(boost::mutex* plock_ = NULL, 
+				std::set<LogType>&& loglevel_set_ = { 
+                /*
+                    makelevel(TRACE), makelevel(DEBUG),
+                    makelevel(INFO),  makelevel(WARN),
+                    makelevel(ERROR), makelevel(FATAL) 
+                */
+                    },
+				const Format_t& format_ = default_format()) :
+				 plock(plock_), loglevel_set(std::move(loglevel_set_)), format(format_) {} 
 		os_property(const os_property& that) :
-			plock(that.plock), min_loglevel(that.min_loglevel), 
+			plock(that.plock), loglevel_set(that.loglevel_set), 
 			format(that.format) {}
 	}; // struct os_property
 
-	
 private:
-	LogOutput(void)                        = default;
+	LogOutput2(void)                        = default;
 public:
-	LogOutput(const LogOutput&)            = delete;
-	LogOutput& operator=(const LogOutput&) = delete;
-	virtual ~LogOutput() {
+	LogOutput2(const LogOutput2&)            = delete;
+	LogOutput2& operator=(const LogOutput2&) = delete;
+	virtual ~LogOutput2() {
 		std::for_each(_outstream.begin(), _outstream.end(), 
 			[this] (std::pair<std::ostream*, os_property> element) -> void {
 				this->release_lock(*element.first, element.second.plock);
@@ -76,42 +91,30 @@ public:
 	}
 public:
 	// 
-	inline static LogOutput& get_instance(void) {
-		static LogOutput instance;
+	inline static LogOutput2& get_instance(void) {
+		static LogOutput2 instance;
 		return instance; 
 	}
 
 	// bind/insert ostream, ... 
 	template <typename Format = default_format>
 	bool bind(std::ostream& os, 
-			const LogType& min_loglevel = makelevel(TRACE), 
+			std::set<LogType>&& loglevel_set = { 
+                    makelevel(TRACE), makelevel(DEBUG),
+                    makelevel(INFO),  makelevel(WARN),
+                    makelevel(ERROR), makelevel(FATAL) 
+            }, // default bind TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 			Format format = default_format()) {
 
         // assert only one subclass is working
         assert(is_unique_subclass_working(this));
 		
-        boost::mutex::scoped_lock lock(_outstreamlock);
-		//os => {lock, min_loglevel, format}
-		auto ret = _outstream.insert(std::pair<std::ostream*, os_property>
-				(&os, os_property(new_lock(os), min_loglevel, format)));	
-		return ret.second; 
-	}
-	/*
-	bool bind(std::ostream& os) {
-		return bind(os, makelevel(TRACE), default_format());
-	}
-	bool bind(std::ostream& os, const LogType& min_loglevel) {
-		return bind(os, min_loglevel, default_format());
-	}
-	template <typename Format>
-	bool bind(std::ostream& os, const LogType& min_loglevel, Format format) {
 		boost::mutex::scoped_lock lock(_outstreamlock);
-		//os => {lock, min_loglevel, format}
+		//os => {lock, loglevel_set, format}
 		auto ret = _outstream.insert(std::pair<std::ostream*, os_property>
-				(&os, os_property(new_lock(os), min_loglevel, format)));	
+				(&os, os_property(new_lock(os), std::move(loglevel_set), format)));	
 		return ret.second; 
 	}
-	*/
 
 	// unbind/remove ostream. 
 	// Just remove the ostream, but not destruct ostream
@@ -132,7 +135,8 @@ public:
 		boost::mutex::scoped_lock lock(_outstreamlock);
 		std::for_each(_outstream.begin(), _outstream.end(), 
 			[&val] (std::pair<std::ostream*, os_property> element) -> void {
-				if (val->log_type >= element.second.min_loglevel) {
+                auto& loglevel_set = element.second.loglevel_set;
+                if (loglevel_set.find(val->log_type) != loglevel_set.end()) {
 					scoped_lock lock(*element.first, *element.second.plock);
 					*element.first << element.second.format(val) << std::flush;
 				}
@@ -178,7 +182,7 @@ private:
 		static UseLock is_uselock;
 		return is_uselock();
 	}
-}; // class LogOutput
+}; // class LogOutput2
 
 
-#endif // _LOGOUTPUT_H_1
+#endif // _LOGOUTPUT2_H_1
