@@ -404,27 +404,27 @@ void session::left_read_handler(const boost::system::error_code& error,
         lsslogdebug("and send to server.");
     }
     else {
-        if (error == boost::asio::error::eof) {
-            // for HTTP Connection: Keep-Alive
-            logerror(error.message() << " value = " << error.value() 
-                    << ". Restart async-read-left with timeout");
-            auto&& data_left = lproxy::make_shared_data(max_length, 0);
-            this->socket_left.async_read_some(
-                    boost::asio::buffer(&(*data_left)[0], max_length),
-                    boost::bind(&session::left_read_handler, 
-                        shared_from_this(), _1, _2, data_left));
-            deadline_timer t(this->socket_left.get_io_service(),
-                    boost::posix_time::seconds(
-                        config::get_instance().get_timeout()));
-            t.async_wait(boost::bind(
-                        &session::left_read_timeout_handler,
-                        shared_from_this(), _1));
-        }
-        else {
+        //if (error == boost::asio::error::eof) {
+        //    // for HTTP Connection: Keep-Alive
+        //    logerror(error.message() << " value = " << error.value() 
+        //            << ". Restart async-read-left with timeout");
+        //    auto&& data_left = lproxy::make_shared_data(max_length, 0);
+        //    this->socket_left.async_read_some(
+        //            boost::asio::buffer(&(*data_left)[0], max_length),
+        //            boost::bind(&session::left_read_handler, 
+        //                shared_from_this(), _1, _2, data_left));
+        //    deadline_timer t(this->socket_left.get_io_service(),
+        //            boost::posix_time::seconds(
+        //                config::get_instance().get_timeout()));
+        //    t.async_wait(boost::bind(
+        //                &session::left_read_timeout_handler,
+        //                shared_from_this(), _1));
+        //}
+        //else {
             logerror(error.message() << " value = " << error.value()
                     << " close this");
             this->close();
-        }
+        //}
     }
 }
 

@@ -633,56 +633,56 @@ void session::right_read_handler(const boost::system::error_code& error,
 
     }
     else {
-        if (error == boost::asio::error::eof) {
-            // for HTTP Connection: Keep-Alive
-            logerror(error.message() << " value = " << error.value() 
-                    << ". Restart async-read-right with timeout");
+        //if (error == boost::asio::error::eof) {
+        //    // for HTTP Connection: Keep-Alive
+        //    logerror(error.message() << " value = " << error.value() 
+        //            << ". Restart async-read-right with timeout");
 
-            switch (this->socks5_cmd) {
-                case CMD_CONNECT: {
-                    auto&& data_right = make_shared_data(max_length, 0);
-                    this->socket_right_tcp.async_read_some(
-                        boost::asio::buffer(&(*data_right)[0], max_length), 
-                        boost::bind(&session::right_read_handler, 
-                            shared_from_this(), _1, _2, data_right));
-                    deadline_timer t(this->socket_right_tcp.get_io_service(),
-                            boost::posix_time::seconds(
-                                config::get_instance().get_timeout()));
-                    t.async_wait(boost::bind(
-                                &session::right_read_timeout_handler,
-                                shared_from_this(), _1));
+        //    switch (this->socks5_cmd) {
+        //        case CMD_CONNECT: {
+        //            auto&& data_right = make_shared_data(max_length, 0);
+        //            this->socket_right_tcp.async_read_some(
+        //                boost::asio::buffer(&(*data_right)[0], max_length), 
+        //                boost::bind(&session::right_read_handler, 
+        //                    shared_from_this(), _1, _2, data_right));
+        //            deadline_timer t(this->socket_right_tcp.get_io_service(),
+        //                    boost::posix_time::seconds(
+        //                        config::get_instance().get_timeout()));
+        //            t.async_wait(boost::bind(
+        //                        &session::right_read_timeout_handler,
+        //                        shared_from_this(), _1));
 
-                    break;
-                }
-                case CMD_UDP: {
-                    ip::udp::endpoint destination(
-                        ip::address::from_string(this->dest_name), 
-                        this->dest_port);
-                    auto&& data_right = make_shared_data(max_length, 0);
-                    this->socket_right_udp.async_receive_from(
-                        boost::asio::buffer(&(*data_right)[0], max_length), 
-                        destination,
-                        boost::bind(&session::right_read_handler, 
-                            shared_from_this(), _1, _2, data_right));
-                    deadline_timer t(this->socket_right_udp.get_io_service(),
-                            boost::posix_time::seconds(
-                                config::get_instance().get_timeout()));
-                    t.async_wait(boost::bind(
-                                &session::right_read_timeout_handler,
-                                shared_from_this(), _1));
-                
-                    break;
-                }
-                default: /*TODO*/break;
-            }
-        }
-        else {
+        //            break;
+        //        }
+        //        case CMD_UDP: {
+        //            ip::udp::endpoint destination(
+        //                ip::address::from_string(this->dest_name), 
+        //                this->dest_port);
+        //            auto&& data_right = make_shared_data(max_length, 0);
+        //            this->socket_right_udp.async_receive_from(
+        //                boost::asio::buffer(&(*data_right)[0], max_length), 
+        //                destination,
+        //                boost::bind(&session::right_read_handler, 
+        //                    shared_from_this(), _1, _2, data_right));
+        //            deadline_timer t(this->socket_right_udp.get_io_service(),
+        //                    boost::posix_time::seconds(
+        //                        config::get_instance().get_timeout()));
+        //            t.async_wait(boost::bind(
+        //                        &session::right_read_timeout_handler,
+        //                        shared_from_this(), _1));
+        //        
+        //            break;
+        //        }
+        //        default: /*TODO*/break;
+        //    }
+        //}
+        //else {
             logerror(error.message() << " value = " << error.value() 
                     << "send lss_bad to local, then close this");
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
                     boost::bind(&session::close, shared_from_this()));
-        }
+        //}
     }
 }
 
