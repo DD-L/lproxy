@@ -427,7 +427,8 @@ void session::left_read_handler(const boost::system::error_code& error,
         }
     } 
     else { // error
-        logerror(error.message() << " close this");
+        logerror(error.message() << " value = " << error.value() 
+                << ". close this");
         this->close();
     }
 }
@@ -482,7 +483,8 @@ void session::left_write_handler(const boost::system::error_code& error,
             switch (this->socks5_cmd) {
             case CMD_CONNECT:
 
-                lsslogdebug("start async_read_some from socket_right_tcp");
+                //lsslogdebug("start async_read_some from socket_right_tcp");
+                lsslogdebug("begin to async-read data from remote");
 
                 socket_right_tcp.async_read_some(
                     boost::asio::buffer(&(*data_right)[0], max_length), 
@@ -491,7 +493,8 @@ void session::left_write_handler(const boost::system::error_code& error,
                 break;
             case CMD_UDP: {
 
-                lsslogdebug("start async_receive_from socket_right_udp");
+                //lsslogdebug("start async_receive_from socket_right_udp");
+                lsslogdebug("begin to async-receive data from remote");
 
                 ip::udp::endpoint destination(
                     ip::address::from_string(this->dest_name), this->dest_port);
@@ -524,7 +527,7 @@ void session::left_write_handler(const boost::system::error_code& error,
         } // end if (lproxy::socks5::server::CONNECTED == this->socks5_state)
     }
     else {
-        logerror(error.message() << " errror.value = " << error.value() 
+        logerror(error.message() << " value = " << error.value() 
                 << " . close this");
         this->close();
     }
@@ -547,6 +550,7 @@ void session::right_write_handler(const boost::system::error_code& error,
 
             lsslogdebug("begin to async-read data from local");
 
+            /*
             auto&& data_right = make_shared_data(max_length, 0);
             this->socket_right_tcp.async_read_some(
                 boost::asio::buffer(&(*data_right)[0], max_length), 
@@ -554,6 +558,7 @@ void session::right_write_handler(const boost::system::error_code& error,
                     shared_from_this(), _1, _2, data_right));
 
             lsslogdebug("begin to async-read data from remote");
+            */
             break;
         }
         case CMD_UDP: {
