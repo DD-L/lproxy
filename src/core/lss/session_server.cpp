@@ -506,23 +506,26 @@ void session::left_write_handler(const boost::system::error_code& error,
                 /* TODO */
             case CMD_UNSUPPORT:
             default:
-                logwarn("Unsuported socks5_cmd");
+                logwarn("Unsuported socks5_cmd, send lss_bad to local,"
+                        " finally close this");
                 boost::asio::async_write(this->socket_left,
                         pack_bad().buffers(),
                         boost::bind(&session::close, shared_from_this()));
             } // switch (this->socks5_cmd)
         }
-        else { 
+        else {
+            // lproxy::socks5::server::CONNECTED != this->socks5_state
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
                         lproxy::placeholders::shared_data,
                         lproxy::placeholders::shared_data)); 
-        }
+        } // end if (lproxy::socks5::server::CONNECTED == this->socks5_state)
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " errror.value = " << error.value() 
+                << " . close this");
         this->close();
     }
 } 
@@ -897,11 +900,13 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
 
     switch (rq.Cmd) {
     case 0x01: // CONNECT请求
+        lsslogdebug("lproxy::socks5::req::Cmd = TCP-CONNECT");
         this->socks5_cmd = CMD_CONNECT;
         resovle_connect_tcp(&this->dest_name[0], this->dest_port);
         // 异步完成才可打包 socks5::resp 发给 local
         break;
     case 0x02: // BIND请求
+        lsslogdebug("lproxy::socks5::req::Cmd = BIND");
         this->socks5_cmd = CMD_BIND;
         // 暂时不做
         // TODO
@@ -913,6 +918,7 @@ void session::socks5_request_processing(const lproxy::socks5::req& rq) {
 
         break;
     case 0x03: {// UDP转发
+        lsslogdebug("lproxy::socks5::req::Cmd = UDP");
         this->socks5_cmd = CMD_UDP;
 
         // 判断是否为 全0 ip.
@@ -1161,8 +1167,14 @@ void session::socks5_resp_to_local() {
     // socks5::resp 封包
     pack_socks5_resp(data);
     // lproxy::server::reply 封包
-    // 异步发给 local
 
+
+    if (this->socks5_resp_reply == 0x00) {
+        // 设置当前 socks5 状态为: CONNECTED 
+        this->socks5_state = lproxy::socks5::server::CONNECTED; 
+    }
+
+    // 异步发给 local
     auto&& data_reply = make_shared_reply(pack_data(data, data.size()));
     boost::asio::async_write(this->socket_left, data_reply->buffers(),
                 boost::bind(&session::left_write_handler, 
@@ -1172,14 +1184,12 @@ void session::socks5_resp_to_local() {
         << _debug_format_data(get_vdata_from_lss_pack(*data_reply), 
             int(), ' ', std::hex));
 
-    if (this->socks5_resp_reply == 0x00) {
-        // 设置当前 socks5 状态为: CONNECTED 
-        this->socks5_state = lproxy::socks5::server::CONNECTED; 
-    }
-    else {
+    if (this->socks5_resp_reply != 0x00) {
         // socks5 服务器  不能响应 客户端请求命令
         // TODO
         //delete_this();
+        lsslogdebug("socks5_resp_reply = " << std::hex 
+                << this->socks5_resp_reply);
         logerror("SOCKS5 server cant respond to client request. close this");
         this->close();
         // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
