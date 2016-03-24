@@ -141,9 +141,9 @@ private:
      *      case (CMD_CONNECT) {
      *          socket_left.async_read_some [bind: left_read_handler]
      *          
-     *          socket_right_tcp.async_read_some {
-     *              [bind: right_read_handler]
-     *          }
+     *          //socket_right_tcp.async_read_some {
+     *          //    [bind: right_read_handler]
+     *          //}
      *      }
      *      case (CMD_BIND) {
      *          // TODO
@@ -151,9 +151,9 @@ private:
      *      case (CMD_UDP) {
      *          socket_left.async_read_some [bind: left_read_handler]
      *
-     *          socket_right_udp.async_receive_from {
-     *              [bind: right_read_handler]
-     *          }
+     *          //socket_right_udp.async_receive_from {
+     *          //    [bind: right_read_handler]
+     *          //}
      *      }
      *      default {
      *          async_write:socket_left (pack_bad().buffers()) {

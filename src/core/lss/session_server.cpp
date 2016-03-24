@@ -573,6 +573,7 @@ void session::right_write_handler(const boost::system::error_code& error,
 
             lsslogdebug("begin to read data from local");
 
+            /*
             ip::udp::endpoint destination(
                  ip::address::from_string(this->dest_name), 
                  this->dest_port);
@@ -585,7 +586,7 @@ void session::right_write_handler(const boost::system::error_code& error,
                     shared_from_this(), _1, _2, data_right));
 
             lsslogdebug("begin to async-read data from remote");
-
+            */
             break;
         }
         case CMD_BIND:
@@ -1194,7 +1195,7 @@ void session::socks5_resp_to_local() {
         // TODO
         //delete_this();
         lsslogdebug("socks5_resp_reply = " << std::hex 
-                << this->socks5_resp_reply);
+                << uint32_t(this->socks5_resp_reply));
         logerror("SOCKS5 server cant respond to client request. close this");
         this->close();
         // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
