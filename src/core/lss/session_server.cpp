@@ -475,7 +475,7 @@ void session::left_read_handler(const boost::system::error_code& error,
         if (error == boost::asio::error::eof) {
             error.value(); // debug
             // TODO
-            _print_s_err("\n-------------------------------------------------------------\n\n");
+            _print_s_err("\n------------------------------------------------------------- this = " << this << "pid = " << std::hex << std::this_thread::get_id() <<"\n\n");
         }
         this->close();
     }
