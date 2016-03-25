@@ -49,8 +49,32 @@ void session::close(void) {
         // http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
         // 
         // cancel session 上所有的异步
-        socket_left.close();
-        socket_right.close();
+
+        boost::system::error_code ec;
+        if (socket_left.is_open()) {
+            socket_left.shutdown(tcp::socket::shutdown_both, ec);
+            if (ec) {
+                logwarn(ec.message() << " value = " << ec.value() 
+                        << ", socket_left::shutdown, this = " << this);
+            }
+            socket_left.close(ec);
+            if (ec) {
+                logwarn(ec.message() << " value = " << ec.value() 
+                        << ", socket_left::close, this = " << this);
+            }
+        }
+        if (socket_right.is_open()) {
+            socket_right.shutdown(tcp::socket::shutdown_both, ec);
+            if (ec) {
+                logwarn(ec.message() << " value = " << ec.value() 
+                        << ", socket_right::shutdown, this = " << this);
+            }
+            socket_right.close(ec);
+            if (ec) {
+                logwarn(ec.message() << " value = " << ec.value() 
+                        << ", socket_right::close, this = " << this);
+            }
+        }
         
         // step 2
         //delete this;
@@ -71,7 +95,8 @@ void session::resolve_handler(const boost::system::error_code& ec,
     }
     else {
         // 主机不可达
-        logerror(ec.message() << " Host unreachable. close this");
+        logerror(ec.message() << " Host unreachable. close this, this = "
+                << this);
         this->close();
     }
 }
@@ -103,7 +128,8 @@ void session::connect_handler(const boost::system::error_code& ec,
     }
     else {
         // 网络不可达
-        logerror(ec.message() << " Network unreachable. close this");
+        logerror(ec.message() << " Network unreachable. close this, this = "
+                << this);
         this->close();
     }
 }
@@ -125,7 +151,7 @@ void session::hello_handler(const boost::system::error_code& error,
         this->status = status_hello;
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " close this, this = " << this);
         this->close();
     }
 }
@@ -143,7 +169,7 @@ void session::exchange_handler(const boost::system::error_code& error,
         status = status_auth;
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " close this, this = " << this);
         this->close();
     }
 }
@@ -215,7 +241,7 @@ void session::right_read_handler(const boost::system::error_code& error,
                 // 验证 随机 数
                 if (reply_random_str != this->random_str) {
                     // 非法的server端
-                    logwarn("Illegal server !!! close this.");
+                    logwarn("Illegal server !!! close this. this = " << this);
                     this->close();
                     break; 
                 }
@@ -231,12 +257,13 @@ void session::right_read_handler(const boost::system::error_code& error,
             case reply::deny: // 0x04
                     // 被 server 端拒绝
                     logwarn("Connection rejected by the server-side. "
-                            "close this.");
+                            "close this. this = " << this);
                     this->close();
                 break;
             case reply::timeout: // 0x05
                     // server端session超时;
-                    logwarn("Server-side session timeout. close this.");
+                    logwarn("Server-side session timeout. close this. this = "
+                            << this);
                     this->close();
                 break;
             case reply::zipdata:// 0x17
@@ -297,7 +324,7 @@ void session::right_read_handler(const boost::system::error_code& error,
             case reply::bad: // 0xff
             default:
                     // 数据包 bad
-                    logwarn("lss packet is bad. close this");
+                    logwarn("lss packet is bad. close this, this = " << this);
                     this->close();
                 break;
             }
@@ -306,7 +333,7 @@ void session::right_read_handler(const boost::system::error_code& error,
             // default:
             // TODO
             // 临时方案
-            logerror("wrong_packet_type. close this");
+            logerror("wrong_packet_type. close this, this = " << this);
             this->close();
         }
         catch (incomplete_data& ec) {
@@ -330,34 +357,34 @@ void session::right_read_handler(const boost::system::error_code& error,
                             lproxy::placeholders::shared_data));
             }
             else {
-                logwarn("close this");
+                logwarn("close this, this = " << this);
                 this->close();
             }
         }
         catch (wrong_lss_status& ec) {
-            logerror(ec.what() << ". close this");
+            logerror(ec.what() << ". close this, this = " << this);
             this->close();
         }
         catch (EncryptException& ec) {
-            logerror(ec.what() << ". close this");
+            logerror(ec.what() << ". close this, this = " << this);
             this->close();
         }
         catch (DecryptException& ec) {
-            logerror(ec.what() << ". close this");
+            logerror(ec.what() << ". close this, this = " << this);
             this->close();
         }
         catch (std::exception& ec) {
-            logerror(ec.what() << ". close this");
+            logerror(ec.what() << ". close this, this = " << this);
             this->close();
         }
         catch (...) {
-            logerror("close this");
+            logerror("close this, this = " << this);
             this->close();
         }
         //break;}
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " close this, this = " << this);
         this->close();
     }
 }
@@ -422,7 +449,7 @@ void session::left_read_handler(const boost::system::error_code& error,
         //}
         //else {
             logerror(error.message() << " value = " << error.value()
-                    << " close this");
+                    << " close this, this = " << this);
             this->close();
         //}
     }
@@ -431,7 +458,7 @@ void session::left_read_handler(const boost::system::error_code& error,
 
 void session::left_read_timeout_handler(const boost::system::error_code& error) {
     logerror(error.message() << " value = " << error.value() 
-            << " close this");
+            << " close this, this = " << this);
     /*
     if (error == boost::asio::error::operation_aborted) {
     }
@@ -453,7 +480,7 @@ void session::right_write_handler(const boost::system::error_code& error,
                     shared_from_this(), _1, _2, data_left));
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " close this, this = " << this);
         this->close();
     }
 }
@@ -470,7 +497,7 @@ void session::left_write_handler(const boost::system::error_code& error,
                     lproxy::placeholders::shared_data));
     }
     else {
-        logerror(error.message() << " close this");
+        logerror(error.message() << " close this, this = " << this);
         this->close();
     }
 }
