@@ -5,6 +5,7 @@
 	> Created Time: 2015/12/1 3:56:39
  ************************************************************************/
 #include <atomic>
+#include <boost/thread.hpp> // for boost::mutex
 #include <lss/session_local.h>
 #include <lss/config.h>
 #include <crypto/md5_crypto.h>
@@ -42,9 +43,31 @@ void session::start(void) {
 }
 
 void session::close(void) {
-    //static std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    if (! close_flag.test_and_set()) {
         // TODO
+//2016-Mar-26 06:01:44.706102 [ERROR] Operation canceled close this, this = 0x1762340	[pid:7ffff65c3700] session_local.cpp:387 right_read_handler
+//2016-Mar-26 06:01:44.706117 [DEBUG] session::~session() this = 0x1762340	[pid:7ffff65c3700] session.h:25 ~session
+//terminate called without an active exception
+//
+//Program received signal SIGABRT, Aborted.
+//0x00007ffff6dfbcc9 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+//(gdb) 
+//(gdb) 
+//(gdb) 
+//(gdb) bt
+//#0  0x00007ffff6dfbcc9 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+//#1  0x00007ffff6dff0d8 in abort () from /lib/x86_64-linux-gnu/libc.so.6
+//#2  0x00007ffff77106dd in __gnu_cxx::__verbose_terminate_handler() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+//#3  0x00007ffff770e746 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+//#4  0x00007ffff770e791 in std::terminate() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+//#5  0x000000000041b4eb in std::thread::~thread (this=0x7fffffffe3a8, __in_chrg=<optimized out>) at /usr/include/c++/4.9/thread:146
+//#6  0x000000000041ba60 in lproxy::lss_server<lproxy::local::session>::~lss_server (this=0x7fffffffe380, __in_chrg=<optimized out>)
+//    at src/core/lss/lss_server.h:20
+//#7  0x0000000000412cf1 in main (argc=1, argv=0x7fffffffe608) at local.cpp:29
+ 
+    // 测试 close 加锁, 是否能避免 上述 bug
+    boost::mutex::scoped_lock lock(close_mutex);
+    
+    if (! close_flag.test_and_set()) {
         // step 1
         // http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
         // 

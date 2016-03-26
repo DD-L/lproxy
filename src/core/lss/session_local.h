@@ -191,6 +191,7 @@ private:
     tcp::socket      socket_right;    // server socket
     tcp::resolver    resolver_right;  // server resolver
     std::atomic_flag close_flag = ATOMIC_FLAG_INIT;
+    boost::mutex     close_mutex;
 
 }; // class lproxy::local::session
 

@@ -386,6 +386,7 @@ private:
 
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
     std::atomic_flag                   close_flag = ATOMIC_FLAG_INIT;
+    boost::mutex                       close_mutex;
 }; // class lproxy::server::session
 } // namespace lproxy::server
 } // namespace lproxy

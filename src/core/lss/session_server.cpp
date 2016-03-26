@@ -4,7 +4,7 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2016/3/1 4:29:50
  ************************************************************************/
-
+#include <boost/thread.hpp> // for boost::mutex
 #include <lss/session_server.h>
 #include <lss/config.h>
 #include <crypto/aes_crypto.h>
@@ -43,8 +43,17 @@ void session::start(void) {
 }
 
 void session::close(void) {
+    // TODO
+//Program received signal SIGSEGV, Segmentation fault.
+//[Switching to Thread 0x7ffff65c3700 (LWP 1597)]
+//0x000000000041726f in boost::asio::detail::epoll_reactor::start_op (this=0x1785f50, op_type=1, descriptor=24, descriptor_data=@0x17b8358: 0x0, op=0x7fffe8001ac0, is_continuation=false, 
+//    allow_speculative=true) at contrib/boost/boost_1_57_0/boost/asio/detail/impl/epoll_reactor.ipp:219
+//219	  if (descriptor_data->shutdown_)
+//descriptor_data == 0x0
+    // 测试 close 加锁, 是否能避免 上述 bug
+    boost::mutex::scoped_lock lock(close_mutex);
     if (! close_flag.test_and_set()) {
-        // TODO
+
         // step 1
         // cancel session 上所有的异步
         // http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
