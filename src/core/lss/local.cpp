@@ -14,7 +14,7 @@ try {
     // 启动日志输出线程
     std::thread thread_logoutput(lproxy::log::output_thread, 
             lproxy::log::LOCAL);
-    (void)thread_logoutput;
+    thread_logoutput.detach();
 
     // 获取配置
     auto& bind_addr

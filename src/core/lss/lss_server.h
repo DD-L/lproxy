@@ -40,6 +40,26 @@ public:
         sig_right.async_wait(boost::bind(&config::signal_handler, 
                     &io_service_right(), _1, _2));
     }
+    virtual ~lss_server() {
+// Program received signal SIGABRT, Aborted.
+//0x00007ffff6dfbcc9 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+//(gdb) bt
+//#0  0x00007ffff6dfbcc9 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+//#1  0x00007ffff6dff0d8 in abort () from /lib/x86_64-linux-gnu/libc.so.6
+//#2  0x00007ffff77106dd in __gnu_cxx::__verbose_terminate_handler() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+//#3  0x00007ffff770e746 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+//#4  0x00007ffff770e791 in std::terminate() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+//#5  0x000000000041b4eb in std::thread::~thread (this=0x7fffffffe3a8, __in_chrg=<optimized out>) at /usr/include/c++/4.9/thread:146
+//#6  0x000000000041ba60 in lproxy::lss_server<lproxy::local::session>::~lss_server (this=0x7fffffffe380, __in_chrg=<optimized out>)
+//    at /opt/lproxy/src/core/lss/../../..//src/core/lss/lss_server.h:20
+//#7  0x0000000000412cf1 in main (argc=1, argv=0x7fffffffe608) at local.cpp:29
+ 
+        // TODO
+        // 尝试修复上述bug:
+        // 析构前添加 thread::detach(), 使 joinable == false, 
+        // 避免析构 this->thread_right 时, std::terminate() 被调用
+        this->thread_right.detach();
+    }
 private:
     void start_accept() {
         /*
