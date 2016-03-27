@@ -101,7 +101,9 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 	打开这么多标签页后，按`刷新所有标签页`的快捷键`Ctrl+Shift+R`, 稍等片刻，页面全部加载完毕，lproxy 运行情况良好。
 	
 	[[写在中间]]：
+
 	1. **之所以选了这么多的百度新闻页，是因为这些页面里的资源很多，每一个资源都是一个 HTTP 请求，其中还有很多 Ajax 请求。比如统计了下我此刻的 http://tech.baidu.com/ 页面，资源加载完整就需要完成 77 次请求，而且这还不算 Chrome 的 `multiple requests`策略带来的重复请求，所以这么多百度新闻的页面放在一起同时刷新，肯定很热闹**
+
 	2. **之所以选基于 Chrome 的浏览器，是因为它每次页面刷新，Chrome 都会发出多个相同的请求（实测一般是3~4个）`multiple requests`，这可能是 Chrome 为了提高浏览器对页面响应的成功率，进行的自身优化策略。更多资料可以 google 一下 `Google Chrome sends multiple requests to fetch a page`**
 
 	因为 `刷新所有标签页` 一次，执行情况良好。
