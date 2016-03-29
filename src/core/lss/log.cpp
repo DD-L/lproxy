@@ -6,7 +6,6 @@
  ************************************************************************/
 
 #include <lss/log.h>
-#include <lss/config.h>
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -17,7 +16,7 @@ using namespace lproxy;
 // 日志输出线程函数
 
 // function lproxy::log::output_thread
-void lproxy::log::output_thread(lproxy::log::Which which) {
+void lproxy::log::output_thread(const sdata_t& errlog_filename/* = ""*/) {
     // 如果输出目标被多个日志线程访问，需在编译选项加上 -DLOG_USE_LOCK
 #ifndef LOGOUTPUT2
     auto& logoutput = LogOutput_t::get_instance();
@@ -47,21 +46,9 @@ void lproxy::log::output_thread(lproxy::log::Which which) {
             std::bind(lproxy::log::output_format, std::placeholders::_1));
 #endif // if not define(LOGOUTPUT2)
 
-    sdata_t logfilename = "";
-    switch (which) {
-    case lproxy::log::LOCAL:
-        logfilename = local::config::get_instance().get_logfilename();
-        break;
-    case lproxy::log::SERVER:
-        logfilename = server::config::get_instance().get_logfilename();
-        break;
-    default:
-        logfilename = "";
-        break;
-    }
     std::ofstream logfile;
-    if (logfilename != "") {
-        logfile.open(logfilename, std::ofstream::app);
+    if (errlog_filename != "") {
+        logfile.open(errlog_filename, std::ofstream::app);
         assert(logfile);
 #ifndef LOGOUTPUT2
         // 只输出权重大于等于 ERROR  级别的日志
@@ -84,6 +71,7 @@ void lproxy::log::output_thread(lproxy::log::Which which) {
         logoutput(val);
         // TODO
         // do something
+        // ...
     } 
 
     logoutput.unbind(std::cout);

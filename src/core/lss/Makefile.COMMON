@@ -34,8 +34,8 @@ BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 COMMON_LINKS = $(BOOSTLINK) $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) \
 			   $(LOG_STATIC_LIB) 
 
-LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o $(TMP)/log.o $(COMMON_LINKS)
-SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(TMP)/log.o $(COMMON_LINKS)
+LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o $(TMP)/config_local.o $(TMP)/log.o $(COMMON_LINKS)
+SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(TMP)/config_server.o $(TMP)/log.o $(COMMON_LINKS)
 
 
 CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a

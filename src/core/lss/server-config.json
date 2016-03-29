@@ -1,0 +1,30 @@
+{
+    "lssserver": 
+    {
+        "bind_addr": "0.0.0.0",          // 本地绑定的 ip, 支持 ipv4/ipv6 
+        "bind_port": 8088,               // 本地绑定的端口, 必须为数字类型
+        "bind_addr_socks5": "127.0.0.1", // socks5 响应时返回的地址, 目前不需要更改. 支持 ipv4/ipv6/domain
+        "bind_addr_type_socks5": "ipv4", // "bind_addr_socks5" 地址的类型, 可选值 [ "ipv4" | "ipv6" | "domain" ]
+        "bind_port_socks5": 8088,        // socks5 响应时返回的端口，一般和 "bind_port" 保持一致. 必须为数字类型.
+        "zip_on": false,                 // 是否对流量进行压缩. 布尔类型数据. 默认值 false
+        "timeout": 30,                   // 超时设置 (秒). 必须为数字类型. 默认值 30
+        //"logfile": "/var/log/lproxy/server.err", // (错误)运行日志. 如果未设置则不保存日志
+        
+        // lsslocal 的认证 key 集合, 不得重复. 
+        // 计算方法: 
+        //  upper(md5-32(lsslocal.auth_key))
+        //  用 python 描述是
+        //     >>> import hashlib
+        //     >>> auth_key = "xxxxxxxxx"
+        //     >>> hashlib.md5(auth_key.encode()).hexdigest().upper()
+        //     'ABA369F7D2B28A9098A0A26FEB7DC965'
+        //     >>>
+        "cipher_auth_key_set": [
+            "ABA369F7D2B28A9098A0A26FEB7DC965", // "xxxxxxxxx"
+            "0B4E7A0E5FE84AD35FB5F95B9CEEAC79", // "aaaaaa"
+            // ...,
+            "62B1021B8A7BB09630BEF739189DDDF8"  // "abdeF1"
+        ]
+    }
+}
+
