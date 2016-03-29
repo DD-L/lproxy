@@ -10,10 +10,61 @@
 #include <lss/lss_server.h>
 #include <lss/log.h>
 
+#include <program_options/program_options.h>
+
+static void process_program_options(const program_options& po,
+        std::string& server_config_file) {
+    if (po.empty()) {
+        server_config_file = "server-config.json";
+        return;
+    }
+    if (po.count("-h") || po.count("--help")) {
+        std::string message = po.show_help(
+                "\"server\" side of \"lproxy service\"\n");
+        _print_s(message);
+        exit(0);
+    }
+    try {
+        if (po.count("-c")) {
+            std::string value = po.get("-c");
+            server_config_file = value;
+            return;
+        }
+        if (po.count("--config")) {
+            std::string value = po.get("--config");
+            server_config_file = value;
+            return;
+        }
+    }
+    catch (const program_options::parameter_error& error) {
+        _print_s_err("[FATAL] " << error.what() << std::endl);
+        exit(-1);
+    }
+
+    _print_s_err("[FATAL] Unsupported options" << std::endl); 
+    exit(1);
+}
+
 int main(int argc, char* argv[]) 
 try {
+    // 参数处理
+    program_options po("lssserver.exe [option]");
+
+    po.add_option("-h, --help", "Show this message.");
+    //po.add_option("-v, --version", "Show current version.");
+    po.add_option("-c, --config", "Specify which configuration file "
+            "lssserver.exe should\nuse instead of the default.\n"
+            "If not specified, the default configuration file is\n"
+            "'server-config.json' in the current working directory");
+
+    po.store(argc, argv);
+
+    std::string server_config_file;
+    process_program_options(po, server_config_file);
+    _print_s("[INFO] configuration file: " << server_config_file << std::endl);
+
     // 加载配置文件
-    lproxy::server::config::get_instance().configure("server-config.json");
+    lproxy::server::config::get_instance().configure(server_config_file);
 
     _print_s("[INFO] start log output thread...\n");
     // 启动日志输出线程
