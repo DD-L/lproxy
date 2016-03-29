@@ -7,7 +7,7 @@
 #include <atomic>
 #include <boost/thread.hpp> // for boost::mutex
 #include <lss/session_local.h>
-#include <lss/config.h>
+#include <lss/config_local.h>
 #include <crypto/md5_crypto.h>
 #include <crypto/rsa_crypto.h>
 #include <except/except.h>

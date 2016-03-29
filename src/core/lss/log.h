@@ -12,10 +12,10 @@
 namespace lproxy {
 namespace log {
 
-enum Which { LOCAL = 0, SERVER = 1 };
+//enum Which { LOCAL = 0, SERVER = 1 };
 
 // function lproxy::log::output_thread
-void output_thread(Which which);
+void output_thread(const sdata_t& errlog_filename = "");
 
 
 // 返回一个 basename(filename) 的临时对象

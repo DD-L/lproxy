@@ -6,7 +6,7 @@
  ************************************************************************/
 #include <boost/thread.hpp> // for boost::mutex
 #include <lss/session_server.h>
-#include <lss/config.h>
+#include <lss/config_server.h>
 #include <crypto/aes_crypto.h>
 #include <except/except.h>
 
