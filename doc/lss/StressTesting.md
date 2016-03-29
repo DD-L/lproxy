@@ -138,7 +138,22 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 	219	  if (descriptor_data->shutdown_)
 	(gdb) 
 	(gdb) p descriptor_data
-	$1 = (*) 0x0
+	$1 = (boost::asio::detail::epoll_reactor::per_descriptor_data &) @0x17d1368: 0x0
+	(gdb) l
+	214	    return;
+	215	  }
+	216	
+	217	  mutex::scoped_lock descriptor_lock(descriptor_data->mutex_);
+	218	
+	219	  if (descriptor_data->shutdown_)
+	220	  {
+	221	    post_immediate_completion(op, is_continuation);
+	222	    return;
+	223	  }
+	(gdb) f
+	#0  0x0000000000416b2d in boost::asio::detail::epoll_reactor::start_op (this=0x17ceb40, op_type=0, descriptor=21, descriptor_data=@0x17d1368: 0x0, op=0x17d1740, is_continuation=false, 
+	    allow_speculative=true) at /opt/lproxy/src/core/lss/../../..//contrib/boost/boost_1_57_0/boost/asio/detail/impl/epoll_reactor.ipp:219
+	219	  if (descriptor_data->shutdown_)
 	(gdb) bt
 	#0  0x00000000004172dd in boost::asio::detail::epoll_reactor::start_op (this=0x1785fd0, op_type=0, descriptor=24, 
 	    descriptor_data=@0x17c12a8: 0x0, op=0x17bdff0, 
