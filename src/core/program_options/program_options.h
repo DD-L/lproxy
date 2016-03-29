@@ -42,12 +42,21 @@ public:
         // TODO
     }
 
+
+    void example(const std::string& message) {
+        m_examples.push_back(message); 
+    }
+
     const std::string show_help(const std::string& title = "") const {
         std::ostringstream message;
+        // show Title
         if (title != "") {
-            message << title << std::endl;
+            message << title << std::endl << std::endl;
         }
+        // show usage
         message << "Usage: " << m_usage << std::endl << std::endl;
+
+        // show options
         message << "Options: " << std::endl;
 
         for (auto& v : m_helpmessage) {
@@ -66,6 +75,14 @@ public:
                 message << "  " //<< std::left 
                     << std::setw(m_max_options_str_length) << ' ' << "  "
                     << *cit << std::endl;
+            }
+        }
+
+        // show example
+        if (m_examples.size()) {
+            message << std::endl << "Examples:" << std::endl;
+            for (auto& v : m_examples) {
+                message << "  " << v << std::endl;
             }
         }
         return message.str();
@@ -115,6 +132,7 @@ private:
     std::string    m_usage;
     std::size_t    m_max_options_str_length = 0;
     std::vector<opts_help_t> m_helpmessage;
+    std::vector<std::string> m_examples;
     int                      m_argc;
     std::vector<std::string> m_argv;
 };

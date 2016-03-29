@@ -50,6 +50,11 @@ int main(int argc, char* argv[]) {
     po.add_option("-h, --help", "Show this message.");
     po.add_option("-v, --version", "Show current version.");
     po.add_option("-p, --print", "Print a message.\ne.g. demo -p hello");
+
+    po.example("demo --help");
+    po.example("demo -v");
+    po.example("demo -p helloworld");
+
     po.store(argc, argv);
 
     process_program_options(po);
@@ -63,6 +68,7 @@ $ make clean; make
 
 $ ./bin/demo
 arg empty
+
 Usage: demo [option]
 
 Options:
@@ -70,9 +76,15 @@ Options:
   -v, --version  Show current version.
   -p, --print    Print a message.
                  e.g. demo -p hello
+
+Examples:
+  demo --help
+  demo -v
+  demo -p helloworld
 
 $ ./bin/demo -h
 this is title
+
 Usage: demo [option]
 
 Options:
@@ -80,6 +92,11 @@ Options:
   -v, --version  Show current version.
   -p, --print    Print a message.
                  e.g. demo -p hello
+
+Examples:
+  demo --help
+  demo -v
+  demo -p helloworld
 
 $ ./bin/demo --version
 ver: 0.1
