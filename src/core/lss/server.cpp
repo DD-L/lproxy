@@ -20,7 +20,7 @@ static void process_program_options(const program_options& po,
     }
     if (po.count("-h") || po.count("--help")) {
         std::string message = po.show_help(
-                "\"server\" side of \"lproxy service\"\n");
+                "\"server\" side of \"lproxy service\"");
         _print_s(message);
         exit(0);
     }
@@ -56,6 +56,9 @@ try {
             "lssserver.exe should\nuse instead of the default.\n"
             "If not specified, the default configuration file is\n"
             "'server-config.json' in the current working directory");
+
+    po.example("lssserver.exe");
+    po.example("lssserver.exe -c /path/to/server-config.json");
 
     po.store(argc, argv);
 

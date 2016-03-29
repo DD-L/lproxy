@@ -18,7 +18,7 @@ static void process_program_options(const program_options& po,
     }
     if (po.count("-h") || po.count("--help")) {
         std::string message = po.show_help(
-                "\"local\" side of \"lproxy service\"\n");
+                "\"local\" side of \"lproxy service\"");
         _print_s(message);
         exit(0);
     }
@@ -54,6 +54,9 @@ try {
             "lsslocal.exe should\nuse instead of the default.\n"
             "If not specified, the default configuration file is\n"
             "'local-config.json' in the current working directory");
+
+    po.example("lsslocal.exe");
+    po.example("lsslocal.exe -c /path/to/local-config.json");
 
     po.store(argc, argv);
 
