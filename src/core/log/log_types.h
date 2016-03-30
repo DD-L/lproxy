@@ -65,14 +65,14 @@
 namespace log_tools {
 	typedef boost::posix_time::ptime          ptime;
 	typedef boost::posix_time::microsec_clock microsec_clock;
-	typedef boost::thread::id                 pid_t;
+	typedef boost::thread::id                 tid_t;
 
 	// get the current time
 	const ptime local_time(void);
 	// boost::posix_time::ptime to std::string
 	const std::string time2string(const ptime& time_point);
 	// get the current thread id
-	const pid_t get_pid(void);
+	const tid_t get_tid(void);
 
 	// 
 	// global print lock
@@ -88,7 +88,7 @@ namespace log_tools {
 class LogVal {
 public:
 	typedef log_tools::ptime  ptime;
-	typedef log_tools::pid_t  pid_t;
+	typedef log_tools::tid_t  tid_t;
 	class	Extra;     // 附加数据接口类
 	class   ExtraNone; // Extra抽象类的实现子类
 
@@ -96,7 +96,7 @@ public:
 	ptime                  now;
 	LogType                log_type;
 	std::string            msg;
-	pid_t                  pid;
+	tid_t                  tid;
 	std::string            func_name;
 	std::string            file_name;
 	unsigned int           line_num;
@@ -136,23 +136,23 @@ public:
 	LogVal(const LogVal::ptime& time = log_tools::local_time(), 
 		const LogType& logtype = makelevel(WARN), 
 		const std::string& message = "",
-		const LogVal::pid_t& thread_id = log_tools::get_pid(),
+		const LogVal::tid_t& thread_id = log_tools::get_tid(),
 		const std::string& function_name = "UNKNOWN_FUNCTION",
 		const std::string& filename = "UNKNOWN_FILENAME",
 		const unsigned int& line = 0,
 		std::shared_ptr<Extra> extra_data = std::make_shared<ExtraNone>()) :
 				now(time), log_type(logtype), msg(message), 
-				pid(thread_id),	func_name(function_name), 
+				tid(thread_id),	func_name(function_name), 
 				file_name(filename), line_num(line), 
 				extra(extra_data) {}
 	LogVal(const LogVal& that):
 			now(that.now), log_type(that.log_type),
-			msg(that.msg), pid(that.pid), func_name(that.func_name),
+			msg(that.msg), tid(that.tid), func_name(that.func_name),
 			file_name(that.file_name), line_num(that.line_num),
 			extra(that.extra) {}
 	LogVal(LogVal&& that) :
 			now(std::move(that.now)), log_type(that.log_type),
-			msg(std::move(that.msg)), pid(std::move(that.pid)),
+			msg(std::move(that.msg)), tid(std::move(that.tid)),
 			func_name(std::move(that.func_name)),
 			file_name(std::move(that.file_name)), line_num(that.line_num),
 			extra(that.extra) {}
@@ -165,7 +165,7 @@ public:
 			now       = that.now;
 			log_type  = that.log_type;
 			msg       = that.msg;
-			pid       = that.pid;
+			tid       = that.tid;
 			func_name = that.func_name;
 			file_name = that.file_name;
 			line_num  = that.line_num;
@@ -178,7 +178,7 @@ public:
 			now       = std::move(that.now);
 			log_type  = that.log_type;
 			msg       = std::move(that.msg);
-			pid       = std::move(that.pid);
+			tid       = std::move(that.tid);
 			func_name = std::move(that.func_name);
 			file_name = std::move(that.file_name);
 			line_num  = that.line_num;

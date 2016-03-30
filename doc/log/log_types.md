@@ -34,14 +34,14 @@ MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 class LogVal {
 public:
 	typedef log_tools::ptime  ptime;
-	typedef log_tools::pid_t  pid_t;
+	typedef log_tools::tid_t  tid_t;
 	class Extra; // 扩展数据的抽象类
 	class ExtraNone; // Extra抽象类的实现子类，被用在LogVal的缺省构造函数参数中
 
 	ptime               now;       // 当前时间
 	LogType             log_type;  // 日志类型
 	std::string         msg;       // 日志正文
-	pid_t               pid;       // 当前线程id
+	tid_t               tid;       // 当前线程id
 	std::string         func_name; // 所在函数
 	std::string         file_name; // 所在文件
 	unsigned int        line_num;  // 所在行号
@@ -52,7 +52,7 @@ public:
 	LogVal(const LogVal::ptime& time = log_tools::local_time(), 
 		const LogType& logtype = makelevel(WARN), 
 		const std::string& message = "",
-		const LogVal::pid_t& thread_id = log_tools::get_pid(),
+		const LogVal::tid_t& thread_id = log_tools::get_tid(),
 		const std::string& function_name = "UNKNOWN_FUNCTION",
 		const std::string& filename = "UNKNOWN_FILENAME",
 		const unsigned int& line = 0,
@@ -121,8 +121,8 @@ LogVal val;
 buff.pop(val);
 std::cout << log_tools::time2string(val.now)
 	<< " [" << log_tools::logtype2string(val.log_type) 
-	<< "] " << val.msg << " [p:" 
-	<< val.pid << "] [F:" << val.func_name << "] " 
+	<< "] " << val.msg << " [t:" 
+	<< val.tid << "] [F:" << val.func_name << "] " 
 	<< val.file_name << ":" << val.line_num 
 	<< val.extra  // <-- 附加数据, 重写了流输出操作符 
 	// or 
@@ -153,7 +153,7 @@ public:
 <pre>
 typedef boost::posix_time::ptime          ptime;
 typedef boost::posix_time::microsec_clock microsec_clock;
-typedef boost::thread::id                 pid_t;
+typedef boost::thread::id                 tid_t;
 
 // get the current time
 const ptime local_time();
@@ -162,6 +162,6 @@ const ptime local_time();
 const std::string time2string(const ptime& time_point);
 
 // get the current thread id
-const pid_t get_pid();
+const tid_t get_tid();
 
 </pre>
