@@ -37,27 +37,27 @@ void test() {
 	LogStore& logstore = LogStore::get_mutable_instance();
 	logstore.push({ 
 			log_tools::local_time(), makelevel(INFO), "1", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({
 			log_tools::local_time(), makelevel(ERROR), "2", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
 			log_tools::local_time(), makelevel(FATAL), "3", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
 			log_tools::local_time(), makelevel(WARN), "4", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
 			log_tools::local_time(), makelevel(ERROR), "5", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	
@@ -67,8 +67,8 @@ void test() {
 		logstore.pop(val);
 		std::cout << log_tools::time2string(val.now)
 			<< " [" << val.log_type 
-			<< "] " << val.msg << " [p:" 
-			<< val.pid << "] [F:" << val.func_name << "] " 
+			<< "] " << val.msg << " [t:" 
+			<< val.tid << "] [F:" << val.func_name << "] " 
 			<< val.file_name << ":" << val.line_num 
 			// << val.extra // default "", 可以省略
 			<< std::endl;
@@ -102,27 +102,27 @@ void test_pointer() {
 	LogStore& logstore = LogStore::get_mutable_instance();
 	logstore.push( new LogVal { 
 			log_tools::local_time(), makelevel(INFO), "1", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push( new LogVal {
 			log_tools::local_time(), makelevel(ERROR), "2", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push( new LogVal { 
 			log_tools::local_time(), makelevel(FATAL), "3", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push( new LogVal { 
 			log_tools::local_time(), makelevel(WARN), "4", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push( new LogVal { 
 			log_tools::local_time(), makelevel(ERROR), "5", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	
@@ -132,8 +132,8 @@ void test_pointer() {
 		logstore.pop(val);
 		std::cout << log_tools::time2string(val->now)
 			<< " [" << val->log_type 
-			<< "] " << val->msg << " [p:" 
-			<< val->pid << "] [F:" << val->func_name << "] " 
+			<< "] " << val->msg << " [t:" 
+			<< val->tid << "] [F:" << val->func_name << "] " 
 			<< val->file_name << ":" << val->line_num 
 			// << val->extra // default "", 可以省略
 			<< std::endl;

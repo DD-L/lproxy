@@ -4,7 +4,7 @@
 
 void logging (
 		const LogType& log_type, const std::string& msg, 
-		const LogVal::pid_t& pid, const std::string& func_name, 
+		const LogVal::tid_t& tid, const std::string& func_name, 
 		const std::string& file_name, const unsigned int& line_num, 
 		std::shared_ptr<LogVal::Extra> extra 
 			= std::make_shared<LogVal::ExtraNone>()
@@ -12,7 +12,7 @@ void logging (
 
 void logging (
 		const LogType& log_type, std::string&& msg,
-		const LogVal::pid_t& pid, std::string&& func_name, 
+		const LogVal::tid_t& tid, std::string&& func_name, 
 		std::string&& file_name, const unsigned int& line_num, 
 		std::shared_ptr<LogVal::Extra> extra 
 			= std::make_shared<LogVal::ExtraNone>()
@@ -25,13 +25,13 @@ void logging (
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(TRACE), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__, __FILE__, __LINE__);} while (0)
 #define logtraceEx(log, shared_ptr_extra) \
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(TRACE), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__,__FILE__, __LINE__, shared_ptr_extra);} while (0)
 
 // debug
@@ -39,13 +39,13 @@ void logging (
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(DEBUG), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__, __FILE__, __LINE__);} while (0)
 #define logdebugEx(log, shared_ptr_extra) \
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(DEBUG), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__,__FILE__, __LINE__, shared_ptr_extra);} while (0)
 
 // info
@@ -53,13 +53,13 @@ void logging (
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(INFO), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__, __FILE__, __LINE__);} while (0)
 #define loginfoEx(log, shared_ptr_extra) \
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(INFO), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__,__FILE__, __LINE__, shared_ptr_extra);} while (0)
 
 // warn
@@ -67,13 +67,13 @@ void logging (
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(WARN), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__, __FILE__, __LINE__);} while (0)
 #define logwarnEx(log, shared_ptr_extra) \
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(WARN), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__,__FILE__, __LINE__, shared_ptr_extra);} while (0)
 
 // error
@@ -81,13 +81,13 @@ void logging (
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(ERROR), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__, __FILE__, __LINE__);} while (0)
 #define logerrorEx(log, shared_ptr_extra) \
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(ERROR), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__,__FILE__, __LINE__, shared_ptr_extra);} while (0)
 
 // fatal
@@ -95,13 +95,13 @@ void logging (
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(FATAL), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__, __FILE__, __LINE__);} while (0)
 #define logfatalEx(log, shared_ptr_extra) \
 		do {std::ostringstream __oss;\
 		(__oss << log);\
 		logging(makelevel(FATAL), std::move(__oss.str()), \
-				log_tools::get_pid(),\
+				log_tools::get_tid(),\
 				__func__,__FILE__, __LINE__, shared_ptr_extra);} while (0)
 
 #endif // LOG_H__0
