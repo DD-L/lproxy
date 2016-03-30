@@ -33,7 +33,7 @@ namespace log_tools {
 	/*
 	typedef boost::posix_time::ptime          ptime;
 	typedef boost::posix_time::microsec_clock microsec_clock;
-	typedef boost::thread::id                 pid_t;
+	typedef boost::thread::id                 tid_t;
 	*/
 	// get the current time
 	const ptime local_time() {
@@ -44,7 +44,7 @@ namespace log_tools {
 		return boost::posix_time::to_simple_string(time_point);
 	}
 	// get the current thread id
-	const pid_t get_pid() {
+	const tid_t get_tid() {
 		return boost::this_thread::get_id();
 	}
 

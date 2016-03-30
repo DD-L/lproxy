@@ -37,8 +37,8 @@ void pop() {
 		logmanager.pop(val);
 		std::cout << log_tools::time2string(val->now)
 			<< " [" << val->log_type 
-			<< "] " << val->msg << " [p:" 
-			<< val->pid << "] [F:" << val->func_name << "] " 
+			<< "] " << val->msg << " [t:" 
+			<< val->tid << "] [F:" << val->func_name << "] " 
 			<< val->file_name << ":" << val->line_num 
 			<< val->extra  // <-- 附加数据
 			<< std::endl;
