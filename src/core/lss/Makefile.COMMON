@@ -28,7 +28,8 @@ LIB_DYNAMIC_LIB := $(LOG_MODULE_DIR)/lib/liblog.so
 
 BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
 			  $(BOOST_LINK_DIR)/tprebuild.o \
-			  $(BOOST_LINK_DIR)/dateprebuild.o
+			  $(BOOST_LINK_DIR)/dateprebuild.o \
+			  $(BOOST_LINK_DIR)/fsprebuild.o
 
 
 COMMON_LINKS = $(BOOSTLINK) $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) \
