@@ -89,10 +89,15 @@ public:
     }
 
     void store(int argc, char** argv) {
+        assert(argc > 0);
         m_argc = argc; 
         for (int i = 0; i < argc; ++i) {
             m_argv.push_back(argv[i]);
         }
+    }
+
+    const std::vector<std::string> get_argv(void) const {
+        return m_argv;
     }
 
     bool count(const std::string& option) const {
@@ -101,8 +106,6 @@ public:
     }
 
     bool empty(void) const {
-        // *unix
-        // TODO
         return m_argc == 1;
     }
 
