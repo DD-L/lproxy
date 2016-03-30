@@ -46,22 +46,28 @@ static void process_program_options(const program_options& po,
 int main(int argc, char* argv[]) 
 try {
     // 参数处理
-    program_options po("lsslocal.exe [option]");
+    program_options* po_ptr = new program_options("lsslocal.exe [option]");
 
-    po.add_option("-h, --help", "Show this message.");
-    //po.add_option("-v, --version", "Show current version.");
-    po.add_option("-c, --config", "Specify which configuration file "
+    po_ptr->add_option("-h, --help", "Show this message.");
+    //po_ptr->add_option("-v, --version", "Show current version.");
+    po_ptr->add_option("-c, --config", "Specify which configuration file "
             "lsslocal.exe should\nuse instead of the default.\n"
             "If not specified, the default configuration file is\n"
             "'local-config.json' in the current working directory");
+    //po_ptr->add_option("-k, --keep-running", 
+    //        "Keep this program running. Restart immediately after\n"
+    //        "the program quit unexpectedly. ");
 
-    po.example("lsslocal.exe");
-    po.example("lsslocal.exe -c /path/to/local-config.json");
+    po_ptr->example("lsslocal.exe");
+    po_ptr->example("lsslocal.exe -c /path/to/local-config.json");
+    //po_ptr->example("lsslocal.exe -c /path/to/local-config.json -k");
 
-    po.store(argc, argv);
+    po_ptr->store(argc, argv);
 
     std::string local_config_file;
-    process_program_options(po, local_config_file);
+    process_program_options(*po_ptr, local_config_file);
+    delete po_ptr; po_ptr = nullptr;
+
     _print_s("[INFO] configuration file: " << local_config_file << std::endl);
 
     // 加载配置文件
