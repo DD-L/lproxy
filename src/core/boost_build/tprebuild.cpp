@@ -1,4 +1,6 @@
-#define BOST_ALL_NO_LIB
+#ifndef BOOST_ALL_NO_LIB
+#define BOOST_ALL_NO_LIB
+#endif
 #include <boost/thread.hpp>
 
 #ifdef _MSC_VER
