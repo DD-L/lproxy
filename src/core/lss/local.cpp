@@ -10,6 +10,8 @@
 #include <lss/log.h>
 #include <program_options/program_options.h>
 
+#include <boost/filesystem.hpp>
+#include <cstdlib>
 static void process_program_options(const program_options& po,
         std::string& local_config_file) {
     if (po.empty()) {
@@ -21,6 +23,42 @@ static void process_program_options(const program_options& po,
                 "\"local\" side of \"lproxy service\"");
         _print_s(message);
         exit(0);
+    }
+    if (po.count("-k") || po.count("--keep-running")) {
+        // step 1 检查当前程序目录中是否有 lkeep.exe 程序.
+        namespace fs = boost::filesystem;
+        const std::string keep_exe = "lkeep.exe";
+        auto&& argv = po.get_argv();
+
+        fs::path this_app(argv[0].begin(), argv[0].end());
+        fs::path&& keep_exe_path = this_app.parent_path() / "/" / keep_exe;
+
+        if (! fs::exists(keep_exe_path)) {
+            // 当前程序目录中没有 lkeep.exe
+            _print_s_err("[FATAL] " << keep_exe_path << " not exists! "
+                    "(Specified parameter \"-k\" or \"--keep-running\")" 
+                    << std::endl);
+            exit(-1);
+        }
+
+        // 为了使 keep_exe_path 在 win32 / Cygwin 下路径带引号, 
+        // 不采用 path::string() 的方式
+        std::ostringstream keep_exe_path_oss;
+        keep_exe_path_oss << keep_exe_path;
+        std::string&& keep_exe_path_str = keep_exe_path_oss.str();
+
+        // step 2 组装 lkeep.exe 的运行参数
+        std::string cmd_line = keep_exe_path_str;
+        for (auto& v : argv) {
+            if (v == "-k" || v == "--keep-running") continue;
+            cmd_line += (" " + v);
+        }
+        _print_s("[info] start a new process: " << cmd_line << std::endl);
+        // TODO
+        // https://github.com/BorisSchaeling/boost-process
+        // http://www.highscore.de/boost/process0.5/
+        // 以后要用 boost.process 替换 简陋粗糙的 ::system()
+        exit(::system(cmd_line.c_str())); // ::system 的返回值很讨厌
     }
     try {
         if (po.count("-c")) {
@@ -50,17 +88,18 @@ try {
 
     po_ptr->add_option("-h, --help", "Show this message.");
     //po_ptr->add_option("-v, --version", "Show current version.");
-    po_ptr->add_option("-c, --config", "Specify which configuration file "
-            "lsslocal.exe should\nuse instead of the default.\n"
+    po_ptr->add_option("-c, --config", 
+            "Specify which configuration file lsslocal.exe should\n"
+            "use instead of the default.\n"
             "If not specified, the default configuration file is\n"
             "'local-config.json' in the current working directory");
-    //po_ptr->add_option("-k, --keep-running", 
-    //        "Keep this program running. Restart immediately after\n"
-    //        "the program quit unexpectedly. ");
+    po_ptr->add_option("-k, --keep-running", 
+            "Keep this program running. Restart immediately after\n"
+            "the program quit unexpectedly.");
 
     po_ptr->example("lsslocal.exe");
     po_ptr->example("lsslocal.exe -c /path/to/local-config.json");
-    //po_ptr->example("lsslocal.exe -c /path/to/local-config.json -k");
+    po_ptr->example("lsslocal.exe -c /path/to/local-config.json -k");
 
     po_ptr->store(argc, argv);
 
