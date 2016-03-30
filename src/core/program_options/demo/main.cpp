@@ -23,6 +23,13 @@ void process_program_options(const program_options& po) {
         std::cout << "ver: 0.1" << std::endl;
         exit(0);
     }
+    if (po.count("-c") || po.count("--command")) {
+        for (auto& v : po.get_argv()) {
+            std::cout << v << " ";
+        }
+        std::cout << std::endl;
+        exit(0);
+    }
     try {
         if (po.count("-p")) {
             std::string value = po.get("-p");
@@ -50,10 +57,12 @@ int main(int argc, char* argv[]) {
     po_ptr->add_option("-h, --help", "Show this message.");
     po_ptr->add_option("-v, --version", "Show current version.");
     po_ptr->add_option("-p, --print", "Print a message.\ne.g. demo -p hello");
+    po_ptr->add_option("-c, --command", "Print current command.");
 
     po_ptr->example("demo --help");
     po_ptr->example("demo -v");
     po_ptr->example("demo -p helloworld");
+    po_ptr->example("demo -c");
 
     po_ptr->store(argc, argv);
 
@@ -77,11 +86,13 @@ Options:
   -v, --version  Show current version.
   -p, --print    Print a message.
                  e.g. demo -p hello
+  -c, --command  Print current command.
 
 Examples:
   demo --help
   demo -v
   demo -p helloworld
+  demo -c
 
 $ ./bin/demo -h
 this is title
@@ -93,11 +104,13 @@ Options:
   -v, --version  Show current version.
   -p, --print    Print a message.
                  e.g. demo -p hello
+  -c, --command  Print current command.
 
 Examples:
   demo --help
   demo -v
   demo -p helloworld
+  demo -c
 
 $ ./bin/demo --version
 ver: 0.1
@@ -110,5 +123,8 @@ Exception: program_options::parameter_error: -p
 
 $ ./bin/demo -xxxxx
 Unsupported options
+
+$ ./bin/demo -c
+./bin/demo -c
 
 */
