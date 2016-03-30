@@ -122,13 +122,13 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 	
 	```
 	bug 详情：
-	2016-Mar-27 06:37:45.694879 [DEBUG] unpack data from local: 5 1 0 3 12 77 77 77 2e 67 6f 6f 67 6c 65 61 70 69 73 2e 63 6f 6d 1 bb 	[pid:7ffff7fef780] session_server.cpp:231 left_read_handler
-	2016-Mar-27 06:37:45.694890 [DEBUG] start socks5_request_processing...	[pid:7ffff7fef780] session_server.cpp:269 left_read_handler
-	2016-Mar-27 06:37:45.694896 [DEBUG] lproxy::socks5::req::AddrType = domain	[pid:7ffff7fef780] session_server.cpp:937 socks5_request_processing
-	2016-Mar-27 06:37:45.694909 [DEBUG] lproxy::socks5::req::Addr.domain = www.googleapis.com	[pid:7ffff7fef780] session_server.cpp:943 socks5_request_processing
-	2016-Mar-27 06:37:45.694915 [DEBUG] lproxy::socks5::req::Port = 443	[pid:7ffff7fef780] session_server.cpp:967 socks5_request_processing
-	2016-Mar-27 06:37:45.694924 [DEBUG] lproxy::socks5::req::Cmd = TCP-CONNECT	[pid:7ffff7fef780] session_server.cpp:971 socks5_request_processing
-	2016-Mar-27 06:37:45.694956 [DEBUG] start async_read local...[pid:7ffff7fef780] session_server.cpp:282 left_read_handler
+	2016-Mar-27 06:37:45.694879 [DEBUG] unpack data from local: 5 1 0 3 12 77 77 77 2e 67 6f 6f 67 6c 65 61 70 69 73 2e 63 6f 6d 1 bb 	[tid:7ffff7fef780] session_server.cpp:231 left_read_handler
+	2016-Mar-27 06:37:45.694890 [DEBUG] start socks5_request_processing...	[tid:7ffff7fef780] session_server.cpp:269 left_read_handler
+	2016-Mar-27 06:37:45.694896 [DEBUG] lproxy::socks5::req::AddrType = domain	[tid:7ffff7fef780] session_server.cpp:937 socks5_request_processing
+	2016-Mar-27 06:37:45.694909 [DEBUG] lproxy::socks5::req::Addr.domain = www.googleapis.com	[tid:7ffff7fef780] session_server.cpp:943 socks5_request_processing
+	2016-Mar-27 06:37:45.694915 [DEBUG] lproxy::socks5::req::Port = 443	[tid:7ffff7fef780] session_server.cpp:967 socks5_request_processing
+	2016-Mar-27 06:37:45.694924 [DEBUG] lproxy::socks5::req::Cmd = TCP-CONNECT	[tid:7ffff7fef780] session_server.cpp:971 socks5_request_processing
+	2016-Mar-27 06:37:45.694956 [DEBUG] start async_read local...[tid:7ffff7fef780] session_server.cpp:282 left_read_handler
 	
 	Program received signal SIGSEGV, Segmentation fault.
 	0x00000000004172dd in boost::asio::detail::epoll_reactor::start_op (this=0x1785fd0, op_type=0, descriptor=24, 

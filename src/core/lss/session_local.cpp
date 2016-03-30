@@ -44,8 +44,8 @@ void session::start(void) {
 
 void session::close(void) {
         // TODO
-//2016-Mar-26 06:01:44.706102 [ERROR] Operation canceled close this, this = 0x1762340	[pid:7ffff65c3700] session_local.cpp:387 right_read_handler
-//2016-Mar-26 06:01:44.706117 [DEBUG] session::~session() this = 0x1762340	[pid:7ffff65c3700] session.h:25 ~session
+//2016-Mar-26 06:01:44.706102 [ERROR] Operation canceled close this, this = 0x1762340	[tid:7ffff65c3700] session_local.cpp:387 right_read_handler
+//2016-Mar-26 06:01:44.706117 [DEBUG] session::~session() this = 0x1762340	[tid:7ffff65c3700] session.h:25 ~session
 //terminate called without an active exception
 //
 //Program received signal SIGABRT, Aborted.

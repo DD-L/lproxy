@@ -86,8 +86,8 @@ sdata_t lproxy::log::output_format(const std::shared_ptr<LogVal>& val) {
         << " ["
         << std::right << std::setw(5)
         << val->log_type
-        << "] " << val->msg << "\t[pid:"
-        << val->pid << "] "
+        << "] " << val->msg << "\t[tid:"
+        << val->tid << "] "
         << lproxy::log::basename(val->file_name) 
         << ":" << val->line_num
         << ' ' << val->func_name

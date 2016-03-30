@@ -484,7 +484,7 @@ void session::left_read_handler(const boost::system::error_code& error,
 #ifdef LSS_DEBUG
         if (error == boost::asio::error::eof) {
             // TODO
-            _print_s_err("\n------------------------------------------------------------- this = " << this << "pid = " << std::hex << std::this_thread::get_id() <<"\n\n");
+            _print_s_err("\n------------------------------------------------------------- this = " << this << "tid = " << std::hex << std::this_thread::get_id() <<"\n\n");
         }
 #endif
         this->close();
