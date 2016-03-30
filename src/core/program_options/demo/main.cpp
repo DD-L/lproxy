@@ -46,19 +46,20 @@ void process_program_options(const program_options& po) {
 }
 
 int main(int argc, char* argv[]) {
-    program_options po("demo [option]");
-    po.add_option("-h, --help", "Show this message.");
-    po.add_option("-v, --version", "Show current version.");
-    po.add_option("-p, --print", "Print a message.\ne.g. demo -p hello");
+    program_options* po_ptr = new program_options("demo [option]");
+    po_ptr->add_option("-h, --help", "Show this message.");
+    po_ptr->add_option("-v, --version", "Show current version.");
+    po_ptr->add_option("-p, --print", "Print a message.\ne.g. demo -p hello");
 
-    po.example("demo --help");
-    po.example("demo -v");
-    po.example("demo -p helloworld");
+    po_ptr->example("demo --help");
+    po_ptr->example("demo -v");
+    po_ptr->example("demo -p helloworld");
 
-    po.store(argc, argv);
+    po_ptr->store(argc, argv);
 
-    process_program_options(po);
+    process_program_options(*po_ptr);
 
+    delete po_ptr;
     return 0;
 }
 
