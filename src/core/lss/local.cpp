@@ -9,9 +9,8 @@
 #include <thread>
 #include <lss/log.h>
 #include <program_options/program_options.h>
+#include <cstdlib> // for ::system()
 
-#include <boost/filesystem.hpp>
-#include <cstdlib>
 static void process_program_options(const program_options& po,
         std::string& local_config_file) {
     if (po.empty()) {
@@ -25,33 +24,23 @@ static void process_program_options(const program_options& po,
         exit(0);
     }
     if (po.count("-k") || po.count("--keep-running")) {
-        // step 1 检查当前程序目录中是否有 lkeep.exe 程序.
-        namespace fs = boost::filesystem;
-        const std::string keep_exe = "lkeep.exe";
         auto&& argv = po.get_argv();
-
-        fs::path this_app(argv[0].begin(), argv[0].end());
-        fs::path&& keep_exe_path = this_app.parent_path() / "/" / keep_exe;
-
-        if (! fs::exists(keep_exe_path)) {
-            // 当前程序目录中没有 lkeep.exe
-            _print_s_err("[FATAL] " << keep_exe_path << " not exists! "
+        std::string keep_exe;
+        const bool ret = lproxy::get_keep_exe_path(keep_exe, argv[0]);
+        if (ret == false) {
+            // keep_exe 不存在
+            _print_s_err("[FATAL] " << keep_exe << " not exists! "
                     "(Specified parameter \"-k\" or \"--keep-running\")" 
                     << std::endl);
-            exit(-1);
+            exit(-1); 
         }
-
-        // 为了使 keep_exe_path 在 win32 / Cygwin 下路径带引号, 
-        // 不采用 path::string() 的方式
-        std::ostringstream keep_exe_path_oss;
-        keep_exe_path_oss << keep_exe_path;
-        std::string&& keep_exe_path_str = keep_exe_path_oss.str();
-
-        // step 2 组装 lkeep.exe 的运行参数
-        std::string cmd_line = keep_exe_path_str;
-        for (auto& v : argv) {
-            if (v == "-k" || v == "--keep-running") continue;
-            cmd_line += (" " + v);
+        // 组装 lkeep.exe 的运行参数
+        std::string cmd_line = keep_exe + " --run "
+            // 修饰 argv[0]. 如果 argv[0] 路径有空格, 添加引号
+            + lproxy::adorn_appname(argv[0]);
+        for (auto&& cit = argv.cbegin() + 1; cit != argv.cend(); ++cit) {
+            if (*cit == "-k" || *cit == "--keep-running") continue;
+            cmd_line += (" " + *cit);
         }
         _print_s("[info] start a new process: " << cmd_line << std::endl);
         // TODO
@@ -92,7 +81,7 @@ try {
             "Specify which configuration file lsslocal.exe should\n"
             "use instead of the default.\n"
             "If not specified, the default configuration file is\n"
-            "'local-config.json' in the current working directory");
+            "'local-config.json' in the current working directory.");
     po_ptr->add_option("-k, --keep-running", 
             "Keep this program running. Restart immediately after\n"
             "the program quit unexpectedly.");

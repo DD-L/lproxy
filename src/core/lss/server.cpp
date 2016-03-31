@@ -11,6 +11,7 @@
 #include <lss/log.h>
 
 #include <program_options/program_options.h>
+#include <cstdlib> // for ::system()
 
 static void process_program_options(const program_options& po,
         std::string& server_config_file) {
@@ -23,6 +24,33 @@ static void process_program_options(const program_options& po,
                 "\"server\" side of \"lproxy service\"");
         _print_s(message);
         exit(0);
+    }
+    if (po.count("-k") || po.count("--keep-running")) {
+        auto&& argv = po.get_argv();
+        std::string keep_exe;
+        const bool ret = lproxy::get_keep_exe_path(keep_exe, argv[0]);
+        if (ret == false) {
+            // keep_exe 不存在
+            _print_s_err("[FATAL] " << keep_exe << " not exists! "
+                    "(Specified parameter \"-k\" or \"--keep-running\")" 
+                    << std::endl);
+            exit(-1); 
+        }
+        // 组装 lkeep.exe 的运行参数
+        std::string cmd_line = keep_exe + " --run " 
+            // 修饰 argv[0]. 如果 argv[0] 路径有空格, 添加引号
+            + lproxy::adorn_appname(argv[0]);
+
+        for (auto&& cit = argv.cbegin() + 1; cit != argv.cend(); ++cit) {
+            if (*cit == "-k" || *cit == "--keep-running") continue;
+            cmd_line += (" " + *cit);
+        }
+        _print_s("[info] start a new process: " << cmd_line << std::endl);
+        // TODO
+        // https://github.com/BorisSchaeling/boost-process
+        // http://www.highscore.de/boost/process0.5/
+        // 以后要用 boost.process 替换 简陋粗糙的 ::system()
+        exit(::system(cmd_line.c_str())); // ::system 的返回值很讨厌
     }
     try {
         if (po.count("-c")) {
@@ -52,13 +80,18 @@ try {
 
     po_ptr->add_option("-h, --help", "Show this message.");
     //po_ptr->add_option("-v, --version", "Show current version.");
-    po_ptr->add_option("-c, --config", "Specify which configuration file "
-            "lssserver.exe should\nuse instead of the default.\n"
+    po_ptr->add_option("-c, --config", 
+            "Specify which configuration file lssserver.exe should\n"
+            "use instead of the default.\n"
             "If not specified, the default configuration file is\n"
-            "'server-config.json' in the current working directory");
+            "'server-config.json' in the current working directory.");
+    po_ptr->add_option("-k, --keep-running", 
+            "Keep this program running. Restart immediately after\n"
+            "the program quit unexpectedly.");
 
     po_ptr->example("lssserver.exe");
     po_ptr->example("lssserver.exe -c /path/to/server-config.json");
+    po_ptr->example("lssserver.exe -c /path/to/server-config.json -k");
 
     po_ptr->store(argc, argv);
 

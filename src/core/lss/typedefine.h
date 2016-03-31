@@ -23,6 +23,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
+#include <boost/filesystem.hpp>
 
 namespace lproxy {
 
@@ -124,6 +125,56 @@ vdata_t get_vdata_from_lss_pack(T&& lss) {
     boost::asio::buffer_copy(boost::asio::buffer(_test), 
             std::forward<T>(lss).buffers());
     return _test;
+}
+
+/**
+ * @brief adorn_appname 修饰 appname 
+ *                      给 appname 路径添加引号, 去除 appname 路径有空格的影响
+ * @param appname
+ * @return 返回修饰后的结果, 一个 sdata_t 的临时对象
+ */
+static inline sdata_t adorn_appname(const boost::filesystem::path& appname) {
+    return sdata_t("\"" + appname.string() + "\"");
+}
+static inline sdata_t adorn_appname(boost::filesystem::path&& appname) {
+    return adorn_appname(appname);
+}
+static inline sdata_t adorn_appname(const sdata_t& appname) {
+    namespace fs = boost::filesystem;
+    return adorn_appname(fs::path(appname.begin(), appname.end()));
+}
+
+/**
+ * @brief  get_keep_exe_path. 获取 keep_exe
+ * @param  keep_exe.          类型: sdata_t&       [out]
+ * @param  argv0.             类型: const sdata_t& [in]  主函数参数argv[0]
+ * @return 成功返回 true, 失败或 keep_exe 文件不存在返回 false.
+*/
+static inline bool get_keep_exe_path(sdata_t& keep_exe, const sdata_t& argv0) {
+    const sdata_t _keep_exe = "lkeep.exe";
+    namespace fs = boost::filesystem;
+
+    // 修饰 keep_exe
+    fs::path this_app(argv0.begin(), argv0.end());
+    fs::path this_app_path = this_app.remove_filename();
+    fs::path keep_exe_path;
+    if (this_app_path.string() == "") {
+        // 处理: 不带路径信息的运行了程序, 比如在
+        // 1. windows 下直接运行 > app.exe
+        // 2. linux 下 将 . 配置到 PATH 中
+        //      $ export PATH=$PATH:.
+        //      $ app.exe
+        keep_exe_path.assign(_keep_exe.begin(), _keep_exe.end());
+    }
+    else {
+        keep_exe_path = this_app_path / "/" / _keep_exe;
+    }
+
+    // 给路径加引号
+    keep_exe = adorn_appname(keep_exe_path);
+
+    // 检测 keep_exe 是否存在.
+    return fs::exists(keep_exe_path);
 }
 
 
