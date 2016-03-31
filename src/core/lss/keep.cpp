@@ -133,15 +133,17 @@ int main(int argc, char* argv[]) {
 
     po_ptr->add_option("-h, --help", "Show this message.");
     po_ptr->add_option("-r, --run      <command ...>", 
-            "Run a command line. the function finds command\ninterpreter:\n"
+            "Run a command line.\n"
+            "the function finds command interpreter:\n"
             "e.g.\n"
-            "* linux: '/bin/sh'\n"
-            "* Windows/DOS: 'COMMAND.COM'\n"
-            "* Windows NT: 'CMD.EXE'");
+            " * linux: '/bin/sh'\n"
+            " * Windows/DOS: 'COMMAND.COM'\n"
+            " * Windows NT: 'CMD.EXE'");
     po_ptr->add_option("-i, --interval <milliseconds>",
             "Milliseconds to wait between two sessions.");
     po_ptr->add_option("-m, --max      <times>",
-            "Maximum number of cycles. the default value is\ninfinite.");
+            "Maximum number of cycles. the default value is\n"
+            "infinite.");
 
     po_ptr->example("lkeep.exe --help");
     po_ptr->example("lkeep.exe --run echo hello world");
