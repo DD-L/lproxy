@@ -93,6 +93,9 @@ static inline void process_program_options(const program_options& po,
                     pos_flag = true; 
                 }
             }
+            // 参数合法性检查, 如果 get 不到值,
+            // 下面语句会使程序抛出 parameter_error 异常
+            po.get("-r"); po.get("--run");
         }
         else {
             std::cerr << "[FATAL] Unsupported options" << std::endl;
@@ -109,15 +112,19 @@ static inline void process_program_options(const program_options& po,
 void do_loop(const arg_t& arg) {
     int loop = 0;
     while (true) {
-       ::system(arg.command_line.c_str());
-       if (arg.interval > 0) {
-           std::this_thread::sleep_for(std::chrono::milliseconds(arg.interval));
-       }
-       if (arg.max_cycles > 0) {
-           if (++loop >= arg.max_cycles) {
-               break;
-           }
-       }
+        // TODO
+        // https://github.com/BorisSchaeling/boost-process
+        // http://www.highscore.de/boost/process0.5/
+        // 以后要用 boost.process 替换 简陋粗糙的 ::system()
+        ::system(arg.command_line.c_str());
+        if (arg.interval > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(arg.interval));
+        }
+        if (arg.max_cycles > 0) {
+            if (++loop >= arg.max_cycles) {
+                break;
+            }
+        }
     }
 }
 
@@ -146,13 +153,6 @@ int main(int argc, char* argv[]) {
     arg_t arg;
     process_program_options(*po_ptr, arg);
     delete po_ptr; po_ptr = nullptr;
-
-    /*
-    std::cout << "----------" << std::endl;
-    std::cout << arg.command_line << std::endl;
-    std::cout << arg.interval     << std::endl;
-    std::cout << arg.max_cycles   << std::endl;
-    */
 
     do_loop(arg);
     return 0;
