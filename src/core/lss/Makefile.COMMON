@@ -37,6 +37,7 @@ COMMON_LINKS = $(BOOSTLINK) $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) \
 
 LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o $(TMP)/config_local.o $(TMP)/log.o $(COMMON_LINKS)
 SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(TMP)/config_server.o $(TMP)/log.o $(COMMON_LINKS)
+KEEP_LINK = $(TMP)/keep.o
 
 
 CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
@@ -57,11 +58,12 @@ CRYPTO_DYNAMIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.so
 
 LOCAL  = $(BIN)/lsslocal.exe 
 SERVER = $(BIN)/lssserver.exe
+KEEP   = $(BIN)/lkeep.exe
 test_clinet = $(BIN)/test_client.exe
 
 all: init target
 
-target: $(LOCAL) $(SERVER) $(test_clinet) 
+target: $(LOCAL) $(SERVER) $(KEEP) $(test_clinet) 
 
 
 init:
@@ -83,6 +85,10 @@ $(LOCAL): $(LOCAL_LINK)
 	$(CXX) $^ -o $@  $(LIBS)
 
 $(SERVER): $(SERVER_LINK)
+	#$(CXX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
+
+$(KEEP): $(KEEP_LINK)
 	#$(CXX) $^ -o $@  -static  $(LIBS)
 	$(CXX) $^ -o $@  $(LIBS)
 
