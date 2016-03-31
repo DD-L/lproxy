@@ -80,7 +80,7 @@ try {
 
     po_ptr->add_option("-h, --help", "Show this message.");
     //po_ptr->add_option("-v, --version", "Show current version.");
-    po_ptr->add_option("-c, --config", 
+    po_ptr->add_option("-c, --config <profile>", 
             "Specify which configuration file lssserver.exe should\n"
             "use instead of the default.\n"
             "If not specified, the default configuration file is\n"
