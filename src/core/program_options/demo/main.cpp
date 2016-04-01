@@ -31,6 +31,17 @@ void process_program_options(const program_options* po) {
         delete po; po = nullptr;
         exit(0);
     }
+    /*
+    if (po->count("-s") || po->count("--sizeof-this")) {
+        std::cout << "sizeof (program_options) = " << sizeof (program_options)
+            << std::endl;
+        std::cout << "sizeof (int) = " << sizeof (int) << std::endl;
+        std::cout << "sizeof (void*) = " << sizeof (void*) << std::endl;
+
+        delete po; po = nullptr;
+        exit(0);
+    }
+    */
     if (po->count("-c") || po->count("--command")) {
         for (auto& v : po->get_argv()) {
             std::cout << v << " ";
@@ -59,7 +70,6 @@ void process_program_options(const program_options* po) {
         exit(-1);
     }
 
-
     std::cerr << "Unsupported options" << std::endl;
 
     delete po; po = nullptr;
@@ -72,6 +82,7 @@ int main(int argc, char* argv[]) {
     po->add_option("-v, --version", "Show current version.");
     po->add_option("-p, --print   <something>", "Print a message.\ne.g. demo -p hello");
     po->add_option("-c, --command", "Print current command.");
+    //po->add_option("-s, --sizeof-this", "printf(\"%d\", sizeof (program_options));");
 
     po->example("demo --help");
     po->example("demo -v");
