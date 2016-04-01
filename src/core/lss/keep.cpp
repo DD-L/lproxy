@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include <program_options/program_options.h>
-#include <cstdlib> // for ::system()
+#include <cstdlib> // for ::system() exit()
 #include <thread>
 #include <chrono>
 #include <boost/lexical_cast.hpp>
@@ -108,6 +108,33 @@ static inline void process_program_options(const program_options& po,
     }
 }
 
+void option(int argc, char** argv, arg_t& arg) {
+    assert(argv);
+
+    program_options po("lkeep.exe [option]");    
+
+    po.add_option("-h, --help", "Show this message.");
+    po.add_option("-r, --run      <command ...>", 
+            "Run a command line.\n"
+            "the function finds command interpreter:\n"
+            "e.g.\n"
+            " * linux: '/bin/sh'\n"
+            " * Windows/DOS: 'COMMAND.COM'\n"
+            " * Windows NT: 'CMD.EXE'");
+    po.add_option("-i, --interval <milliseconds>",
+            "Milliseconds to wait between two sessions.");
+    po.add_option("-m, --max      <times>",
+            "Maximum number of cycles. the default value is\n"
+            "infinite.");
+
+    po.example("lkeep.exe --help");
+    po.example("lkeep.exe --run echo hello world");
+    po.example("lkeep.exe -i 1000 -r echo hello world");
+    po.example("lkeep.exe -i 1000 -m 5 -r echo hello world");
+
+    po.store(argc, argv);
+    process_program_options(po, arg);
+}
 
 void do_loop(const arg_t& arg) {
     int loop = 0;
@@ -129,32 +156,8 @@ void do_loop(const arg_t& arg) {
 }
 
 int main(int argc, char* argv[]) {
-    program_options* po_ptr = new program_options("lkeep.exe [option]");    
-
-    po_ptr->add_option("-h, --help", "Show this message.");
-    po_ptr->add_option("-r, --run      <command ...>", 
-            "Run a command line.\n"
-            "the function finds command interpreter:\n"
-            "e.g.\n"
-            " * linux: '/bin/sh'\n"
-            " * Windows/DOS: 'COMMAND.COM'\n"
-            " * Windows NT: 'CMD.EXE'");
-    po_ptr->add_option("-i, --interval <milliseconds>",
-            "Milliseconds to wait between two sessions.");
-    po_ptr->add_option("-m, --max      <times>",
-            "Maximum number of cycles. the default value is\n"
-            "infinite.");
-
-    po_ptr->example("lkeep.exe --help");
-    po_ptr->example("lkeep.exe --run echo hello world");
-    po_ptr->example("lkeep.exe -i 1000 -r echo hello world");
-    po_ptr->example("lkeep.exe -i 1000 -m 5 -r echo hello world");
-
-    po_ptr->store(argc, argv);
-    
     arg_t arg;
-    process_program_options(*po_ptr, arg);
-    delete po_ptr; po_ptr = nullptr;
+    option(argc, argv, arg);
 
     do_loop(arg);
     return 0;

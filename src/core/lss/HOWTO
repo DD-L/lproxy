@@ -3,6 +3,7 @@
     target:
         ./bin/lsslocal.exe
         ./bin/lssserver.exe
+        ./bin/lkeep.exe
 
     Command:
         Build in linux:
@@ -11,3 +12,9 @@
         Build in Cygwin:
         $ make -f Makefile.Cygwin -j 4
         
+2. Run
+    
+    Command:
+        $ ./bin/lsslocal.exe --help
+        $ ./bin/lssserver.exe --help
+        $ ./bin/lkeep.exe --help

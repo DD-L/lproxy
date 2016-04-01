@@ -11,7 +11,7 @@
 #include <lss/log.h>
 
 #include <program_options/program_options.h>
-#include <cstdlib> // for ::system()
+#include <cstdlib> // for ::system() exit()
 
 static void process_program_options(const program_options& po,
         std::string& server_config_file) {
@@ -73,32 +73,35 @@ static void process_program_options(const program_options& po,
     exit(1);
 }
 
-int main(int argc, char* argv[]) 
-try {
+void option(int argc, char** argv, std::string& server_config_file) {
+    assert(argv);
     // 参数处理
-    program_options* po_ptr = new program_options("lssserver.exe [option]");
+    program_options po("lssserver.exe [option]");
 
-    po_ptr->add_option("-h, --help", "Show this message.");
-    //po_ptr->add_option("-v, --version", "Show current version.");
-    po_ptr->add_option("-c, --config <profile>", 
+    po.add_option("-h, --help", "Show this message.");
+    //po.add_option("-v, --version", "Show current version.");
+    po.add_option("-c, --config <profile>", 
             "Specify which configuration file lssserver.exe should\n"
             "use instead of the default.\n"
             "If not specified, the default configuration file is\n"
             "'server-config.json' in the current working directory.");
-    po_ptr->add_option("-k, --keep-running", 
+    po.add_option("-k, --keep-running", 
             "Keep this program running. Restart immediately after\n"
             "the program quit unexpectedly.");
 
-    po_ptr->example("lssserver.exe");
-    po_ptr->example("lssserver.exe -c /path/to/server-config.json");
-    po_ptr->example("lssserver.exe -c /path/to/server-config.json -k");
+    po.example("lssserver.exe");
+    po.example("lssserver.exe -c /path/to/server-config.json");
+    po.example("lssserver.exe -c /path/to/server-config.json -k");
 
-    po_ptr->store(argc, argv);
+    po.store(argc, argv);
+    process_program_options(po, server_config_file);
+}
 
+int main(int argc, char* argv[]) 
+try {
+    // get server_config_file
     std::string server_config_file;
-    process_program_options(*po_ptr, server_config_file);
-    delete po_ptr; po_ptr = nullptr;
-
+    option(argc, argv, server_config_file);
     _print_s("[INFO] configuration file: " << server_config_file << std::endl);
 
     // 加载配置文件
