@@ -195,10 +195,12 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 
 如果要关闭由 `-k` 或 `--keep-running` 启动的 lss 程序
 * 在 linux 上可以使用下面命令来关闭 (如果失败, 请检查用户权限):
+
 	```shell
 	kill -9 $(ps aux | grep 'lss\w\{1,6\}\.exe' | grep -v grep | awk '{print $2}')
-	```` 
+	```
 * 在 windows 上可以使用下面命令来关闭 (以管理员身份运行 cmd.exe): 
-	```bat
+
+	```
 	taskkill /f /im lkeep.exe /t && taskkill /f /im lsslocal.exe /t && taskkill /f /im lssserver.exe /t
 	```
