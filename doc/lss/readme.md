@@ -10,5 +10,5 @@
 
 	* [pdf](./lproxy.pdf) 
 	* [svg](./lproxy.svg)
-
-		![process](https://raw.githubusercontent.com/DD-L/lproxy/lss/doc/lss/lproxy.svg)
+	
+	![lproxy](./lproxy.png)
