@@ -16,7 +16,8 @@ std::priority_queue 的堆排序算法不符合日志库设计需求，这里特
 
 
 比如，针对当前日志库设计：
-<pre>
+
+```cpp
 优先成员指针mp 这样定义:
 LogType LogVal::* mp = &LogVal::log_type;
 
@@ -37,15 +38,14 @@ std::vector< LogType > vfactor(f, f + 2);
 
 如果优先因子为空, 则日志弹出顺序和容器的元素存储顺序相同:
 {1, INFO} {2, WARN} {3, ERROR} {4, FATAL} {5, FATAL} {6, ERROR}
-
-</pre>
+```
 
 有关 LogType 和 LogVal，请移步[here](./log_types.md)
 
 ## log_tools::priority_queue类摘要
 
 ```cpp
-template < typename value_type, typename PriorityFactor >
+template <typename value_type, typename PriorityFactor>
 class priority_queue {
 public:
 	// init/settings
@@ -88,14 +88,14 @@ public:
 	#include "log_types.h"      // src/log/log_types.h
 	#include "priority_queue.h" // src/log/priority_queue.h
 	#include "store.h"          // src/store/store.h
-	typedef log_tools::priority_queue< LogVal, LogType > LogQueue;
+	typedef log_tools::priority_queue<LogVal, LogType> LogQueue;
 	```
 
 * 初始化优先因子
 	1. 优先因子为空, 输出顺序同输入的顺序，FIFO
 
 		```cpp
-		std::vector< LogType > vfactor;
+		std::vector<LogType> vfactor;
 		//assert(vfactor.empty());
 		```
 
