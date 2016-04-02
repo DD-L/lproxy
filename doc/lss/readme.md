@@ -1,14 +1,12 @@
 # lss
 
-* 简单介绍
+* [lss 包结构介绍](./pack.md)
 
-* [lss 包结构](./pack.md)
-
-* [压力(并发)测试](./StressTesting.md)
-
-* lss 基本结构 及 session
+* lss 基本架构 及其 session 大致流程.
 
 	* [pdf](./lproxy.pdf) 
 	* [svg](./lproxy.svg)
 	
 	![lproxy](./lproxy.png)
+
+* [压力(并发)测试](./StressTesting.md)
