@@ -62,9 +62,9 @@ void create_logs() {
 
 	// mylevel
 	make_mylevel();
-	logging(makelevel(MyLevel1), "7 test MyLevel1", log_tools::get_pid(),
+	logging(makelevel(MyLevel1), "7 test MyLevel1", log_tools::get_tid(),
 			__func__, __FILE__, __LINE__);
-	logging(makelevel(MyLevel2), "7 test MyLevel2", log_tools::get_pid(),
+	logging(makelevel(MyLevel2), "7 test MyLevel2", log_tools::get_tid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test MyLevel2", 700));
 }

@@ -116,27 +116,27 @@ public:
 	
 	logstore.push({ 
 			log_tools::local_time(), INFO, "1", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({
 			log_tools::local_time(), ERROR, "2", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
 			log_tools::local_time(), FATAL, "3", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
 			log_tools::local_time(), WARN, "4", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	logstore.push({ 
 			log_tools::local_time(), ERROR, "5", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__ 
 	});
 	
@@ -147,8 +147,8 @@ public:
 		logstore.pop(val);
 		std::cout << log_tools::time2string(val.now)
 			<< " [" << log_tools::logtype2string(val.log_type) 
-			<< "] " << val.msg << " [pid:" 
-			<< val.pid << "] [FUNC:" << val.func_name << "] " 
+			<< "] " << val.msg << " [tid:" 
+			<< val.tid << "] [FUNC:" << val.func_name << "] " 
 			<< val.file_name << ":" << val.line_num << std::endl;
 	}
 	</pre>
@@ -156,27 +156,27 @@ public:
 * 则针对以上3列举的3种初始化优先因子的方式的输出结果：
 	1. 优先因子为空
 		<pre>
-		2015-Aug-12 23:51:39.325037 [INFO ] 1 [pid:0x20000038] [FUNC:test] demo.cpp:38
-		2015-Aug-12 23:51:39.326037 [ERROR] 2 [pid:0x20000038] [FUNC:test] demo.cpp:43
-		2015-Aug-12 23:51:39.326037 [FATAL] 3 [pid:0x20000038] [FUNC:test] demo.cpp:48
-		2015-Aug-12 23:51:39.326037 [WARN ] 4 [pid:0x20000038] [FUNC:test] demo.cpp:53
-		2015-Aug-12 23:51:39.326037 [ERROR] 5 [pid:0x20000038] [FUNC:test] demo.cpp:58
+		2015-Aug-12 23:51:39.325037 [INFO ] 1 [tid:0x20000038] [FUNC:test] demo.cpp:38
+		2015-Aug-12 23:51:39.326037 [ERROR] 2 [tid:0x20000038] [FUNC:test] demo.cpp:43
+		2015-Aug-12 23:51:39.326037 [FATAL] 3 [tid:0x20000038] [FUNC:test] demo.cpp:48
+		2015-Aug-12 23:51:39.326037 [WARN ] 4 [tid:0x20000038] [FUNC:test] demo.cpp:53
+		2015-Aug-12 23:51:39.326037 [ERROR] 5 [tid:0x20000038] [FUNC:test] demo.cpp:58
 		</pre>
 	2. 优先因子元素只有一个: FATAL
 		<pre>
-		2015-Aug-12 23:51:39.326037 [FATAL] 3 [pid:0x20000038] [FUNC:test] demo.cpp:48
-		2015-Aug-12 23:51:39.325037 [INFO ] 1 [pid:0x20000038] [FUNC:test] demo.cpp:38
-		2015-Aug-12 23:51:39.326037 [ERROR] 2 [pid:0x20000038] [FUNC:test] demo.cpp:43
-		2015-Aug-12 23:51:39.326037 [WARN ] 4 [pid:0x20000038] [FUNC:test] demo.cpp:53
-		2015-Aug-12 23:51:39.326037 [ERROR] 5 [pid:0x20000038] [FUNC:test] demo.cpp:58
+		2015-Aug-12 23:51:39.326037 [FATAL] 3 [tid:0x20000038] [FUNC:test] demo.cpp:48
+		2015-Aug-12 23:51:39.325037 [INFO ] 1 [tid:0x20000038] [FUNC:test] demo.cpp:38
+		2015-Aug-12 23:51:39.326037 [ERROR] 2 [tid:0x20000038] [FUNC:test] demo.cpp:43
+		2015-Aug-12 23:51:39.326037 [WARN ] 4 [tid:0x20000038] [FUNC:test] demo.cpp:53
+		2015-Aug-12 23:51:39.326037 [ERROR] 5 [tid:0x20000038] [FUNC:test] demo.cpp:58
 		</pre>
 	3. 优先因子元素有2个: FATAL 和 ERROR
 		<pre>
-		2015-Aug-12 23:51:39.326037 [FATAL] 3 [pid:0x20000038] [FUNC:test] demo.cpp:48
-		2015-Aug-12 23:51:39.326037 [ERROR] 2 [pid:0x20000038] [FUNC:test] demo.cpp:43
-		2015-Aug-12 23:51:39.326037 [ERROR] 5 [pid:0x20000038] [FUNC:test] demo.cpp:58
-		2015-Aug-12 23:51:39.325037 [INFO ] 1 [pid:0x20000038] [FUNC:test] demo.cpp:38
-		2015-Aug-12 23:51:39.326037 [WARN ] 4 [pid:0x20000038] [FUNC:test] demo.cpp:53
+		2015-Aug-12 23:51:39.326037 [FATAL] 3 [tid:0x20000038] [FUNC:test] demo.cpp:48
+		2015-Aug-12 23:51:39.326037 [ERROR] 2 [tid:0x20000038] [FUNC:test] demo.cpp:43
+		2015-Aug-12 23:51:39.326037 [ERROR] 5 [tid:0x20000038] [FUNC:test] demo.cpp:58
+		2015-Aug-12 23:51:39.325037 [INFO ] 1 [tid:0x20000038] [FUNC:test] demo.cpp:38
+		2015-Aug-12 23:51:39.326037 [WARN ] 4 [tid:0x20000038] [FUNC:test] demo.cpp:53
 		</pre>
 
 

@@ -42,8 +42,8 @@ void logoutput_thread(void) {
 					<< " [" 
 					<< std::right << std::setw(5)
 					<< val->log_type
-					<< "] " << val->msg << "\t[pid:" 
-					<< val->pid << "] @"
+					<< "] " << val->msg << "\t[tid:" 
+					<< val->tid << "] @"
 					<< val->file_name << ":" << val->line_num 
 					<< ' ' << val->func_name 
 					<< val->extra

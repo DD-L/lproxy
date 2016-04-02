@@ -50,25 +50,25 @@ void test() {
 	LogStore& logstore = LogStore::get_mutable_instance();
 	logstore.push({ 
 			log_tools::local_time(), makelevel(INFO), "1", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test1", 100)
 	});
 	logstore.push({ 
 			log_tools::local_time(), makelevel(WARN), "2", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test2", 200)
 	});
 	logstore.push({ 
 			log_tools::local_time(), makelevel(FATAL), "3", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test3", 300)
 	});
 	logstore.push({ 
 			log_tools::local_time(), makelevel(DEBUG), "4", 
-			log_tools::get_pid(),
+			log_tools::get_tid(),
 			__func__, __FILE__, __LINE__, 
 			std::make_shared<LogValExtraExample>("test4", 400)
 	});
@@ -78,8 +78,8 @@ void test() {
 		logstore.pop(val);
 		std::cout << log_tools::time2string(val.now)
 			<< " [" << val.log_type 
-			<< "] " << val.msg << " [p:" 
-			<< val.pid << "] [F:" << val.func_name << "] " 
+			<< "] " << val.msg << " [t:" 
+			<< val.tid << "] [F:" << val.func_name << "] " 
 			<< val.file_name << ":" << val.line_num 
 			//<< *val.extra  // <-- 附加数据
 			<< val.extra  // <-- 附加数据
