@@ -19,7 +19,7 @@ MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 
 有关 `MAKE_LOGLEVEL` 的使用详情，移步这里 [here](./loglevel.md)
 
-推荐使用方式:
+推荐的使用方式:
  
 | 级别 | 含义                                        |
 |------|-------------------------------------------- |
@@ -54,14 +54,14 @@ public:
 
 	// 缺省构造 / 拷贝构造 / operator= / 析构
 	virtual ~LogVal() {}
-	LogVal(const LogVal::ptime& time        = log_tools::local_time(), 
-		const LogType& logtype              = makelevel(WARN), 
-		const std::string& message          = "",
-		const LogVal::tid_t& thread_id      = log_tools::get_tid(),
-		const std::string& function_name    = "UNKNOWN_FUNCTION",
-		const std::string& filename         = "UNKNOWN_FILENAME",
-		const unsigned int& line            = 0,
-		std::shared_ptr< Extra > extra_data = std::make_shared< ExtraNone >());
+	LogVal(const LogVal::ptime& time      = log_tools::local_time(), 
+		const LogType& logtype            = makelevel(WARN), 
+		const std::string& message        = "",
+		const LogVal::tid_t& thread_id    = log_tools::get_tid(),
+		const std::string& function_name  = "UNKNOWN_FUNCTION",
+		const std::string& filename       = "UNKNOWN_FILENAME",
+		const unsigned int& line          = 0,
+		std::shared_ptr<Extra> extra_data = std::make_shared<ExtraNone>());
 	LogVal(const LogVal& that);
 	LogVal(LogVal&& that);
 	LogVal& operator= (const LogVal& that);
