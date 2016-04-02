@@ -189,4 +189,16 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 	直到这次测试结束，那个 已知的 Bug 依然没有复现，遗留。测试时间：2016-03-27
 
 
-后记：对于程序意外退出，目前有一个暂时性的解决方案就是在 执行 lsslocal.exe 或 lssserver.exe 时，添加运行参数 `-k` 或 `--keep-runing`, 该参数会使得 lproxy 服务在退出后重新被拉起。可用 `--help` 查看使用帮助。
+后记：
+
+对于程序意外退出，目前有一个暂时性的解决方案就是在 执行 lsslocal.exe 或 lssserver.exe 时，添加运行参数 `-k` 或 `--keep-runing`, 该参数会使得 lproxy 服务在退出后重新被拉起。 可用 `--help` 查看使用帮助。
+
+如果要关闭由 `-k` 或 `--keep-running` 启动的 lss 程序
+* 在 linux 上可以使用下面命令来关闭 (如果失败, 请检查用户权限):
+	```shell
+	kill -9 $(ps aux | grep 'lss\w\{1,6\}\.exe' | grep -v grep | awk '{print $2}')
+	```` 
+* 在 windows 上可以使用下面命令来关闭 (以管理员身份运行 cmd.exe): 
+	```bat
+	taskkill /f /im lkeep.exe /t && taskkill /f /im lsslocal.exe /t && taskkill /f /im lssserver.exe /t
+	```
