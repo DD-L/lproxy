@@ -4,7 +4,12 @@ lproxy
 
 ## store
 
-* [Store](./store/store.md)
+1. test
+	* [test](../src/core/store/test)
+
+2. 详细文档
+	* [Store](./store/store.md)
+	* [Store::push & Store::pop 性能测试](../src/core/store/test/testscript/readme.md)
 
 ## log
 
