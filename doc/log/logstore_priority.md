@@ -30,3 +30,5 @@ private:
 	typedef log_tools::priority_queue<LogVal*, LogType> LogQueue;
 };
 ```
+
+注意，这里的 pop 方法在执行时，如果遇到底层容器元素为空的情况，会一直阻塞线程，直到不为空。

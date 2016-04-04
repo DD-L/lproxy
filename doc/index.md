@@ -18,9 +18,9 @@ lproxy
 
 	* [log_types](./log/log_types.md)
 	* [loglevel](./log/loglevel.md) (以及被 [遗弃](./log/loglevel.old.md) 的版本)
-	* [LogStoreInterface](./log/logstoreinterface.h)
+	* [LogStoreInterface](./log/logstoreinterface.md)
 	* [LogStore_priority](./log/logstore_priority.md)
-	* [LogStore_lockfree](./log/logmanager.md)
+	* [LogStore_lockfree](./log/logstore_lockfree.md)
 	* [log_tools::priority_queue](./log/priority_queue.md)
 	* [LogManager](./log/logmanager.md)
 	* [logging](./log/logging.md)
