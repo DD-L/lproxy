@@ -14,7 +14,7 @@
  *		优先成员指针mp 这样定义:
  *		LogType LogVal::* mp = &LogVal::log_type;
  *		优先因子vfactor这样定义:
- *		LogType f[2] = {FATAL, ERROR}; 
+ *		LogType f[2] = {makelevel(FATAL), makelevel(ERROR)}; 
  *		vector<LogType> vfactor(f, f +2);
  *
  *		若日志插入顺序是：
