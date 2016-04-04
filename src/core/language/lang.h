@@ -3,39 +3,40 @@
 
 #include <string>
 #include <map>
-//using std::string;
+#include <memory>
+#include <assert.h>
 
-struct Lang {
+struct Lang: std::enable_shared_from_this<Lang> {
 	Lang(const std::string& str_key) : _key(str_key) {}
-	Lang(void) {}
+	Lang(void) = default;
 	operator const char* (void) {
-		return lang ? lang->m[_key].c_str() : "";
+		return _lang ? _lang->m[_key].c_str() : "";
 	}
 	std::string operator+ (const std::string& str) const {
-		if (!lang) return str;
-		return lang->m[_key] + str;
+		if (!_lang) return str;
+		return _lang->m[_key] + str;
 	}
 	std::string operator+ (const char* str) const {
 		return *this + std::string(str);
 	}
 	static void setLang(Lang* lang) {
-		delete Lang::lang;
-		Lang::lang = lang;
+        assert(lang);
+        _lang.reset(lang);
 	}
-	Lang* getCurLang(void) {
-		return lang;
+	std::shared_ptr<Lang>& getCurLang(void) {
+		return _lang;
 	}
 	virtual ~Lang(void) {}
 protected:
 	std::map<std::string, std::string> m;
 private:
-	const std::string _key;
-	static Lang*      lang;
+	const std::string            _key;
+    static std::shared_ptr<Lang> _lang;
 };
 
 
-#include "langEN.hpp"
-#include "langCN.hpp"
+//#include "langEN.hpp"
+//#include "langCN.hpp"
 
 #endif //LANG_H
 
