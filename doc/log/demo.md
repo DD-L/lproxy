@@ -2,6 +2,8 @@
 
 lproxy/src/core/log/demo
 
+[demo](../../src/core/log/demo)
+
 文件清单
 
 * demo.cpp
