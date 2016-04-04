@@ -12,7 +12,7 @@ lproxy
 
 	* [demo](./log/demo.md)
 	* [demo2](./log/demo2.md)
-	* [lss_log_demo](./log/lss_log_demo)
+	* [lss_log_demo](./log/lss_log_demo.md)
 
 2. 详细文档
 
