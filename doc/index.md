@@ -52,7 +52,7 @@ lproxy
 
 2. 详细文档
 
-	* [lang](./language/lang.md)
+	* [Lang](./language/lang.md)
 
 
 ## static_analysis

@@ -1,7 +1,8 @@
 # language demo
 
 ```cpp
-#include <language/lang.h>
+#include <language/langCN.hpp>
+#include <language/langEN.hpp>
 #include <iostream>
 #include <string>
 using namespace std;
@@ -32,18 +33,20 @@ int main() {
 }
 ```
 
+#####  Lang* 的定义：
+
 `LangEN` 和 `LangCN` 定义
 
 ```cpp
 
-struct LangCN : Lang {
+struct LangCN: Lang {
 	LangCN(void) {
 		m["hello"] = "你好";
 		m["hehe"] = "呵呵";
 		// ...
 	}
 };
-struct LangEN : Lang {
+struct LangEN: Lang {
 	LangEN(void) {
 		m["hello"] = "hello";
 		m["hehe"] = "hehe";
