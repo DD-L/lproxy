@@ -29,9 +29,15 @@ lproxy
 	* [LogOutput2](./log/logoutput2.md)
 	* [init_simple](./log/init_simple.md)
 	
-## except
+## exception
 
-* [](.)
+1. 使用示例
+
+	* [example](./except/example.h)
+
+2. 详细文档
+	
+	* [exception](./except/except.md)
 
 ## language
 
