@@ -33,7 +33,7 @@ lproxy
 
 1. 使用示例
 
-	* [example](./except/example.h)
+	* [example](./except/example.md)
 
 2. 详细文档
 	
