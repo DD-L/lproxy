@@ -46,7 +46,14 @@ lproxy
 
 ## language
 
-* [](.)
+1. 使用示例
+	
+	* [demo](./language/demo.md)
+
+2. 详细文档
+
+	* [lang](./language/lang.md)
+
 
 ## static_analysis
 	代码静态检查
