@@ -4,12 +4,14 @@ lproxy
 
 ## static_analysis
 
-代码静态检查
+cpp 代码静态检查
 
 * [cppcheck](./static_analysis/cppcheck/readme.md)
 * [pclint](./static_analysis/pclint/readme.md)
 
 ## store
+
+“多生产者-多消费者” 的模板仓库
 
 1. test
 	* [test](../src/core/store/test)
@@ -19,6 +21,8 @@ lproxy
 	* [Store::push & Store::pop 性能测试](../src/core/store/test/testscript/readme.md)
 
 ## log
+
+日志库
 
 1. 使用示例
 
@@ -43,6 +47,8 @@ lproxy
 	
 ## exception
 
+异常类型包装
+
 1. 使用示例
 
 	* [example](./except/example.md)
@@ -52,6 +58,8 @@ lproxy
 	* [exception](./except/except.md)
 
 ## language
+
+多国语言包装
 
 1. 使用示例
 	
@@ -67,6 +75,8 @@ lproxy
 
 ## python
 
+cpp 调用 python 函数 的简易工具
+
 1. 使用示例
 
 	* [demo](./python/demo.md)
@@ -77,6 +87,8 @@ lproxy
 	* [GetPyFunc](./python/getpyfunc.md)
 
 ## logrotate
+
+日志转储 （对膨胀的日志文件进行分片压缩）
 
 1. 使用示例
 
