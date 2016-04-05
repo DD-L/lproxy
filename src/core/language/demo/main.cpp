@@ -1,4 +1,3 @@
-#include <language/lang.h>
 #include <language/langEN.hpp>
 #include <language/langCN.hpp>
 
