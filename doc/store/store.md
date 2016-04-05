@@ -74,7 +74,7 @@ class Store<T, boost::lockfree::queue<T> > :
 
 Note: 
 
-*如果仓库元素想存放自定义类型 `MyClass`, 则在使用 `boost::lockfree::queue/stack` 时，要用指针 `MyClass*` 代替，这是 `boost::lockfree::queue/stack` 要求的， 即 `T = MyClass*`。*
+如果仓库元素想存放自定义类型 `MyClass`, 则在使用 `boost::lockfree::queue/stack` 时，要用指针 `MyClass*` 代替，这是 `boost::lockfree::queue/stack` 要求的， 即 `T = MyClass*`。
 
 #### 对 boost::lockfree::stack 偏特化版本
 
