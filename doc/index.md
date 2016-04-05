@@ -2,6 +2,13 @@
 
 lproxy
 
+## static_analysis
+
+代码静态检查
+
+* [cppcheck](./static_analysis/cppcheck/readme.md)
+* [pclint](./static_analysis/pclint/readme.md)
+
 ## store
 
 1. test
@@ -78,10 +85,3 @@ lproxy
 2. 详细文档
 	
 	* [Logrotate](./logrotate/logrotate.md)
-
-## static_analysis
-
-代码静态检查
-
-* [cppcheck](./static_analysis/cppcheck/readme.md)
-* [pclint](./static_analysis/pclint/readme.md)
