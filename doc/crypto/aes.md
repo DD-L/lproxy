@@ -72,7 +72,7 @@ private:
 
 	如果 `_raw256key` 的 size() 不等于 32 (即 256 bit)，在程序运行时会引发断言错误 ：`assert(_raw256key.size() == aes_key_len)`
 
-	用法见 `demo`
+	用法见 [demo](./demo.md#aes)
 
 
 	

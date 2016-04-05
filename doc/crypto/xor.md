@@ -35,7 +35,7 @@ private:
 }; 
 ```
 
-构造函数 `Xor(const uint8_t* _key, size_t _key_len, bool _is_synchro = false);` 
+构造函数 `Xor::Xor(const uint8_t* _key, size_t _key_len, bool _is_synchro = false);` 
 
 1. `_key`: key 的首地址
 

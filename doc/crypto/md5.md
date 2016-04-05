@@ -10,7 +10,7 @@ class crypto::Md5 : public crypto::Encrypt;
 
 采用 md5 加密算法的加密类， 该类依赖 `cryptopp`
 
-注意，md5 是不可逆加密算法，所以试图调用该类的解密操作，会引发“解密时异常”`DecryptException`。用法见 `demo`
+注意，md5 是不可逆加密算法，所以试图调用该类的解密操作，会引发“解密时异常”`DecryptException`。用法见 [demo](./demo.md#md5)
 
 该类的加密算法，用 python 语言描述是：
 
