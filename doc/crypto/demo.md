@@ -357,7 +357,7 @@ void test_md5(void) {
 
     try {
         std::vector<uint8_t> recovered;
-		// md5 加密时不可逆的，运行时会抛出“解密时异常”
+		// md5 加密是不可逆的，运行时会抛出“解密时异常”
         md5.decrypt(recovered, (const uint8_t*)&cipher[0], cipher.size());
     }
     catch(std::exception& e) {
