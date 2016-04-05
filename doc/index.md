@@ -88,7 +88,7 @@ cpp 调用 python 函数 的简易工具
 
 ## logrotate
 
-日志转储 （对膨胀的日志文件进行分片压缩）
+日志转储 （对持续膨胀的日志文件进行分片压缩）
 
 1. 使用示例
 
@@ -100,7 +100,7 @@ cpp 调用 python 函数 的简易工具
 
 ## workers
 
-资源池 (该分支尚未合并, 遗留。代码: [here](https://github.com/DD-L/lproxy/tree/feature-workers/src/core/workers))
+一种资源池实现 (该分支尚未合并, 遗留。代码: [here](https://github.com/DD-L/lproxy/tree/feature-workers/src/core/workers))
 
 ## crypto
 
@@ -112,18 +112,18 @@ cpp 调用 python 函数 的简易工具
 
 2. 详细文档
 	
-	* xor
-	* rc4
-	* aes
-	* rsa
-	* base64
-	* md5
-	* 异常处理
+	* [encryptor](./crypto/encryptor.md)
+	* [xor](./crypto/xor.md)
+	* [rc4](./crypto/rc4.md)
+	* [aes](./crypto/aes.md)
+	* [rsa](./crypto/rsa.md)
+	* [base64](./crypto/base64.md)
+	* [md5](./crypto/md5.md)
+	* [异常处理](./crypto/exception.md)
 
 ## program_options
 
 命令行选项工具
-
 
 ## lss
 

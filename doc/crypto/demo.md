@@ -367,7 +367,7 @@ void test_md5(void) {
 
 ```
 
-注意 cryptp::Md5 加密的结果是 32 个字节长度，并且为字母都大写
+注意 cryptp::Md5 加密的结果是 32 个字节长度，并且字母都为大写
 
 用 python 描述 crypto::Md5 加密的结果 是这样的：
 
@@ -384,7 +384,7 @@ hashlib.md5(src.encode()).hexdigest().upper()
 
 * `CryptoException` 
 	
-	crypto 加解密异常, 继承自 `std::exception`
+	crypto 加解密异常， 继承自 `std::exception`
 
 * `EncryptException`
 
