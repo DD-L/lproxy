@@ -6,7 +6,8 @@
 
 ```cpp
 #include <crypto/xor_crypto.h>
-#include <stdint.h>
+#include <cstdio>   // for printf
+#include <cstring>  // for strlen
 
 void test_xor(void) {
 	using namespace crypto;
@@ -15,17 +16,17 @@ void test_xor(void) {
 	std::vector<uint8_t> cipher, recovered;
 	// std::string 也可以
 	
-	Encryptor xor(new Xor((const uint8_t*)key, strlen(key))); 
+	Encryptor xor_(new Xor((const uint8_t*)key, strlen(key))); 
 	
 	// 加密
-	xor.encrypt(cipher, buffer, 1024);	
+	xor_.encrypt(cipher, buffer, 1024);	
 	for (auto& i : cipher) {
 		printf("%x ", (int)i);
 	}
 	printf("\n");
 
 	// 解密
-	xor.encrypt(recovered, &cipher[0], cipher.size());
+	xor_.encrypt(recovered, &cipher[0], cipher.size());
 	for (auto& i : recovered) {
 		printf("%x ", (int)i);
 	}
@@ -42,28 +43,35 @@ void test_xor(void) {
 
 ```cpp
 #include <crypto/rc4_crypto.h>
+#include <cstdio>   // for printf
+#include <cstring>  // for strlen
+#include <assert.h> // for assert
 void test_rc4(void) {
-	using namespace crypto;
-	const char* key = "hello crypto!";
-	uint8_t buffer[1024] = "This is a test ...";
-	std::vector<uint8_t> cipher, recovered;
-	// std::string 也可以
-	
-	Encryptor rc4(new Rc4((const uint8_t*)key, strlen(key))); 
-	
-	// 加密
-	rc4.encrypt(cipher, buffer, 1024);
-	for (auto& i : cipher) {
-		printf("%x ", (int)i);
-	}
-	printf("\n");
+    using namespace crypto;
+    const char* key = "hello crypto!";
+    uint8_t buffer[1024] = "This is a test ...";
+    std::vector<uint8_t> cipher, recovered;
+    // std::string 也可以
 
-	// 解密
-	rc4.encrypt(recovered, &cipher[0], cipher.size());
-	for (auto& i : recovered) {
-		printf("%x ", (int)i);
-	}
-	printf("\n");
+    Encryptor rc4(new Rc4((const uint8_t*)key, strlen(key))); 
+
+    // 加密
+    rc4.encrypt(cipher, buffer, 1024);
+    for (auto& i : cipher) {
+        printf("%x ", (int)i);
+    }
+    printf("\n\n");
+
+    // 解密
+    rc4.decrypt(recovered, &cipher[0], cipher.size());
+
+    assert(recovered.size() == 1024);
+
+    for (int i = 0; i < 1024; ++i) {
+        printf("%x ", (int)recovered[i]);
+        assert(recovered[i] == buffer[i]);
+    }
+    printf("\n")
 }
 ```
 内置同步机制，无法并行加解密
@@ -74,15 +82,17 @@ AES-256 CTR mode
 
 ```cpp
 #include <crypto/aes_crypto.h>
-void test_aes(void) {
-	using namespace crypto;
-	// key 的长度是任意的
-	const char* key = "hello crypto!";
+#include <cstdio>   // for printf
+#include <assert.h> // for assert
+void test(void) {
+    using namespace crypto;
+    // key 的长度是任意的
+    const char* key = "hello crypto!";
 
-	const std::size_t buffer_size = 1023; 
-	uint8_t buffer[buffer_size] = {0};
-	
-	for (std::size_t i = 0; i < buffer_size; ++i) {
+    const std::size_t buffer_size = 1023; 
+    uint8_t buffer[buffer_size] = {0};
+
+    for (std::size_t i = 0; i < buffer_size; ++i) {
         static char flag = 'A';
         if ((i % 10) == 0) {
             buffer[i] = flag++;
@@ -93,24 +103,27 @@ void test_aes(void) {
         }
     }
 
-	std::string cipher, recovered;
-	// std::vector<uint8_t> 也可以
-	
-	Encryptor aes(new Aes(std::string(key)));
+    std::string cipher, recovered;
+    // std::vector<uint8_t> 也可以
 
-	// 加密
-	aes.encrypt(cipher, buffer, buffer_size);	
-	for (auto& i : cipher) {
-		printf("%x ", (unsigned int)i);
-	}
-	printf("\n");
+    Encryptor aes(new Aes(std::string(key)));
 
-	// 解密
-	aes.encrypt(recovered, &cipher[0], cipher.size());
-	for (auto& i : recovered) {
-		printf("%x ", (unsigned int)i);
-	}
-	printf("\n");
+    // 加密
+    aes.encrypt(cipher, buffer, buffer_size);   
+    for (auto& i : cipher) {
+        printf("%x ", (uint8_t)i);
+    }
+    printf("\n\n");
+
+    // 解密
+    aes.encrypt(recovered, &cipher[0], cipher.size());
+
+    assert(recovered.size() == buffer_size);
+    for (std::size_t i = 0; i < buffer_size; ++i) {
+        printf("%x ", (uint8_t)recovered[i]);
+        assert(recovered[i] == buffer[i]);
+    }
+    printf("\n");
 }
 ```
 
@@ -118,9 +131,15 @@ void test_aes(void) {
 
 ```cpp
 #include <crypto/aes_crypto.h>
+#include <cstdio>   // for printf
+#include <assert.h> // for assert
 void test_aes(void) {
 	using namespace crypto;
-	uint8_t key[32] = {
+	
+    const std::size_t buffer_size = 155;
+    uint8_t buffer[buffer_size] = "abcdefghi"; 
+    
+    uint8_t key[32] = {
 		0x23, 0xa3, 0x47, 0x78, 0x9a, 0x45, 0x87,
 		0x9a, 0x45, 0x87, 0x23, 0xa3, 0x47, 0x78,
 		0x78, 0x9a, 0x45, 0x9a, 0x45, 0x23, 0xa3,
@@ -130,7 +149,7 @@ void test_aes(void) {
 	const std::string raw_key(key, key + 32);
 	// std::vector<uint8_t> 也可以
 
-	assert(sraw_key.size() == (256 / 8));
+	assert(raw_key.size() == (256 / 8));
 
 	Encryptor aes(new Aes(raw_key, Aes::raw256keysetting()));
 
@@ -140,16 +159,19 @@ void test_aes(void) {
 	// 加密
 	aes.encrypt(cipher, buffer, buffer_size);	
 	for (auto& i : cipher) {
-		printf("%x ", (unsigned int)i);
+		printf("%x ", (uint8_t)i);
 	}
-	printf("\n");
+	printf("\n\n");
 
 	// 解密
 	aes.encrypt(recovered, &cipher[0], cipher.size());
-	for (auto& i : recovered) {
-		printf("%x ", (unsigned int)i);
-	}
-	printf("\n");
+
+    assert(recovered.size() == buffer_size);
+    for (std::size_t i = 0; i < buffer_size; ++i) {
+        printf("%x ", (uint8_t)recovered[i]);
+        assert(recovered[i] == buffer[i]);
+    }
+    printf("\n");
 }
 ```
 
@@ -178,6 +200,9 @@ key 的 模长越大越安全，生成 key 所花费的时间越长。
 
 ```cpp
 #include <crypto/rsa_crypto.h>
+#include <cstdio>   // for printf
+#include <assert.h> // for assert
+#include <iostream> // for std::cout std::endl
 void test_rsa(void) {
 	using namespace crypto;
 	uint8_t buffer[] = "this is a test..ffffffffffffffffffffffffffffffffff"
@@ -196,9 +221,9 @@ void test_rsa(void) {
 	RsaKey rsakey(RsaKey::bit1024);
 	
 	// 公钥 用来加密 （std::string 类型）
-	std::cout << "public key: " << rsakey.publicKeyHex() << std::endl;
+	std::cout << "\npublic key: " << rsakey.publicKeyHex() << std::endl;
 	// 私钥 用来解密  (std::string 类型)
-	std::cout << "private key: " << rsakey.privateKeyHex() << std::endl;
+	std::cout << "\nprivate key: " << rsakey.privateKeyHex() << std::endl;
 
 	Encryptor rsa(new Rsa(rsakey));
 	
@@ -207,21 +232,24 @@ void test_rsa(void) {
 	
 	// 加密
 	rsa.encrypt(cipher, buffer, buffer_size);
+	printf("\n");
 	for (auto& i : cipher) {
 		printf("%x ", (int)i);
 	}
-	printf("\n");
+	printf("\n\n");
 
 	// 解密
-	rsa.encrypt(recovered, &cipher[0], cipher.size());
-	for (auto& i : recovered) {
-		printf("%c", i);
+	rsa.decrypt(recovered, &cipher[0], cipher.size());
+    assert(recovered.size() == buffer_size);
+    for (std::size_t i = 0; i < buffer_size; ++i) {
+		printf("%c", recovered[i]);
+        assert(recovered[i] == buffer[i]);
 	}
 	printf("\n");
 
 	//////////////////////////////////////////////////////
 
-	// 用 key 模长 和 公钥 、私钥 构造 Rsa 对象
+	// 用 key 模长 和 公钥、私钥 构造 Rsa 对象
 	Rsa rsa_p(rsakey.keySize(), rsakey.publicKeyHex(), rsakey.privateKeyHex());
 	
 	// 或
@@ -230,7 +258,7 @@ void test_rsa(void) {
 	//			&(rsakey.privateKeyHex()[0]), rsakey.privateKeyHex().size());
 
 	//此时的 rsa_p 对象拥有完整的 公钥 和 私钥， 可以完成 加密任务 和 解密任务
-	vector<uint8_t> cipher_p, recovered_p;
+    std::vector<uint8_t> cipher_p, recovered_p;
 	rsa_p.encrypt(cipher_p, buffer, buffer_size);
 	rsa_p.decrypt(recovered_p, &cipher_p[0], cipher_p.size());
 
@@ -242,7 +270,7 @@ void test_rsa(void) {
 	//			&(rsakey.publicKeyHex()[0]), rsakey.publicKeyHex().size();
 	
 	// 此时的rsa_pub 对象只拥有 公钥，只能完成 加密任务。
-	vector<uint8_t> cipher_pub, recovered_pub;
+    std::vector<uint8_t> cipher_pub, recovered_pub;
 	rsa_pub.encrypt(cipher_pub, buffer, buffer_size);
 	try {
 		// 在执行时会抛出一个“解密时异常”
@@ -268,6 +296,7 @@ RFC2045 标准规定:
 
 ```cpp
 #include <crypto/base64_crypto.h>
+#include <iostream> // for std::cout std::endl
 void test_base64(void) {
 	using namespace crypto;
 	const std::string plain = "hello crypto!";
@@ -283,10 +312,18 @@ void test_base64(void) {
 	// 加密
 	base64.encrypt(cipher, plain.c_str(), plain.size());
 	
+    for (auto& i : cipher) {
+        std::cout << i;
+    }
+    std::cout << std::endl;
+
 	// 解密
 	base64.decrypt(recovered, &cipher[0], cipher.size());
-	
-}
+    for (auto& i : recovered) {
+        std::cout << i;
+    }
+    std::cout << std::endl;
+
 ```
 
 crypto::Base64 支持并行加解密
@@ -298,6 +335,7 @@ crypto::Base64 支持并行加解密
 #include <algorithm> // for std::copy
 #include <iterator>  // for std::ostream_iterator
 #include <assert.h>  // for assert
+#include <iostream>  // for std::cout
 
 void test_md5(void) {
 	using namespace crypto;
@@ -313,18 +351,20 @@ void test_md5(void) {
 	std::copy(cipher.begin(), cipher.end(),
             std::ostream_iterator<char>(std::cout));
 
+    std::cout << "\n";
 	assert(cipher == std::string("4C9E7E7B14F9FFC772962619B05A21A0"));
 
 
     try {
         std::vector<uint8_t> recovered;
 		// md5 加密时不可逆的，运行时会抛出“解密时异常”
-        md5.decrypt(recovered, &cipher[0], cipher.size());
+        md5.decrypt(recovered, (const uint8_t*)&cipher[0], cipher.size());
     }
     catch(std::exception& e) {
         std::cout << e.what() << std::endl;
     }
 }
+
 ```
 
 注意 cryptp::Md5 加密的结果是 32 个字节长度，并且为字母都大写

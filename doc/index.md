@@ -111,7 +111,14 @@ cpp 调用 python 函数 的简易工具
 	* [demo](./crypto/demo.md)
 
 2. 详细文档
-
+	
+	* xor
+	* rc4
+	* aes
+	* rsa
+	* base64
+	* md5
+	* 异常处理
 
 ## program_options
 
@@ -121,5 +128,3 @@ cpp 调用 python 函数 的简易工具
 ## lss
 
 lproxy 核心模块
-
-
