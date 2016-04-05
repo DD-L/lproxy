@@ -58,6 +58,17 @@ lproxy
 
 * see [documents](../src/core/deel.boost.python/README.md)
 
+## python
+
+1. 使用示例
+
+	* [demo](./python/demo.md)
+
+2. 详细文档
+
+	* [pyinit](./python/pyinit.md)
+	* [GetPyFunc](./python/getpyfunc.md)
+
 ## static_analysis
 
 代码静态检查
