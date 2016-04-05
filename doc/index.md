@@ -69,6 +69,16 @@ lproxy
 	* [pyinit](./python/pyinit.md)
 	* [GetPyFunc](./python/getpyfunc.md)
 
+## logrotate
+
+1. 使用示例
+
+	* [demo](./logrotate/demo.md)
+
+2. 详细文档
+	
+	* [Logrotate](./logrotate/logrotate.md)
+
 ## static_analysis
 
 代码静态检查
