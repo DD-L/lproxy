@@ -11,7 +11,7 @@ cpp 代码静态检查
 
 ## store
 
-“多生产者-多消费者” 的模板仓库
+适用于“多生产者-多消费者” 的模板仓库
 
 1. test
 	* [test](../src/core/store/test)
@@ -47,7 +47,7 @@ cpp 代码静态检查
 	
 ## exception
 
-异常类型包装
+异常类型组件
 
 1. 使用示例
 
@@ -59,7 +59,7 @@ cpp 代码静态检查
 
 ## language
 
-多国语言包装
+多国语言组件
 
 1. 使用示例
 	
@@ -100,6 +100,26 @@ cpp 调用 python 函数 的简易工具
 
 ## workers
 
-资源池 (该部分代码尚未合并)
+资源池 (该分支尚未合并, 遗留。代码: [here](https://github.com/DD-L/lproxy/tree/feature-workers/src/core/workers))
 
-## 
+## crypto
+
+加解密工具
+
+1. 使用示例
+
+	* [demo](./crypto/demo.md)
+
+2. 详细文档
+
+
+## program_options
+
+命令行选项工具
+
+
+## lss
+
+lproxy 核心模块
+
+

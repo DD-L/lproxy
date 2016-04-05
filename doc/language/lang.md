@@ -64,7 +64,7 @@ struct LangEN:  Lang {
 ```cpp
 // 注意此类所在文件的编码格式
 
-struct LangCN : public Lang {
+struct LangCN: Lang {
 	LangCN(void) {
 		m["hello"] = "你好";
 		m["hehe"] = "呵呵";
