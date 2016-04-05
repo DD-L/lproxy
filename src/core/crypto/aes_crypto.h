@@ -25,7 +25,7 @@ public:
     class raw256keysetting {};
 
 public:
-    Aes(const uint8_t* _key, std::size_t _key_len);
+    Aes(const uint8_t* _key, const std::size_t _key_len);
     explicit Aes(const std::string& _key);
     Aes(const std::string& _raw256key, Aes::raw256keysetting);
     Aes(const std::vector<uint8_t>& _raw256key, Aes::raw256keysetting);
