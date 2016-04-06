@@ -737,7 +737,7 @@ void session::right_read_handler(const boost::system::error_code& error,
         //}
         //else {
             logwarn(error.message() << " value = " << error.value() 
-                    << "send lss_bad to local, then close this, this = " 
+                    << " send lss_bad to local, then close this, this = " 
                     << this);
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
