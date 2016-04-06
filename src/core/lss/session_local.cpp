@@ -471,9 +471,17 @@ void session::left_read_handler(const boost::system::error_code& error,
         //                shared_from_this(), _1));
         //}
         //else {
-            logwarn(error.message() << " value = " << error.value()
-                    << " close this, this = " << this);
-            this->close();
+            //logwarn(error.message() << " value = " << error.value()
+            //        << " close this, this = " << this);
+            //this->close();
+
+            // test 2016-04-06
+            logwarn(error.message() << ", value = " << error.value()
+                    << ", send lss_bad to server, then close this, this = "
+                    << this);
+            boost::asio::async_write(this->socket_right,
+                    pack_bad().buffers(),
+                    boost::bind(&session::close, shared_from_this()));
         //}
     }
 }
