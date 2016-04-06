@@ -475,7 +475,6 @@ void session::left_read_handler(const boost::system::error_code& error,
             //        << " close this, this = " << this);
             //this->close();
 
-            // test 2016-04-06
             logwarn(error.message() << ", value = " << error.value()
                     << ", send lss_bad to server, then close this, this = "
                     << this);

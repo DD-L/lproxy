@@ -130,12 +130,14 @@ try {
 }
 catch (const std::exception& e) {
     _print_s_err("[FATAL] Exception: " << e.what() 
-            << " " << lproxy::log::basename(__FILE__) << std::endl);
+            << " " << lproxy::log::basename(__FILE__) << ":" 
+            << __LINE__ << std::endl);
     exit(1);
 }
 catch (...) {
     _print_s_err("[FATAL] An error has occurred" 
-            << " " << lproxy::log::basename(__FILE__) << std::endl);
+            << " " << lproxy::log::basename(__FILE__) << ":" 
+            << __LINE__ << std::endl);
     exit(1);
 }
 
