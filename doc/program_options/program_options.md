@@ -11,7 +11,7 @@ class program_options;
 
 POSIX C 中有个工具函数 `int getopt(int argc,char * const argv[ ],const char * optstring);` 用来分析命令行参数，很实用，但可惜无法跨平台。
 
-Boost.program_options 库可以做得非常优秀，但因为 Boost.program_options库太大了，而且必须事先编译好 Boost.program_options 库才能使用。
+Boost.program_options 库可以做得非常优秀，但因为 Boost.program_options 库太大了，而且必须事先编译好 Boost.program_options 库才能使用。
 
 所以这里实现了一个简易的 `program_options`，应对简单的命令行参数处理足够了，使用时直接 `#include "program_options.h"` 即可，不用事先编译好它。
 
@@ -129,4 +129,4 @@ public:
 
 ### demo
 
-使用示例见 [demo](./demo)
+使用示例见 [demo](./demo.md)

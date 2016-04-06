@@ -88,9 +88,6 @@ int main(int argc, char* argv[]) {
 ##### 程序运行情况
 
 ```shell
-$ make clean; make
-```
-```shell
 $ ./bin/demo
 arg empty
 
