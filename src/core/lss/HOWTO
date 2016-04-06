@@ -11,6 +11,8 @@
 
         Build in Cygwin:
         $ make -f Makefile.Cygwin -j 4
+
+        If you want a DEBUG version, try `$ make ... DEBUG=enable`.
         
 2. Run
     

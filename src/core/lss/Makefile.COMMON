@@ -1,5 +1,12 @@
+ifdef DEBUG
+$(info [info] LSS_DEBUG $(DEBUG))
+ifeq ('$(DEBUG)', 'enable') 
 LSS_DEBUG = -DLSS_DEBUG
 #ASIO_DEBUG = -DBOOST_ASIO_ENABLE_HANDLER_TRACKING
+else
+$(error [ERROR] DEBUG=$(DEBUG), try 'DEBUG=enable')
+endif
+endif
 
 PWD := $(shell pwd)
 ROOT := $(PWD)/../../../
