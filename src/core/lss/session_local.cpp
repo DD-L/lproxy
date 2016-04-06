@@ -285,8 +285,9 @@ void session::right_read_handler(const boost::system::error_code& error,
             }
             case reply::deny: // 0x04
                     // 被 server 端拒绝
-                    logwarn("Connection rejected by the server-side. "
-                            "close this. this = " << this);
+                    logerror("Connection rejected by the server-side, "
+                        "there may be a problem with 'authentication failed'. "
+                        "close this. this = " << this);
                     this->close();
                 break;
             case reply::timeout: // 0x05
