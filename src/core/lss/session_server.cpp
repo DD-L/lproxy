@@ -25,8 +25,13 @@ session::session(boost::asio::io_service& io_service_left,
 }
 
 void session::start(void) {
-    loginfo("client: " << socket_left.remote_endpoint().address());
-
+    boost::system::error_code ec;
+    loginfo("client: " << socket_left.remote_endpoint(ec).address());
+    if (ec) {
+        logerror(ec.message() << ", value = " << ec.value() 
+                << ". Terminate this session!!! this = " << this);
+        return;
+    }
     status = status_connected;
 
     lsslogdebug("start read msg from local..");
