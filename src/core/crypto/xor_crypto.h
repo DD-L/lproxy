@@ -31,7 +31,7 @@ private:
     size_t          key_len;
     size_t          encry_loc;  // 加密同步用
     size_t          decry_loc;  // 解密同步用
-    bool            is_synchro; // 是否同步执行模式 
+    bool            is_synchro; // 是否启用同步模式 
 }; 
 
 } // namespace crypto 

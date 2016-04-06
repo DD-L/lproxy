@@ -16,12 +16,12 @@ int main() {
             std::cout << "Press Enter to continue." << std::endl;
             getchar();
 
-            memset(buf, 0, 1024);
             std::ifstream in("./1.txt");
             if (! in)
                 std::cout << "open" << std::endl;
         
             do {
+                memset(buf, 0, 1024);
                 in.getline(buf, 1024);
                 log << buf << std::flush;
             } while(in.fail());

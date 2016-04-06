@@ -60,26 +60,26 @@ public:
 public:
     explicit RsaKey(RsaKey::size keysize);
 
-    inline RsaKey::Pair    keyPair(void);
-    inline RsaKey::Pair    keyPair(void) const;
+    inline RsaKey::Pair          keyPair(void);
+    inline const RsaKey::Pair    keyPair(void) const;
 
-    inline RsaKey::PairHex keyPairHex(void);
-    inline RsaKey::PairHex keyPairHex(void) const;
+    inline RsaKey::PairHex       keyPairHex(void);
+    inline const RsaKey::PairHex keyPairHex(void) const;
 
-    inline std::string     publicKeyHex(void);
-    inline std::string     publicKeyHex(void) const;
+    inline std::string           publicKeyHex(void);
+    inline const std::string     publicKeyHex(void) const;
 
-    inline std::string     privateKeyHex(void);
-    inline std::string     privateKeyHex(void) const;
+    inline std::string           privateKeyHex(void);
+    inline const std::string     privateKeyHex(void) const;
 
-    inline CryptoPP::RSA::PublicKey publicKey(void);
-    inline CryptoPP::RSA::PublicKey publicKey(void) const;
+    inline CryptoPP::RSA::PublicKey       publicKey(void);
+    inline const CryptoPP::RSA::PublicKey publicKey(void) const;
 
-    inline CryptoPP::RSA::PrivateKey privateKey(void);
-    inline CryptoPP::RSA::PrivateKey privateKey(void) const;
+    inline CryptoPP::RSA::PrivateKey       privateKey(void);
+    inline const CryptoPP::RSA::PrivateKey privateKey(void) const;
 
-    inline RsaKey::size keySize(void);
-    inline RsaKey::size keySize(void) const;
+    inline RsaKey::size       keySize(void);
+    inline const RsaKey::size keySize(void) const;
 
 private:
     friend class Rsa;
@@ -132,14 +132,14 @@ RsaKey::Pair RsaKey::keyPair(void) {
     return { publicKey, privateKey, keysize };
 }
 
-RsaKey::Pair RsaKey::keyPair(void) const {
+const RsaKey::Pair RsaKey::keyPair(void) const {
     return const_cast<RsaKey*>(this)->keyPair();
 }
 
 RsaKey::PairHex RsaKey::keyPairHex(void) {
     return { publicKeyHex(), privateKeyHex(), keysize };
 }
-RsaKey::PairHex RsaKey::keyPairHex(void) const {
+const RsaKey::PairHex RsaKey::keyPairHex(void) const {
     return const_cast<RsaKey*>(this)->keyPairHex();
 }
 
@@ -151,7 +151,7 @@ std::string RsaKey::publicKeyHex(void) {
     return keyHex;
 }
 
-std::string RsaKey::publicKeyHex(void) const {
+const std::string RsaKey::publicKeyHex(void) const {
     return const_cast<RsaKey*>(this)->publicKeyHex();
 }
 
@@ -163,7 +163,7 @@ std::string RsaKey::privateKeyHex(void) {
     return keyHex;
 }
 
-std::string RsaKey::privateKeyHex(void) const {
+const std::string RsaKey::privateKeyHex(void) const {
     return const_cast<RsaKey*>(this)->privateKeyHex();
 }
 
@@ -171,19 +171,19 @@ std::string RsaKey::privateKeyHex(void) const {
 CryptoPP::RSA::PublicKey RsaKey::publicKey(void) {
     return CryptoPP::RSA::PublicKey(parameters);
 }   
-CryptoPP::RSA::PublicKey RsaKey::publicKey(void) const {
+const CryptoPP::RSA::PublicKey RsaKey::publicKey(void) const {
     return const_cast<RsaKey*>(this)->publicKey();
 }   
 CryptoPP::RSA::PrivateKey RsaKey::privateKey(void) {
     return CryptoPP::RSA::PrivateKey(parameters);
 }
-CryptoPP::RSA::PrivateKey RsaKey::privateKey(void) const {
+const CryptoPP::RSA::PrivateKey RsaKey::privateKey(void) const {
     return const_cast<RsaKey*>(this)->privateKey();
 }
 RsaKey::size RsaKey::keySize(void) {
     return this->keysize;
 }
-RsaKey::size RsaKey::keySize(void) const {
+const RsaKey::size RsaKey::keySize(void) const {
     return const_cast<RsaKey*>(this)->keySize(); 
 }
 

@@ -99,11 +99,11 @@ arg empty
 Usage: demo [option]
 
 Options:
-  -h, --help     Show this message.
-  -v, --version  Show current version.
-  -p, --print    Print a message.
-                 e.g. demo -p hello
-  -c, --command  Print current command.
+  -h, --help                 Show this message.
+  -v, --version              Show current version.
+  -p, --print   <something>  Print a message.
+                             e.g. demo -p hello
+  -c, --command              Print current command.
 
 Examples:
   demo --help
@@ -117,11 +117,11 @@ this is title
 Usage: demo [option]
 
 Options:
-  -h, --help     Show this message.
-  -v, --version  Show current version.
-  -p, --print    Print a message.
-                 e.g. demo -p hello
-  -c, --command  Print current command.
+  -h, --help                 Show this message.
+  -v, --version              Show current version.
+  -p, --print   <something>  Print a message.
+                             e.g. demo -p hello
+  -c, --command              Print current command.
 
 Examples:
   demo --help

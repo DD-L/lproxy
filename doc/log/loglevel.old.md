@@ -3,25 +3,26 @@ log/loglevel.old.h
 ------------------------------
 
 
-###此源码虽还未彻底完成就已被遗弃，因为有更高效更安全的实现，但作为一种新的尝试方法，保留了下来，以便日后查阅。
+### **此源码虽还未彻底完成就已被遗弃，因为有更高效更安全的实现，但作为一种新的尝试方法，保留了下来，以便日后查阅。*
 
-###新的实现文档在这里[here](./loglevel.md)
+### 新的实现文档在这里 [here](./loglevel.md)
 
 ---------------------------
 
 # MAKE_LOGLEVEL(Level, Rank) 和 makelevel(Level)
-#### ---  enum的增强版实现
+#### ---  `enum` 的增强版实现
 
 enum被用来定义一组常量，但是一旦一个enum类型被定义，以后它就不能再随意的增加常量了。
 
-<pre>
+```cpp
 enum EnumType {AA = 0, BB, CC};
 // 被定义了一组常量 AA BB CC
 // 但是，如果再想追加定义EnumType类型的常量 DD EE，就不可能实现了
-</pre>
+```
 
 然而，log/loglevel.h 中巧妙的绕开了这个限制:
-<pre>
+
+```cpp
 //比如原先的代码中是这样定义日志级别常量的:
 enum LogType { 
 	TRACE = 0,  DEBUG = 10, 
@@ -51,8 +52,7 @@ LogType logtype = makelevel(INFO);
 
 // 也就是说，以后凡是出现通过MAKE_LOGLEVEL的定义的"常量"，都必须加上makelevel(常量)来"转义"；
 // 凡是之前使用enum定义的常量出现的地方，都得改成makelevel(...)的写法。
-
-</pre>
+```
 
 MAKE_LOGLEVEL() 和 makelevel() 的使用方式，借鉴了std::make_shared<>() 和 std::shared_ptr<>() 的使用方式。
 
@@ -84,13 +84,13 @@ log/loglevel.h 实现了可以动态的无限的增加enum常量字段。
 
 ---------
 
-#LogType
+# LogType
 
 日志类型
 
 LogType伪装成一个enum类型, 可以构造成被 makelevel()处理过的"常量"。
 
-<pre>
+```cpp
 // 类摘要
 class LogType {
 public:
@@ -120,7 +120,7 @@ public:
 	// 它仅仅被用在MAKE_LOGLEVEL_INSIDE的内部实现中
 	void clearwarning(void);
 };
-</pre>
+```
 
 -----------
 
@@ -128,7 +128,7 @@ public:
 
 用户无需关心的定义日志级别的基类
 
-<pre>
+```cpp
 // 类摘要:
 class Log_LevelBase {
 public:
@@ -156,7 +156,7 @@ public:
 	
 
 };
-</pre>
+```
 
 ------
 
@@ -164,7 +164,7 @@ public:
 
 用户无需关心的日志级别的管理类，所有日志级别唯一"常量", 都是由它来管理。
 
-<pre>
+```cpp
 // 类摘要
 class LogLevelManage {
 public:
@@ -178,8 +178,7 @@ public:
 	static const std::shared_ptr< Log_LevelBase > get_level_ptr(const char* level);
 
 };
-
-</pre>
+```
 
 
 
@@ -191,7 +190,7 @@ public:
 
 底层实现用户无需关心，但这里还是给出定义, 以便帮助想有更多了解的人:
 
-<pre>
+```cpp
 #define MAKE_LOGLEVEL(Level, Rank)\
 	class Log_##Level : public Log_LevelBase {\
 	public: \
@@ -205,8 +204,7 @@ public:
 	}; \
 	auto __tmp_var_LogLevelManage_##Level \
 		=  LogLevelManage(std::make_shared< Log_##Level >(#Level, Rank));
-
-</pre>
+```
 
 其实所谓的“常量”，只不过是被 MAKE_LOGLEVEL 处理过的 类对象而已。
 
@@ -218,12 +216,13 @@ public:
 # MAKE_LOGLEVEL_INSIDE(Level, Rank)
 
 用户无需关注它的实现，但这里还是给出定义, 以便帮助想有更多了解的人:
-<pre>
+
+```cpp
 // MAKE_LOGLEVEL 函数(局部)域版本
 #define MAKE_LOGLEVEL_INSIDE(Level, Rank)\
 	MAKE_LOGLEVEL(Level, Rank)\
 	__tmp_var_LogLevelManage_##Level.clearwarning();
-</pre>
+```
 
 
 --------
@@ -234,9 +233,9 @@ public:
 
 用户无需关心实现，但这里还是给出定义, 以便帮助想有更多了解的人:
 
-<pre>
+```cpp
 #define makelevel(Level) LogLevelManage::get_level_ptr(#Level)
-</pre>
+```
 
 其实它只是，返回之前交给LogLevelManage管理的“常量”的智能指针常对象.
 
