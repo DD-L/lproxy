@@ -102,6 +102,8 @@ class GetPyFunc {
 4. 依赖 boost.python
 
 5. 依赖 python v2.7.x (推荐'2.7.5'及其以上的2.7版本). 
+
+	需要 `python_dev`支持, 比如 Ubuntu 上安装方法： `sudo apt-get install python-dev` 
 	
 	1. 在 windows 上如果要想支持 python 3.x . 需要修改 `getpyfunc.h` 文件中的
 
