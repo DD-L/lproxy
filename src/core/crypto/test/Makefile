@@ -49,4 +49,4 @@ $(TMP)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
 
 clean:
-	$(RM) $(TMP) $(CRYPTOLIB)
+	$(RM) $(TMP) $(BIN)

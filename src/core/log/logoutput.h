@@ -163,7 +163,7 @@ public:
 		mutex_t::scoped_lock lock(const_cast<mutex_t&>(_outstreamlock));
 		return _outstream.size();
 	}
-	// when there are no ostreams, it is empty
+	// it is empty if there are no ostreams.
 	inline bool empty() const {
 		typedef boost::mutex mutex_t;
 		mutex_t::scoped_lock lock(const_cast<mutex_t&>(_outstreamlock));

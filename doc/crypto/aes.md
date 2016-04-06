@@ -1,21 +1,18 @@
-#ifndef _AES_CRYPTO_H_1
-#define _AES_CRYPTO_H_1
-/*************************************************************************
-	> File Name:    aes_crypto.h
-	> Author:       D_L
-	> Mail:         deel@d-l.top
-	> Created Time: 2015/11/7 9:17:52
- ************************************************************************/
-#include <string>
-#include "crypto/encryptor.h"
-#include <cryptopp/aes.h>
-#include <cryptopp/modes.h>    
-// for CryptoPP::CFB_Mode<Crypto::AES>
-// for CryptoPP::CTR_Mode<Crypto::AES>
+crypto/aes_crypto.h
 
-namespace crypto {
+-----------------
 
-// CTR mode
+# crypto::Aes
+
+```cpp
+class crypto::Aes : public crypto::Encrypt;
+```
+
+采用 AES 256 bit CTR mode 算法的加解密类, 该类依赖 `cryptopp`
+
+### crypto::Aes 类摘要
+
+```cpp
 class Aes : public Encrypt {
 
 static_assert(CryptoPP::AES::BLOCKSIZE > 0, 
@@ -42,14 +39,40 @@ private:
 private:
     
     CryptoPP::SecByteBlock       aes_key;
-    static const std::size_t     aes_key_len = 32;
+    static const std::size_t     aes_key_len = 32; // 256 bit
 
     // counter
     uint8_t ctr[CryptoPP::AES::BLOCKSIZE];
     // the size is always 16 bytes
  
 }; // class crypto::Aes
+```
 
-} // namespace crypto
+支持并行加解密模式
 
-#endif
+构造函数说明
+
+1. `Aes::Aes(const uint8_t* _key, std::size_t _key_len);`
+	
+	* `_key`： key 的首地址
+	* `_key_len`：key 的长度
+
+	对 key 的长度没有限制
+
+2. `explicit Aes::Aes(const std::string& _key)`
+
+	* `_key`: key 
+	
+	对 key 的长度没有限制
+
+3.  `Aes::Aes(const std::string& _raw256key, Aes::raw256keysetting);` 和 `Aes::Aes(const std::vector<uint8_t>& _raw256key, Aes::raw256keysetting);`
+
+	* `_raw256key`： 256bit 的 key
+	* `Aes::raw256keysetting`: 哑元, 用来重载构造函数。
+
+	如果 `_raw256key` 的 size() 不等于 32 (即 256 bit)，在程序运行时会引发断言错误 ：`assert(_raw256key.size() == aes_key_len)`
+
+	用法见 [demo](./demo.md#aes)
+
+
+	

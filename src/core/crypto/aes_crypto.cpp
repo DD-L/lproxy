@@ -21,11 +21,13 @@ using namespace crypto;
 // https://www.cryptopp.com/wiki/CTR_Mode
 // https://zh.wikipedia.org/zh-cn/块密码的工作模式
 
-Aes::Aes(const uint8_t* _key, std::size_t _key_len) 
+Aes::Aes(const uint8_t* _key, const std::size_t _key_len) 
         : aes_key(0x00, aes_key_len) {
     assert(_key);
-    std::string key = (const char*)_key;
-    assert(key.length() == _key_len);
+    //std::string key = (const char*)_key;
+    //assert(key.length() == _key_len);
+
+    std::string key(_key, _key + _key_len);
 
     aes_key.Assign(&(make_md5cipher(key)[0]), aes_key_len);
 

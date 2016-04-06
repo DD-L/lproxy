@@ -48,6 +48,6 @@ void pop() {
 int main() {
 	push();
 	pop();
-	
+    return 0;	
 }
 

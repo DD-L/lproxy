@@ -37,6 +37,6 @@ int main(int argc, char* argv[]) {
 		std::cout << boost::python::extract<int>(ret) << std::endl;
 	}
 	
-
+    return 0;
 }
 
