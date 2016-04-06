@@ -111,7 +111,6 @@ Examples:
   demo -p helloworld
   demo -c
 
-
 $ ./bin/demo -h
 this is title
 
@@ -129,7 +128,6 @@ Examples:
   demo -v
   demo -p helloworld
   demo -c
-
 
 $ ./bin/demo --version
 ver: 0.1
