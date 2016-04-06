@@ -5,8 +5,10 @@ PWD := $(shell pwd)
 LINK = ./link
 DEMO = ./demo
 
-override CFLAGS   += -Wall $(GDB) 
-override CXXFLAGS += -Wall $(GDB)  -std=c++1y
+SRCCOREDIR = $(PWD)/..
+
+override CFLAGS   += -Wall $(GDB) -I$(SRCCOREDIR) 
+override CXXFLAGS += -Wall $(GDB) -I$(SRCCOREDIR) -std=c++1y
 
 
 TARGET = $(LINK)/lang.o

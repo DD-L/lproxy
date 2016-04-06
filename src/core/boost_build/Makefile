@@ -4,8 +4,8 @@ GDB := -g
 PWD = $(shell pwd)
 LINK = ./link
 
-override CFLAGS   += -Wall -Wno-unknown-pragmas $(GDB)
-override CXXFLAGS += -Wall -Wno-unknown-pragmas -D_REENTRANT $(GDB) -std=gnu++0x #-std=std=c++11
+override CFLAGS   += -Wall -Wno-unknown-pragmas -Wno-unused-function $(GDB)
+override CXXFLAGS += -Wall -Wno-unknown-pragmas -Wno-unused-function -D_REENTRANT $(GDB) -std=gnu++0x #-std=std=c++11
 
 
 override INCPATH  += -I$(PWD)/../../../contrib/boost/boost_1_57_0/ -I. 
