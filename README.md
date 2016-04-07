@@ -4,3 +4,7 @@
 A lightweight, secure network-proxy service.
 
 see [documents](./doc/README.md)
+
+##### LICENSE
+
+Placeholder
