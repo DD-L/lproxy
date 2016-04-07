@@ -8,7 +8,7 @@ lproxy
 	$ cd /path/to/lproxy
 	$ make init
 	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
-	$ make install   # 程序和配置文件会被赋值到 /path/to/
+	$ make install   # 程序和配置文件会被复制到 /path/to/
 	```
 2. 运行 `lproxy` 服务
 
@@ -37,7 +37,7 @@ lproxy
 	| `boost.force`| 强制释放 boost 库源码|
 	| `cryptopp`   | 下载并编译 `cryptopp` 静态库|
 	| `lss`        | 编译 lss, 执行 `cd /path/to/lproxy/src/core/lss; make -f Makefile`|
-	| `lss.cygwin` | 在 Cygwin 环境下编译 lss， 执行 `cd /path/to/lproxy/src/core/lss; make -f Makefile.Cygwin`|
+	| `lss.cygwin` | 在 Cygwin 环境下编译 lss，执行 `cd /path/to/lproxy/src/core/lss; make -f Makefile.Cygwin`|
 	| `lss.clean`  | 执行 `cd /path/to/lproxy/src/core/lss; make clean` |
 	| `install`    | 会将编译好的 lss 二进制程序及配置文件拷贝到 `/path/to/lproxy/bin` 目录下|
 	| `uninstall`  | 删除安装， 会执行 `$(RM) /path/to/lproxy/bin` |
