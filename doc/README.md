@@ -10,6 +10,9 @@ lproxy
 	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
 	$ make install   # 程序和配置文件会被复制到 /path/to/
 	```
+	若要编译 `DEBUG` 版本的 `lss`， 对 `make lss` 添加 `DEBUG=enable` 选项即可。
+
+
 2. 运行 `lproxy` 服务
 
 	* 运行 local 端示例:
@@ -43,21 +46,43 @@ lproxy
 	| `uninstall`  | 删除安装， 会执行 `$(RM) /path/to/lproxy/bin` |
 	| `clean`      | 依次清除 “先前释放的 boost 库源码”，“cryptocpp 源码及其静态库”|
 
+
 4. 补充说明
 
    * 在释放 `boost` 库源码时，会检测系统是否安装 `7z`工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`; Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * `lss` 暂未提供在 Windows/MinGW 环境下编译支持。
 
-## lproxy 所有组件
+## Docker 支持
 
-### static_analysis
+* `lproxy` 
+
+	1. 获取 `lproxy` Docker 镜像
+	
+		该镜像包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境 （此部分尚未完成）
+	
+	2. 在容器中运行 `lproxy` 服务
+	
+		（此部分尚未完成）
+
+* `lproxy-dev`
+	
+	1. 获取 `lproxy-dev` Docker 镜像
+
+		该镜像包含 `lproxy` 完整的源码 及其 开发、编译、调试环境。源码来自 `lproxy` 的 [lss 分支](https://github.com/DD-L/lproxy/tree/lss) 。
+		
+		（文档待添加）	
+
+
+## `lproxy/src/` 中的所有组件
+
+### 1. static_analysis
 
 cpp 代码静态检查
 
 * [cppcheck](./static_analysis/cppcheck/readme.md)
 * [pclint](./static_analysis/pclint/readme.md)
 
-### store
+### 2. store
 
 适用于“多生产者-多消费者” 的模板仓库
 
@@ -67,7 +92,7 @@ cpp 代码静态检查
 	* [Store](./store/store.md)
 	* [Store::push & Store::pop 性能测试](../src/core/store/test/testscript/readme.md)
 
-### log
+### 3. log
 
 日志库
 
@@ -89,7 +114,7 @@ cpp 代码静态检查
 	* [LogOutput2](./log/logoutput2.md)
 	* [init_simple](./log/init_simple.md)
 	
-### exception
+### 4. exception
 
 异常类型组件
 
@@ -98,7 +123,7 @@ cpp 代码静态检查
 2. 详细文档
 	* [exception](./except/except.md)
 
-### language
+### 5. language
 
 多国语言组件
 
@@ -107,11 +132,11 @@ cpp 代码静态检查
 2. 详细文档
 	* [Lang](./language/lang.md)
 
-### deel.boost.python
+### 6. deel.boost.python
 
 * see [documents](../src/core/deel.boost.python/README.md)
 
-### python
+### 7. python
 
 cpp 调用 python 函数 的简易工具
 
@@ -121,7 +146,7 @@ cpp 调用 python 函数 的简易工具
 	* [pyinit](./python/pyinit.md)
 	* [GetPyFunc](./python/getpyfunc.md)
 
-### logrotate
+### 8. logrotate
 
 日志转储 （对持续膨胀的日志文件进行分片压缩）
 
@@ -130,11 +155,11 @@ cpp 调用 python 函数 的简易工具
 2. 详细文档
 	* [Logrotate](./logrotate/logrotate.md)
 
-### workers
+### 9. workers
 
 一种资源池实现 (该分支尚未合并, 遗留。代码: [here](https://github.com/DD-L/lproxy/tree/feature-workers/src/core/workers))
 
-### crypto
+### 10. crypto
 
 加解密工具
 
@@ -150,7 +175,7 @@ cpp 调用 python 函数 的简易工具
 	* [md5](./crypto/md5.md)
 	* [异常处理](./crypto/exception.md)
 
-### program_options
+### 11. program_options
 
 命令行选项工具
 
@@ -159,6 +184,9 @@ cpp 调用 python 函数 的简易工具
 2. 详细文档
 	* [program_options](./program_options/program_options.md)
 
-### lss
+### 12. lss
 
 lproxy 核心模块
+
+* see [documents](./lss/README.md)
+
