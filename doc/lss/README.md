@@ -40,3 +40,4 @@
 		$ cd /path/to/lproxy/src/core/lss
 		$ make DEBUG=enable        # -f Makefle.Cygwin
 		```
+* [how-to book](../../lss/src/core/lss/HOWTO)

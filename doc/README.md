@@ -140,6 +140,7 @@ cpp 代码静态检查
 	* [LogOutput](./log/logoutput.md)
 	* [LogOutput2](./log/logoutput2.md)
 	* [init_simple](./log/init_simple.md)
+3. [how-to book](../src/core/log/HOWTO)
 	
 ### 4. exception
 
@@ -172,6 +173,7 @@ cpp 调用 python 函数 的简易工具
 2. 详细文档
 	* [pyinit](./python/pyinit.md)
 	* [GetPyFunc](./python/getpyfunc.md)
+3. [how-to book](../src/core/python/HOWTO)
 
 ### 8. logrotate
 
@@ -181,6 +183,7 @@ cpp 调用 python 函数 的简易工具
 	* [demo](./logrotate/demo.md)
 2. 详细文档
 	* [Logrotate](./logrotate/logrotate.md)
+3. [how-to book](../src/core/logrotate/HOWTO)
 
 ### 9. workers
 
@@ -201,6 +204,7 @@ cpp 调用 python 函数 的简易工具
 	* [base64](./crypto/base64.md)
 	* [md5](./crypto/md5.md)
 	* [异常处理](./crypto/exception.md)
+3. [how-to book](../src/core/crypto/HOWTO)
 
 ### 11. program_options
 
