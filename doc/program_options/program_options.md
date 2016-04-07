@@ -125,7 +125,7 @@ public:
 	std::string get(const std::string& option) const;
 	```
 	
-	获取选项后面跟的值，以空格为分界线。注意该方法返回 `std::string`, 如果你想得到数字类型，需要自己转换。如果在存储的选项中，如果 get 不到值，会抛出一个 `program_options::parameter_error ` 类型的异常。
+	获取选项后面跟的值，以空格为分界线。注意该方法返回 `std::string`, 如果你想得到数字类型，需要自行转换。如果在存储的选项中，如果 get 不到值，会抛出一个 `program_options::parameter_error ` 类型的异常。
 
 ### demo
 

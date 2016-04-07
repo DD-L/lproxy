@@ -116,7 +116,7 @@ void test(void) {
     printf("\n\n");
 
     // 解密
-    aes.encrypt(recovered, &cipher[0], cipher.size());
+    aes.decrypt(recovered, &cipher[0], cipher.size());
 
     assert(recovered.size() == buffer_size);
     for (std::size_t i = 0; i < buffer_size; ++i) {
