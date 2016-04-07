@@ -10,17 +10,17 @@ lproxy
 	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
 	$ make install   # 程序和配置文件会被复制到 /path/to/
 	```
-	若要编译 `DEBUG` 版本的 `lss`， 对 `make lss` 添加 `DEBUG=enable` 选项即可。
+	若要编译 `DEBUG` 版本的 `lss`，对 `make lss` 添加 `DEBUG=enable` 选项即可。
 
 
 2. 运行 `lproxy` 服务
 
-	* 运行 local 端示例:
+	* 运行 local 端程序示例:
 
 		```shell
 		$ ./bin/lsslocal.exe -c ./bin/local-config.json
 		```
-	* 运行 server 端示例:
+	* 运行 server 端程序示例:
 
 		```shell
 		$ ./bin/lssserver.exe -c ./bin/server-config.json
@@ -85,7 +85,7 @@ lproxy
 
 		参考示例：
 
-		```cpp
+		```shell
 		$ # 创建并运行一个临时容器 --rm
 		$ sudo docker run --rm --name lproxy_dev -p 8087-8088:8087-8088 -it deel/lproxy-dev
 		$ # 容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里是最新的源码
