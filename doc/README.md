@@ -1,14 +1,12 @@
 # lproxy
 
-lproxy
-
 1. 编译安装 `lproxy`
 
 	```shell
 	$ cd /path/to/lproxy
 	$ make init
 	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
-	$ make install   # 程序和配置文件会被复制到 /path/to/
+	$ make install   # 程序文件和配置文件会被复制到 /path/to/lproxy/bin 文件夹内
 	```
 	若要编译 `DEBUG` 版本的 `lss`，对 `make lss` 添加 `DEBUG=enable` 选项即可。
 
@@ -20,15 +18,25 @@ lproxy
 		```shell
 		$ ./bin/lsslocal.exe -c ./bin/local-config.json
 		```
+		`-c` 选项指定配置文件。如果不指定，则会在当前工作目录寻找一个名字叫做 `local-config.json` 的文件
+
 	* 运行 server 端程序示例:
 
 		```shell
 		$ ./bin/lssserver.exe -c ./bin/server-config.json
 		```
+		`-c` 选项指定配置文件。如果不指定，则会在当前工作目录寻找一个名字叫做 `server-config.json` 的文件
+
 	更多运行参数, 请查阅 `--help`
 
 
-3. `/path/to/lproxy/Makefile` “伪目标”说明
+3. 配置文件
+
+	* local 端配置文件 [local-config.json](./lss/local-config.json.md)
+	* server 端配置文件 [server-config.json](./lss/server-config.json.md)
+
+
+4. `/path/to/lproxy/Makefile` “伪目标”说明
 
 	| 伪目标       | 作用       |
 	|--------------|------------|
@@ -47,7 +55,7 @@ lproxy
 	| `clean`      | 依次清除 “先前释放的 boost 库源码”，“cryptocpp 源码及其静态库”|
 
 
-4. 补充说明
+5. 补充说明
 
    * 在释放 `boost` 库源码时，会检测系统是否安装 `7z`工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`; Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * `lss` 暂未提供在 Windows/MinGW 环境下编译支持。
@@ -58,11 +66,11 @@ lproxy
 
 	1. 获取 `lproxy` Docker 镜像
 	
-		该镜像只包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境 （此部分尚未完成）
+		该镜像只包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境。 **（此部分尚未完成）**
 	
 	2. 在容器中运行 `lproxy` 服务
 	
-		（此部分尚未完成）
+		**（此部分尚未完成）**
 
 * `lproxy-dev`
 	
@@ -88,9 +96,8 @@ lproxy
 		```shell
 		$ # 创建并运行一个临时容器 --rm
 		$ sudo docker run --rm --name lproxy_dev -p 8087-8088:8087-8088 -it deel/lproxy-dev
-		$ # 容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里是最新的源码
-		$ # 之后就可以编译、调试运行 lproxy 服务了
 		```
+		容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里拥有最新的源码。之后就可以在容器里开森的编译、调试运行 lproxy 服务了
 
 
 ## [`lproxy/src/`](../src) 中的所有组件
