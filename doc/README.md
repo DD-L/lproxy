@@ -8,7 +8,7 @@
 	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
 	$ make install   # 程序文件和配置文件会被复制到 /path/to/lproxy/bin 文件夹内
 	```
-	若要编译 `DEBUG` 版本的 `lss`，对 `make lss` 添加 `DEBUG=enable` 选项即可。
+	若要编译 `DEBUG` 版本的 `lss`，对 `make lss` 添加 `DEBUG=enable` 选项即可。更多信息请查阅 [Makefile Variables](./MakefileVariables.md)。
 
 
 2. 运行 `lproxy` 服务
@@ -59,6 +59,10 @@
 
    * 在释放 `boost` 库源码时，会检测系统是否安装 `7z`工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`; Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * `lss` 暂未提供在 Windows/MinGW 环境下编译支持。
+
+6. Makefile 变量
+
+	* [Makefile Variables](./MakefileVariables.md)
 
 ## Docker 支持
 
