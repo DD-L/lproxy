@@ -1,13 +1,14 @@
 {
+    // see https://github.com/DD-L/lproxy/blob/documents/doc/lss/local-config.json.md
     "lsslocal":
     {
-        "bind_addr": "0.0.0.0",     // 本地绑定的 ip, 支持 ipv4/ipv6
-        "bind_port": 8087,          // 本地绑定的端口, 必须为数字类型
-        "server_name": "127.0.0.1", // lssserver 的地址, 支持ipv4/ipv6/domain
-        "server_port": "8088",      // lssserver 的端口, 字符串类型
-        "auth_key": "xxxxxxxxx",    // lsslocal 端的认证 key, 字符串类型
-        "zip_on": false,            // 是否对流量进行压缩. 布尔类型数据. 默认值 false
-        //"logfile": "/var/log/lproxy/local.err", // (错误)运行日志. 如果未设置则不保存日志
-        "timeout": 30               // 超时设置 (秒). 必须为数字类型. 默认值 30
+        "bind_addr": "0.0.0.0",
+        "bind_port": 8087,
+        "server_name": "127.0.0.1",
+        "server_port": "8088",
+        "auth_key": "xxxxxxxxx",
+        "zip_on": false,
+        //"logfile": "/var/log/lproxy/local.err", 
+        "timeout": 30 
     }
 }
