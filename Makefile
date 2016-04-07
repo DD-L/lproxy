@@ -60,6 +60,6 @@ uninstall:
 	$(RM) $(BIN)
 
 clean:
-	cd contrib/boost; make clean -f $(MAKEFILE)
+	cd contrib/boost; make clean -f $(BOOST_MAKEFILE)
 	cd contrib/cryptopp; make clean
 
