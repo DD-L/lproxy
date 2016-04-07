@@ -2,6 +2,54 @@
 
 lproxy
 
+1. 编译安装 `lproxy`
+
+	```shell
+	$ cd /path/to/lproxy
+	$ make init
+	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
+	$ make install   # 程序和配置文件会被赋值到 /path/to/
+	```
+2. 运行 `lproxy` 服务
+
+	* 运行 local 端示例:
+
+		```shell
+		$ ./bin/lsslocal.exe -c ./bin/local-config.json
+		```
+	* 运行 server 端示例:
+
+		```shell
+		$ ./bin/lssserver.exe -c ./bin/server-config.json
+		```
+	更多运行参数, 请查阅 `--help`
+
+
+3. `/path/to/lproxy/Makefile` “伪目标”说明
+
+	| 伪目标       | 作用       |
+	|--------------|------------|
+	| `all`        | do nothing |
+	| `init`       | 依次执行伪目标 `check` `boost` `cryptopp`|
+	| `init.force` | 依次执行伪目标 `check` `boost.force` `cryptopp`|
+	| `check`      | 检查编译环境：1.系统是否安装`dos2unix`; 2. 是否支持 C++11|
+	| `boost`      | 释放 boost 库源码 （lproxy 是以 boost 源码嵌入的方式完成编译的）|
+	| `boost.force`| 强制释放 boost 库源码|
+	| `cryptopp`   | 下载并编译 `cryptopp` 静态库|
+	| `lss`        | 编译 lss, 执行 `cd /path/to/lproxy/src/core/lss; make -f Makefile`|
+	| `lss.cygwin` | 在 Cygwin 环境下编译 lss， 执行 `cd /path/to/lproxy/src/core/lss; make -f Makefile.Cygwin`|
+	| `lss.clean`  | 执行 `cd /path/to/lproxy/src/core/lss; make clean` |
+	| `install`    | 会将编译好的 lss 二进制程序及配置文件拷贝到 `/path/to/lproxy/bin` 目录下|
+	| `uninstall`  | 删除安装， 会执行 `$(RM) /path/to/lproxy/bin` |
+	| `clean`      | 依次清除 “先前释放的 boost 库源码”，“cryptocpp 源码及其静态库”|
+
+4. 补充说明
+
+   * 在释放 `boost` 库源码时，会检测系统是否安装 `7z`工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`; Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
+   * `lss` 暂未提供在 Windows/MinGW 环境下编译支持。
+
+## lproxy 所有组件
+
 ### static_analysis
 
 cpp 代码静态检查
