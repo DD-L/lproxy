@@ -17,7 +17,7 @@
         //"logfile": "/var/log/lproxy/server.err", // (错误)运行日志. 如果未设置则不保存日志
         
         // lsslocal 的认证 key 集合, 重复无效. 
-        //  计算方法: 
+        //  计算方法: (32 字节长度的大写 md5 结果)
         //      upper(md5-32(lsslocal.auth_key))
         //  用 python 来描述是:
         //     >>> import hashlib
