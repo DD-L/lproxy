@@ -59,6 +59,7 @@
 
    * 在释放 `boost` 库源码时，会检测系统是否安装 `7z`工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`; Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * `lss` 暂未提供在 Windows/MinGW 环境下编译支持。
+   * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
 
 6. Makefile 变量
 
@@ -228,4 +229,3 @@ cpp 调用 python 函数 的简易工具
 lproxy 核心模块
 
 * see [documents](./lss/README.md)
-
