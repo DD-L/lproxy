@@ -61,7 +61,7 @@ class Logrotate {
 	功能： 完成 std::ofstream 对象 和 日志文件(名) 的绑定. 
 	1. 如果绑定成功返回 true, 否则返回 false. 如绑定时文件被占用或当前要绑定的 std::ofstream 之前未 `close()`, 都将引发绑定失败.
 	 
-	2. 此方法将内置 `ofstream::open()` 函数.
+	2. 此方法内置 `ofstream::open()` 函数.
 	3. 参数说明
 		1. 参数一 `logfile`:  要绑定的ofstream对象;
 		2. 参数二 `filename`: 要绑定的日志文件名;
