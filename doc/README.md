@@ -1,6 +1,15 @@
 # lproxy
 
-1. 编译安装 `lproxy`
+1. 获取 `lproxy` 源码
+
+	```shell
+	$ git clone https://github.com/DD-L/lproxy.git lproxy
+	$ cd lproxy
+	$ git submodule init
+	$ git submodule update
+	```
+
+2. 编译安装 `lproxy`
 
 	```shell
 	$ cd /path/to/lproxy
@@ -11,7 +20,7 @@
 	若要编译 `DEBUG` 版本的 `lss`，对 `make lss` 添加 `DEBUG=enable` 选项即可。更多信息请查阅 [Makefile Variables](./MakefileVariables.md)。
 
 
-2. 运行 `lproxy` 服务
+3. 运行 `lproxy` 服务
 
 	* 运行 local 端程序示例:
 
@@ -30,13 +39,13 @@
 	更多运行参数, 请查阅 `--help`
 
 
-3. 配置文件
+4. 配置文件
 
 	* local 端配置文件 [local-config.json](./lss/local-config.json.md)
 	* server 端配置文件 [server-config.json](./lss/server-config.json.md)
 
 
-4. `/path/to/lproxy/Makefile` “伪目标”说明
+5. `/path/to/lproxy/Makefile` “伪目标”说明
 
 	| 伪目标       | 作用       |
 	|--------------|------------|
@@ -55,13 +64,13 @@
 	| `clean`      | 依次清除 “先前释放的 boost 库源码”，“cryptocpp 源码及其静态库”|
 
 
-5. 补充说明
+6. 补充说明
 
    * 在释放 `boost` 库源码时，会检测系统是否安装 `7z`工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`; Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * `lss` 暂未提供在 Windows/MinGW 环境下编译支持。
    * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
 
-6. Makefile 变量
+7. Makefile 变量
 
 	* [Makefile Variables](./MakefileVariables.md)
 
