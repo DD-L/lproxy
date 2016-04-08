@@ -196,7 +196,7 @@ cpp 调用 python 函数 的简易工具
 
 ### 10. workers
 
-一种资源池实现 (该分支尚未合并, 遗留。代码: [here](https://github.com/DD-L/lproxy/tree/feature-workers/src/core/workers))
+Worker 线程池 (该分支尚未合并, 遗留。代码: [here](https://github.com/DD-L/lproxy/tree/feature-workers/src/core/workers))
 
 ### 11. crypto
 
