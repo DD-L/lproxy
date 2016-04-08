@@ -37,6 +37,10 @@ install:
     - cd $PROJECT_ROOT/src/core/log; make test 
     - cd $PROJECT_ROOT/src/core/logrotate/demo; make PYTHON_INCLUDE=$PROJECT_ROOT/contrib/Python-2.7.11/include/python2.7 PYTHON_LIB_PATH=$PROJECT_ROOT/contrib/Python-2.7.11/lib PYTHON_LIB=-lpython2.7 
     - cd $PROJECT_ROOT/src/core/program_options/demo; make
+    - cd $PROJECT_ROOT/src/core/language/demo; make
+
+    - cd $PROJECT_ROOT/src/core/lss; make # <-- log using Container_Type=-DLOG_LOCKFREE_QUEUE
+
     - cd $PROJECT_ROOT
 before_script:
 script:
@@ -49,6 +53,11 @@ script:
     - ./test/bin/test_loglevel
     - ./test/bin/test_logmanager
     - cd $PROJECT_ROOT/src/core/program_options/demo; ./bin/demo -p helloworld
+    - cd $PROJECT_ROOT/src/core/language/demo; ./bin/demo
+    - cd $PROJECT_ROOT/src/core/lss;
+    - ./bin/lssserver.exe --help
+    - ./bin/lsslocal.exe --help
+    - ./bin/lkeep.exe --help
 
     - cd $PROJECT_ROOT
 after_script:
@@ -58,6 +67,8 @@ after_script:
     - cd $PROJECT_ROOT/src/core/logrotate; make clean 
     - cd $PROJECT_ROOT/src/core/logrotate/demo; make clean 
     - cd $PROJECT_ROOT/src/core/program_options/demo; make clean
+    - cd $PROJECT_ROOT/src/core/language; make clean
+    - cd $PROJECT_ROOT/src/core/lss; make clean
 
     - cd $PROJECT_ROOT
 

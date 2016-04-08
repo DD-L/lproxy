@@ -1,3 +1,3 @@
 #include "lang.h"
-Lang* Lang::lang = NULL;
+std::shared_ptr<Lang> Lang::_lang = std::make_shared<Lang>();
 

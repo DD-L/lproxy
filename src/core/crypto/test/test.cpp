@@ -327,7 +327,8 @@ void test_md5(void) {
     // test decrypt
     try {
         std::vector<uint8_t> recovered;
-        encryptor.decrypt(recovered, &recovered[0], recovered.size());
+        encryptor.decrypt(recovered, 
+                (const uint8_t*)&cipher[0], cipher.size());
     }
     catch(std::exception& e) {
         std::cout << e.what() << std::endl;

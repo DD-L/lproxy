@@ -1,0 +1,22 @@
+{
+    // see https://github.com/DD-L/lproxy/blob/documents/doc/lss/server-config.json.md
+    "lssserver": 
+    {
+        "bind_addr": "0.0.0.0",
+        "bind_port": 8088,
+        "bind_addr_socks5": "127.0.0.1",
+        "bind_addr_type_socks5": "ipv4",
+        "bind_port_socks5": 8088,
+        "zip_on": false,
+        "timeout": 30,
+        //"logfile": "/var/log/lproxy/server.err",
+        
+        // upper(md5-32(lsslocal.auth_key))
+        "cipher_auth_key_set": [
+            //"62B1021B8A7BB09630BEF739189DDDF8",  // "abdeF1"
+            // ...,
+            "ABA369F7D2B28A9098A0A26FEB7DC965"    // "xxxxxxxxx"
+        ]
+    }
+}
+

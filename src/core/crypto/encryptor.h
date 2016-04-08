@@ -18,7 +18,7 @@ namespace crypto {
  */ 
 class Encrypt {
 public:
-    Encrypt(void) {} 
+    Encrypt(void) = default; 
     Encrypt(const Encrypt&) = delete;
     Encrypt& operator= (const Encrypt&) = delete;
     virtual ~Encrypt() {}

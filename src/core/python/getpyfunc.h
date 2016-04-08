@@ -229,7 +229,7 @@ class GetPyFunc {
             pyexception();
             return boost::python::api::object();
         }
-        // Damn, I don't want to write any more, 
+        // Damn, I don't want to continue any more, 
         // and now, with 10 Enough, like boost::bind()
 #endif // __cplusplus
     private:

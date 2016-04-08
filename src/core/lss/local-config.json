@@ -1,0 +1,14 @@
+{
+    // see https://github.com/DD-L/lproxy/blob/documents/doc/lss/local-config.json.md
+    "lsslocal":
+    {
+        "bind_addr": "0.0.0.0",
+        "bind_port": 8087,
+        "server_name": "127.0.0.1",
+        "server_port": "8088",
+        "auth_key": "xxxxxxxxx",
+        "zip_on": false,
+        //"logfile": "/var/log/lproxy/local.err", 
+        "timeout": 30 
+    }
+}

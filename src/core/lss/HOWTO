@@ -1,0 +1,22 @@
+1. Build
+
+    target:
+        ./bin/lsslocal.exe
+        ./bin/lssserver.exe
+        ./bin/lkeep.exe
+
+    Command:
+        Build in linux:
+        $ make -f Makefile -j 4
+
+        Build in Cygwin:
+        $ make -f Makefile.Cygwin -j 4
+
+        If you want a DEBUG version, try `$ make ... DEBUG=enable`.
+        
+2. Run
+    
+    Command:
+        $ ./bin/lsslocal.exe --help
+        $ ./bin/lssserver.exe --help
+        $ ./bin/lkeep.exe --help
