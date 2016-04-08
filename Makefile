@@ -40,10 +40,10 @@ cryptopp:
 	cd contrib/cryptopp; make
 
 lss:
-	cd src/core/lss; make -j 4
+	cd src/core/lss; make
 
 lss.cygwin:
-	cd src/core/lss; make -f Makefile.Cygwin -j 4
+	cd src/core/lss; make -f Makefile.Cygwin
 
 lss.clean:
 	cd src/core/lss; make clean
