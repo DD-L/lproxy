@@ -107,16 +107,16 @@
 
 ## [`lproxy/src/`](../src) 中的所有组件
 
-### 1. boost_build
-
-lproxy 是以 boost 源码嵌入的方式完成编译的，`boost_build` 中包含了必须事先编译才能使用 boost 库组件，这些 boost 组件为 lproxy 所用。
-
-### 2. static_analysis
+### 1. static_analysis
 
 cpp 代码静态检查
 
 * [cppcheck](./static_analysis/cppcheck/readme.md)
 * [pclint](./static_analysis/pclint/readme.md)
+
+### 2. boost_build
+
+lproxy 是以 boost 源码嵌入的方式完成编译的，`boost_build` 中包含了必须事先编译才能使用 boost 库组件，这些 boost 组件为 lproxy 所用。
 
 ### 3. store
 
