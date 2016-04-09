@@ -80,11 +80,33 @@
 
 	1. 获取 `lproxy` Docker 镜像
 	
-		该镜像只包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境。 **（此部分尚未完成）**
-	
+		该镜像只包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境。
+		* docker.io
+
+			see [deel/lproxy](https://hub.docker.com/r/deel/lproxy/)
+
+			```shell
+			$ sudo docker pull deel/lproxy
+			```
+		* daocloud.io
+
+			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参照 [“lproxy 镜像制作参考”](https://github.com/DD-L/lproxy/tree/docker-dev/docker/lproxy)
+
 	2. 在容器中运行 `lproxy` 服务
-	
-		**（此部分尚未完成）**
+		
+		```shell
+		$ sudo docker run -d --name lproxy -p 8087-8088:8087-8088 -i deel/lproxy
+		```
+		* local 端运行示例
+
+			```shell
+			$ sudo docker exec -i lproxy ./lsslocal.exe  #--help
+			```
+		* server 端运行示例
+
+			```shell
+			$ sudo docker exec -i lproxy ./lssserver.exe #--help
+			```
 
 * `lproxy-dev`
 	
