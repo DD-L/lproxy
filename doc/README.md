@@ -90,7 +90,7 @@
 			```
 		* daocloud.io
 
-			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参照 [“lproxy 镜像制作参考”](https://github.com/DD-L/lproxy/tree/docker-dev/docker/lproxy)
+			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参照 [“lproxy 镜像制作参考”](https://github.com/DD-L/lproxy-docker/tree/master/lproxy)
 
 	2. 在容器中运行 `lproxy` 服务
 		
@@ -123,7 +123,7 @@
 			```
 		* daocloud.io
 
-			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参考 [Dockerfile](https://github.com/DD-L/lproxy/blob/docker-dev/docker/dev/Dockerfile) 
+			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参考 [Dockerfile](https://github.com/DD-L/lproxy-docker/blob/master/dev/Dockerfile)
 
 	2. 运行 lproxy-dev 容器
 
