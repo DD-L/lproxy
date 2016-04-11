@@ -174,11 +174,12 @@ lproxy 是以 boost 源码嵌入的方式完成编译的，`boost_build` 中包�
 
 日志库
 
-1. 使用示例
+1. [特性](./log/feature.md)
+2. 使用示例
 	* [demo](./log/demo.md)
 	* [demo2](./log/demo2.md)
 	* [lss_log_demo](./log/lss_log_demo.md)
-2. 详细文档
+3. 详细文档
 	* [log_types](./log/log_types.md)
 	* [loglevel](./log/loglevel.md) (以及被 [遗弃](./log/loglevel.old.md) 的版本)
 	* [LogStoreInterface](./log/logstoreinterface.md)
@@ -191,7 +192,7 @@ lproxy 是以 boost 源码嵌入的方式完成编译的，`boost_build` 中包�
 	* [LogOutput](./log/logoutput.md)
 	* [LogOutput2](./log/logoutput2.md)
 	* [init_simple](./log/init_simple.md)
-3. [how-to book](../src/core/log/HOWTO)
+4. [how-to book](../src/core/log/HOWTO)
 	
 ### 5. exception
 
