@@ -47,7 +47,7 @@ MAKE_LOGLEVEL(FATAL, 50); // FATAL 权重为50
 MAKE_LOGLEVEL(MyLevel1, 25);
 MAKE_LOGLEVEL(MyLevel2, 25);    // 针对当前的日志库级别，权重特意被设计成可以重复的值
 //MAKE_LOGLEVEL(MyLevel1, 100); // 错误：
-// 1. 如果此重复定义出现在不同作用域，则编译器在编译器不会报错。
+// 1. 如果此重复定义出现在不同作用域，则编译器在编译期不会报错。
 //    但在程序运行时会抛出‘重复定义常量 MyLevel1 ’的异常信息，异常信息包含错误定义所在的文件及行号:
 //    比如： Log Exception: Attempts to re-define an existing global constant - 'MyLevel1' [test_loglevel.cpp:27]
 // 2. 如果此重复定义出现在相同作用域，则会直接在编译期报"声明冲突"的错误信息，导致无法通过编译.
@@ -99,9 +99,8 @@ LogType logtype = makelevel(INFO);
 
 有关 `MAKE_LOGLEVEL` 和 `MAKE_LOGLEVEL_INSIDE` 以及 `makelevel` 的更详细的补充说明，见本页面的最底部。
 
----------
 
-### 详细的使用方法，见 src/log/test/test_loglevel.cpp
+### LogLevel 的详细使用方法，见 [src/core/log/test/test_loglevel.cpp](../../src/core/log/test/test_loglevel.cpp)
 
 ---------
 

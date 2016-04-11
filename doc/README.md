@@ -80,11 +80,33 @@
 
 	1. 获取 `lproxy` Docker 镜像
 	
-		该镜像只包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境。 **（此部分尚未完成）**
-	
+		该镜像只包含必要的 `lproxy` 二进制程序、配置文件 及其 运行环境。
+		* docker.io
+
+			see [deel/lproxy](https://hub.docker.com/r/deel/lproxy/)
+
+			```shell
+			$ sudo docker pull deel/lproxy
+			```
+		* daocloud.io
+
+			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参照 [“lproxy 镜像制作参考”](https://github.com/DD-L/lproxy-docker/tree/master/lproxy)
+
 	2. 在容器中运行 `lproxy` 服务
-	
-		**（此部分尚未完成）**
+		
+		```shell
+		$ sudo docker run -d --name lproxy -p 8087-8088:8087-8088 -i deel/lproxy
+		```
+		* local 端运行示例
+
+			```shell
+			$ sudo docker exec -i lproxy ./lsslocal.exe  #--help
+			```
+		* server 端运行示例
+
+			```shell
+			$ sudo docker exec -i lproxy ./lssserver.exe #--help
+			```
 
 * `lproxy-dev`
 	
@@ -101,14 +123,14 @@
 			```
 		* daocloud.io
 
-			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参考 [Dockerfile](https://github.com/DD-L/lproxy/blob/docker-dev/docker/dev/Dockerfile) 
+			目前在 daocloud.io 没有公开该镜像的访问控制，如果有需要请参考 [Dockerfile](https://github.com/DD-L/lproxy-docker/blob/master/dev/Dockerfile)
 
 	2. 运行 lproxy-dev 容器
 
 		参考示例：
 
 		```shell
-		$ # 创建并运行一个临时容器 --rm
+		$ # 创建并运行一个 临时(--rm) 容器
 		$ sudo docker run --rm --name lproxy_dev -p 8087-8088:8087-8088 -it deel/lproxy-dev
 		```
 		容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里拥有最新的源码。之后就可以在容器里开森的编译、调试运行 lproxy 服务了
