@@ -125,7 +125,7 @@ lproxy 是一套轻巧的、一对多的、安全的 Socks5 网络代理服务�
 	
 	1. 获取 `lproxy-dev` Docker 镜像
 
-		该镜像包含 `lproxy` [lss 分支](https://github.com/DD-L/lproxy/tree/lss)源码 及其完整的 开发、编译、运行调试环境。
+		该镜像包含 `lproxy` 的[ lss 分支](https://github.com/DD-L/lproxy/tree/lss)源码 及其完整的 开发、编译、运行调试环境。
 		
 		* docker.io
 
