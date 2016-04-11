@@ -143,7 +143,7 @@ void do_loop(const arg_t& arg) {
         // https://github.com/BorisSchaeling/boost-process
         // http://www.highscore.de/boost/process0.5/
         // 以后要用 boost.process 替换 简陋粗糙的 ::system()
-        ::system(arg.command_line.c_str());
+        (void)::system(arg.command_line.c_str());
         if (arg.interval > 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(arg.interval));
         }
