@@ -130,7 +130,7 @@
 		参考示例：
 
 		```shell
-		$ # 创建并运行一个临时容器 --rm
+		$ # 创建并运行一个 临时(--rm) 容器
 		$ sudo docker run --rm --name lproxy_dev -p 8087-8088:8087-8088 -it deel/lproxy-dev
 		```
 		容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里拥有最新的源码。之后就可以在容器里开森的编译、调试运行 lproxy 服务了
