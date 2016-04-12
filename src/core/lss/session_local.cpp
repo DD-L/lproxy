@@ -369,7 +369,6 @@ void session::right_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            // 有可能是右边的数据，分包遗留的未读数据
             logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
             if (ec.less() > 0) {
                 //  
@@ -378,6 +377,23 @@ void session::right_read_handler(const boost::system::error_code& error,
 
                 lsslogdebug("incomplete_data. start to async-read " 
                         << ec.less() << " byte data from socket_right");
+
+                const std::size_t lss_pack_size =
+                    lss_reply->get_data().size() + 4; // lss_pack 包头大小为 4
+
+                if (bytes_transferred < lss_pack_size) {
+                    // 当前包数据不完整，需要再读一些
+                    // 修正 lss_reply 中的 data 字段的 size
+                    lss_reply->get_data().resize(bytes_transferred - 4);
+                }
+                else if (bytes_transferred == lss_pack_size) {
+                    // 分包后，(右边的) 数据不完整，有遗留的未读数据
+                }
+                else {
+                    // 理论上不可能出现这种情况
+                    _print_s_err("impossible!! "<< __FILE__ << ":" << __LINE__);
+                }
+
                 this->socket_right.async_read_some(
                         boost::asio::buffer(&(*data_right_rest)[0], 
                             (std::size_t)ec.less()), 
