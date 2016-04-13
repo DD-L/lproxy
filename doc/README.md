@@ -152,13 +152,12 @@
 
 *这只是一个示例*
 
-前期准备：
+预先准备：
 
-1. 本地需要 `lproxy` local 端程序：`lsslocal.exe`。
-
+1. 本地需要一个 `lproxy` local 端程序：`lsslocal.exe`。
 2. 注册一个 [daocloud.io](https://www.daocloud.io/) 账号。
 
-接下来，只需简单的几个步骤，就能即刻体验 `lproxy`：[图文教程](./demo.md)
+接下来，只需简单的几个步骤，就能即刻体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
 
 ## 开发文档
 
