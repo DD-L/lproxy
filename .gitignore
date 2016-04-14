@@ -29,6 +29,7 @@
 
 #
 contrib/boost_1_57_0/
+contrib/cryptopp/cryptopp/
 doc/notes/
 src/core/test/
 bin/
