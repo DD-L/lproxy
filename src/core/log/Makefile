@@ -1,5 +1,6 @@
 RM = rm -rf
 GDB := -g
+MAKE := make
 
 # Settings Container Type
 #Container_Type = -DLOG_PRIORITY_QUEUE
@@ -51,17 +52,17 @@ all: loglib
 demo: empty 
 	@echo "Compiling Log-demo ..."
 ifdef USE_LOCK
-	cd $(DEMODIR); make Container_Type=$(Container_Type) USE_LOCK=$(USE_LOCK)
+	cd $(DEMODIR); $(MAKE) Container_Type=$(Container_Type) USE_LOCK=$(USE_LOCK)
 else
-	cd $(DEMODIR); make Container_Type=$(Container_Type)
+	cd $(DEMODIR); $(MAKE) Container_Type=$(Container_Type)
 endif
 
 demo2: empty 
 	@echo "Compiling Log-demo2 ..."
 ifdef USE_LOCK
-	cd $(DEMO2DIR); make Container_Type=$(Container_Type) USE_LOCK=$(USE_LOCK)
+	cd $(DEMO2DIR); $(MAKE) Container_Type=$(Container_Type) USE_LOCK=$(USE_LOCK)
 else
-	cd $(DEMO2DIR); make Container_Type=$(Container_Type)
+	cd $(DEMO2DIR); $(MAKE) Container_Type=$(Container_Type)
 endif
 
 empty:
@@ -85,13 +86,13 @@ ifndef Container_Type
 	$(info [ err] Container_Type not set!)
 	$(info [info] e.g )
 	$(info [info] $$ Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE')
-	$(info [info] $$ make ... Container_Type=$$Container_Type ...)
+	$(info [info] $$ $(MAKE) ... Container_Type=$$Container_Type ...)
 	$(error error)
 endif
 	[ -d '$(LINK)' ] || mkdir $(LINK)
 	[ -d '$(LOGLIB)' ] || mkdir $(LOGLIB)
-	cd $(BOOST_BUILD); make -j
-	cd $(EXCEPT_DIR); make
+	cd $(BOOST_BUILD); $(MAKE) -j
+	cd $(EXCEPT_DIR); $(MAKE)
 
 
 $(LINK)/%.o: %.c
@@ -102,41 +103,41 @@ $(LINK)/%.o: %.cpp
 # 测试用例
 TestQueue:
 	@echo -e "\nCompiling $@ ..."
-	cd $(TESTDIR); make $@
+	cd $(TESTDIR); $(MAKE) $@
 	@echo
 	@echo "[log_tools::priority_queue] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 TestLogEx:
 	@echo "Compiling $@ ..."
-	cd $(TESTDIR); make $@
+	cd $(TESTDIR); $(MAKE) $@
 	@echo
 	@echo "[test_logval_extra] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 TestLockfree:
 	@echo "Compiling $@ ..."
-	cd $(TESTDIR); make $@
+	cd $(TESTDIR); $(MAKE) $@
 	@echo
 	@echo "[test_lockfree] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 TestLogLevel:
 	@echo "Compiling $@ ..."
-	cd $(TESTDIR); make $@
+	cd $(TESTDIR); $(MAKE) $@
 	@echo
 	@echo "[test_loglevel] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 TestLogManager:
 	@echo "Compiling $@ ..."
-	cd $(TESTDIR); make $@
+	cd $(TESTDIR); $(MAKE) $@
 	@echo
 	@echo "[test_LogManager] Test cases compiled successfully in '"`pwd`/$(TESTDIR)"/bin/'"
 	@echo
 
 clean:
-	cd $(TESTDIR); make clean
-	cd $(DEMODIR); make clean
-	cd $(DEMO2DIR); make clean
+	cd $(TESTDIR); $(MAKE) clean
+	cd $(DEMODIR); $(MAKE) clean
+	cd $(DEMO2DIR); $(MAKE) clean
 	$(RM) $(LINK) $(LOGLIB)

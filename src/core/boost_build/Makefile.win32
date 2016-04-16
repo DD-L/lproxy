@@ -1,0 +1,32 @@
+RM = rmdir /s /q
+GDB := -g
+
+LINK = link
+
+override CFLAGS   += -Wall -Wno-unknown-pragmas -Wno-unused-function $(GDB)
+override CXXFLAGS += -Wall -Wno-unknown-pragmas -Wno-unused-function -D_REENTRANT $(GDB) -std=gnu++0x #-std=std=c++11
+
+override INCPATH  += -I../../../contrib/boost/boost_1_57_0/ -I. 
+#STDLIB = -stdlib=libc++  # win32
+override LIBS     += $(LIBPATH) -lpthread -lrt
+
+BOOSTTHREAD = $(LINK)/sysprebuild.o  $(LINK)/tprebuild.o 
+BOOSTDATETIME = $(LINK)/dateprebuild.o
+BOOSTFILESYSTEM = $(LINK)/fsprebuild.o
+
+all: init TARGET
+
+init:
+	[ -d '$(LINK)' ] || mkdir $(LINK)
+
+TARGET: $(BOOSTTHREAD) $(BOOSTDATETIME) $(BOOSTFILESYSTEM)
+
+$(LINK)/%.o: %.c
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
+$(LINK)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
+
+
+clean:
+	cmd /c if exist $(LINK) $(RM) $(LINK)
+

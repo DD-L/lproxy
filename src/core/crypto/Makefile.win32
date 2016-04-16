@@ -1,0 +1,70 @@
+RM = rm -rf
+GDB := -g
+MAKE := make
+
+TMP = ./~tmp
+CRYPTOLIB = ./lib
+
+TESTDIR = ./test
+
+#PWD = $(shell pwd)
+#ROOT = $(PWD)/../
+ROOT = ..
+
+CRYPTOPP = $(ROOT)/../../contrib/cryptopp
+CRYPTOPP_SRC = $(CRYPTOPP)/cryptopp
+SRCEXIST= $(shell if [ -f $(CRYPTOPP_SRC)/aes.h ]; then echo "exist"; else echo "notexist"; fi; )
+#LIBEXIST = $(shell if [ -f $(CRYPTOPP_SRC)/libcryptopp.a ]; then echo "exist"; else echo "notexist"; fi;)
+
+override CFLAGS += -Wall $(GDB)
+override CXXFLAGS += -Wall $(GDB) -std=gnu++0x  
+# win32: -std=std=c++11
+override INCPATH += -I$(ROOT) -I$(CRYPTOPP) -I. 
+
+#override LIBS += $(LIBPATH) -lpthread -lrt
+
+
+
+ALL_LINK = $(TMP)/encryptor.o $(TMP)/xor_crypto.o \
+		   $(TMP)/rc4_crypto.o $(TMP)/rc4.o \
+		   $(TMP)/aes_crypto.o $(TMP)/rsa_crypto.o \
+		   $(TMP)/base64_crypto.o $(TMP)/md5_crypto.o
+
+CRYPTO_STATIC_LIB = $(CRYPTOLIB)/libcrypto.a
+CRYPTO_DYNAMIC_LIB = $(CRYPTOLIB)/libcrypto.so
+
+.PHONY : all
+.PHONY : init
+.PHONY : test
+.PHONY : clean
+
+all: init $(CRYPTO_STATIC_LIB)
+
+test:
+	cd $(TESTDIR); $(MAKE)
+
+init:
+	[ -d '$(TMP)' ] || mkdir $(TMP)
+	[ -d '$(CRYPTOLIB)' ] || mkdir $(CRYPTOLIB)
+ifneq ('$(SRCEXIST)', 'exist')
+	cd $(CRYPTOPP); $(MAKE) git_clone
+endif
+#ifneq ('$(LIBEXIST)', 'exist')
+#	cd $(CRYPTOPP_SRC); $(MAKE) libcryptopp.a -j 4
+#endif
+
+$(CRYPTO_STATIC_LIB): $(ALL_LINK)
+	$(AR) crv $@ $^
+
+$(CRYPTO_DYNAMIC_LIB): $(ALL_LINK)
+	$(CXX) -shared $^ -o $@
+
+
+$(TMP)/%.o: %.c
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
+$(TMP)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
+
+clean:
+	$(RM) $(TMP) $(CRYPTOLIB)
+	cd $(TESTDIR); $(MAKE) clean
