@@ -1,5 +1,6 @@
 RM = rm -rf
 GDB := -g
+MAKE := make
 
 TMP = ./~tmp
 BIN = ./bin
@@ -32,9 +33,9 @@ all: init $(BIN)/test $(BIN)/test.static
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
-	cd $(CRYPTO_SRC); make 
+	cd $(CRYPTO_SRC); $(MAKE) 
 ifneq ('$(LIBEXIST)', 'exist')
-	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
+	cd $(CRYPTOPP_SRC); $(MAKE) libcryptopp.a -j 4
 endif
 
 $(BIN)/test: $(TMP)/test.o $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) 
