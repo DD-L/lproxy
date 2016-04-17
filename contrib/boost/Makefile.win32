@@ -14,7 +14,7 @@ boost:
 clean: boost.clean
 
 boost.clean:
-	$(RM) $(BOOST_SRC)
+	cmd /c if exist $(BOOST_SRC) $(RM) $(BOOST_SRC)
 
 
 
