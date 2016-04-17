@@ -1,6 +1,6 @@
 ### 编译一个 Windows 版本的 `lproxy`
 
-windows 版本的 lproxy 二进制程序下载： [稍等](#)
+Windows 版本的 lproxy 二进制程序下载： [稍等](#)
 
 **注意这里的编译是在 MinGW32 下完成的**
 
