@@ -108,7 +108,7 @@
 	mingw32-make clean -f Makefile.win32 
 	```
 
-* 清除 crypto 编译生成的二级制文件
+* 清除 crypto 源码 及 编译生成的二级制文件
 
 	```
 	cd %lproxy_root%\src\core\crypto
