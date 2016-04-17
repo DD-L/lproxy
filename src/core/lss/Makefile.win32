@@ -1,0 +1,134 @@
+RM = rm -rf
+GDB := -g
+
+TMP = ./~tmp
+BIN = ./bin
+
+#MINGW_MACROS = -D__USE_W32_SOCKETS -D_WIN32_WINDOWS
+MINGW_SOCKET_LIB = -lws2_32 -lmswsock
+#CYGWIN_INCLUDE_FILE = -include w32api/_mingw_mac.h
+MINGW_INCLUDE_FILE = -include winsock2.h
+
+MACROS = -D_REENTRANT -DBOOST_REGEX_NO_LIB \
+		 -DBOOST_DATE_TIME_SOURCE -DBOOST_SYSTEM_NO_LIB \
+		 $(MINGW_MACROS) $(Log_Container_Type) $(LSS_DEBUG) $(ASIO_DEBUG)
+
+override CFLAGS   += -Wall -Wno-unused-local-typedefs $(GDB) $(MINGW_INCLUDE_FILE)
+override CXXFLAGS += -Wall -Wno-unused-local-typedefs $(MACROS) $(MINGW_INCLUDE_FILE) $(GDB) -std=c++1y
+override LIBS     += $(LIBPATH) -lpthread $(MINGW_SOCKET_LIB)
+
+override INCPATH  +=  -I$(CORE_DIR) -I$(BOOST) -I$(CRYPTOPP) -I. 
+
+
+ifdef DEBUG
+$(info [info] LSS_DEBUG $(DEBUG))
+ifeq ('$(DEBUG)', 'enable') 
+LSS_DEBUG = -DLSS_DEBUG
+#ASIO_DEBUG = -DBOOST_ASIO_ENABLE_HANDLER_TRACKING
+else
+$(error [ERROR] DEBUG=$(DEBUG), try 'DEBUG=enable')
+endif
+endif
+
+MAKE := make
+MAKEFILE := Makefile.win32
+
+ROOT := ../../..
+SRC_DIR := $(ROOT)/src
+CORE_DIR := $(SRC_DIR)/core
+
+
+Log_Container_Type = -DLOG_LOCKFREE_QUEUE # or '-DLOG_PRIORITY_QUEUE'
+
+BOOST := $(ROOT)/contrib/boost/boost_1_57_0/
+CRYPTOPP := $(ROOT)/contrib/cryptopp/
+CRYPTOPP_SRC := $(CRYPTOPP)/cryptopp/
+
+
+CRYPTO_SRC := $(CORE_DIR)/crypto/
+
+BOOST_BUILD := $(CORE_DIR)/boost_build
+BOOST_LINK_DIR := $(BOOST_BUILD)/link
+
+EXCEPT_DIR := $(CORE_DIR)/except
+EXCEPT_LINK_DIR := $(EXCEPT_DIR)/link
+
+LOG_MODULE_DIR  := $(CORE_DIR)/log
+LOG_STATIC_LIB  := $(LOG_MODULE_DIR)/lib/liblog.a
+LIB_DYNAMIC_LIB := $(LOG_MODULE_DIR)/lib/liblog.so
+
+BOOSTLINK = $(BOOST_LINK_DIR)/sysprebuild.o \
+			  $(BOOST_LINK_DIR)/tprebuild.o \
+			  $(BOOST_LINK_DIR)/dateprebuild.o \
+			  $(BOOST_LINK_DIR)/fsprebuild.o
+
+
+COMMON_LINKS = $(BOOSTLINK) $(CRYPTO_STATIC_LIB) $(CRYPTOPP_STATIC_LIB) \
+			   $(LOG_STATIC_LIB) 
+
+LOCAL_LINK = $(TMP)/local.o $(TMP)/session_local.o $(TMP)/config_local.o $(TMP)/log.o $(COMMON_LINKS)
+SERVER_LINK = $(TMP)/server.o $(TMP)/session_server.o $(TMP)/config_server.o $(TMP)/log.o $(COMMON_LINKS)
+KEEP_LINK = $(TMP)/keep.o
+
+
+CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
+CRYPTO_DYNAMIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.so
+
+CRYPTOPP_STATIC_LIB = $(CRYPTOPP_SRC)/libcryptopp.a
+LIBCRYPTOPPEXIST := $(shell if [ -f $(CRYPTOPP_STATIC_LIB) ]; then echo "exist"; else echo "notexist"; fi;)
+
+CRYPTO_STATIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.a
+CRYPTO_DYNAMIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.so
+
+
+.PHONY : all
+.PHONY : init
+.PHONY : test
+.PHONY : clean
+.PHONY : target
+
+LOCAL  = $(BIN)/lsslocal.exe 
+SERVER = $(BIN)/lssserver.exe
+KEEP   = $(BIN)/lkeep.exe
+test_clinet = $(BIN)/test_client.exe
+
+all: init target
+
+target: $(LOCAL) $(SERVER) $(KEEP) $(test_clinet) 
+
+
+init:
+	[ -d '$(TMP)' ] || mkdir $(TMP)
+	[ -d '$(BIN)' ] || mkdir $(BIN)
+#cd $(BOOST_BUILD); $(MAKE) -j -f $(MAKEFILE)
+	cd $(CRYPTO_SRC); $(MAKE) -f $(MAKEFILE)
+#cd $(LOG_MODULE_DIR); $(MAKE) clean -f $(MAKEFILE)
+#cd $(LOG_MODULE_DIR);  $(MAKE) loglib Container_Type=$(Log_Container_Type) -f $(MAKEFILE) 
+	$(warning [WARN] !!!! If an error occurred with the message: "ld.exe: cannot find -llog" or "No rule to make target '...log/lib/liblog.a'", please build the log library first !!!! e.g. cd $(LOG_MODULE_DIR) && $(MAKE) loglib Container_Type=$(Log_Container_Type) -f $(MAKEFILE))
+
+ifneq ('$(LIBCRYPTOPPEXIST)', 'exist')
+	cd $(CRYPTOPP_SRC); $(MAKE) libcryptopp.a -j 4
+endif
+
+$(test_clinet): test_client.cpp $(BOOSTLINK)
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) $^ -o $@  $(LIBS)
+
+$(LOCAL): $(LOCAL_LINK)
+#$(CXX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
+
+$(SERVER): $(SERVER_LINK)
+#$(CXX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
+
+$(KEEP): $(KEEP_LINK)
+#$(CXX) $^ -o $@  -static  $(LIBS)
+	$(CXX) $^ -o $@  $(LIBS)
+
+$(TMP)/%.o: %.c
+	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
+$(TMP)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) -c $< -o $@
+
+clean:
+	$(RM) $(TMP) $(BIN)

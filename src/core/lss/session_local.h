@@ -30,7 +30,7 @@ public:
      */
     virtual void start(void) override;
     virtual tcp::socket& get_socket_left(void) override;
-    virtual void close(void) override;
+    virtual void close(void) throw() override;
 private:
     /**
      * function:resolve_handler {
