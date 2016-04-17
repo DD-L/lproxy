@@ -110,11 +110,17 @@ Windows 版本的 lproxy 二进制程序下载： [稍等](#)
 	mingw32-make clean -f Makefile.win32 
 	```
 
-* 清除 crypto 源码 及 编译生成的二级制文件
+* 清除 cryptopp 源码 及 编译生成的二级制文件
+
+	```
+	cd %lproxy_root%\contrib\cryptopp
+	mingw32-make MAKE=mingw32-make clean
+	```
+* 清除 crypto 及其 test 的二进制文件
 
 	```
 	cd %lproxy_root%\src\core\crypto
-	mingw32-make MAKE=mingw32-make -f Makefile.win32 clean
+	mingw32-make MAKE=mingw32-make clean -f Makefile.win32
 	```
 
 * 异常组件编译与清理
@@ -151,10 +157,28 @@ Windows 版本的 lproxy 二进制程序下载： [稍等](#)
 
 	* `log` 库 test 部分暂时还没有提供 Windows 环境下的编译方法。
 
+	* 清理 日志库 及其 demo 二进制文件
+		
+		```
+		mingw32-make clean -f Makefile.win32
+		```
+* 清理异常组件的 二进制文件
+
+	```
+	cd %lproxy_root%\src\core\except
+	mingw32-make clean -f Makefile.win32
+	```
 
 * 编译 DEBUG 版本 的 lss
 
 	```
 	cd %lproxy_root%\src\core\lss
 	mingw32-make MAKE=mingw32-make CC=gcc DEBUG=enable -f Makefile.win32
+	```
+
+* 清理 lss 二进制文件
+
+	```
+	cd %lproxy_root%\src\core\lss
+	mingw32-make clean -f Makefile.win32
 	```
