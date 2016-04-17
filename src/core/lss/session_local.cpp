@@ -6,6 +6,7 @@
  ************************************************************************/
 #include <atomic>
 #include <boost/thread.hpp> // for boost::mutex
+//#include <boost/exception/get_error_info.hpp> // for get_error_info
 #include <lss/session_local.h>
 #include <lss/config_local.h>
 #include <crypto/md5_crypto.h>
@@ -48,7 +49,8 @@ void session::start(void) {
             boost::bind(&session::resolve_handler, shared_from_this(), _1, _2));
 }
 
-void session::close(void) {
+void session::close(void) throw()
+try {
         // TODO
 //2016-Mar-26 06:01:44.706102 [ERROR] Operation canceled close this, this = 0x1762340	[tid:7ffff65c3700] session_local.cpp:387 right_read_handler
 //2016-Mar-26 06:01:44.706117 [DEBUG] session::~session() this = 0x1762340	[tid:7ffff65c3700] session.h:25 ~session
@@ -109,6 +111,19 @@ void session::close(void) {
         //delete this;
         //flag = false;
     }
+}
+//catch (boost::exception& e) {
+//    // boost::system::system_error
+//    //logerror(*boost::get_error_info<boost::system::system_error>(e));
+//}
+catch (boost::system::system_error const& e) {
+    logerror(e.what());
+}
+catch (std::exception& e) {
+    logerror(e.what());
+}
+catch (...) {
+    logerror("An error has occurred");
 }
 
 tcp::socket& session::get_socket_left(void) {

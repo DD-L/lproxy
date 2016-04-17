@@ -106,7 +106,21 @@ private:
 
         // 为了不使"ios没有任务, ios.run就立刻返回"
         boost::asio::io_service::work work(io_service); 
-        io_service.run(); 
+        for (;;) {
+            try {
+                io_service.run();
+                break;
+            }
+            catch (boost::system::system_error const& e) {
+                logerror(e.what());
+            }
+            catch (const std::exception& e) {
+                logerror(e.what());
+            }
+            catch (...) {
+                logerror("An error has occurred. io_service_right.run()");
+            }
+        }
 
         lsslogdebug("thread io_service_right exit!");
     }

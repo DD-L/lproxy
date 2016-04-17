@@ -19,7 +19,7 @@ public:
     typedef std::shared_ptr<session>  pointer;
 public:
     virtual void start(void) = 0;
-    virtual void close(void) = 0;
+    virtual void close(void) throw() = 0;
     virtual tcp::socket& get_socket_left(void) = 0;
     virtual ~session(void) {
         lsslogdebug("session::~session() this = " << this);
