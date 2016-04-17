@@ -121,12 +121,30 @@ try {
     // 启动 lss_server
     boost::asio::io_service io_service;
 
-    //using namespace std; // for atoi
     lproxy::local::lss_server s(io_service, bind_addr, bind_port);
-    io_service.run();
-
+    for (;;) {
+        try {
+            io_service.run();
+            break;
+        }
+        catch (boost::system::system_error const& e) {
+            logerror(e.what());
+        }
+        catch (const std::exception& e) {
+            logerror(e.what());
+        }
+        catch (...) {
+            logerror("An error has occurred. io_service_left.run()");
+        }
+    }
     _print_s("[INFO] Exit\n");
     return 0;
+}
+catch (boost::system::system_error const& e) {
+    _print_s_err("[FATAL] Exception: " << e.what() 
+            << " " << lproxy::log::basename(__FILE__) << ":" 
+            << __LINE__ << std::endl);
+    exit(1);
 }
 catch (const std::exception& e) {
     _print_s_err("[FATAL] Exception: " << e.what() 
