@@ -88,6 +88,7 @@ Windows 版本的 lproxy 二进制程序下载： [稍等](#)
 	cd %lproxy_root%\src\core\lss
 	mingw32-make MAKE=mingw32-make CC=gcc GDB= CXXFLAGS=-O2 -f Makefile.win32
 	```
+	*编译选项 "-O2" 会使 gcc 产生一些 `warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]` 警告。*
 
 9. install
 
