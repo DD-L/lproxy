@@ -191,16 +191,24 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 
 后记：
 
-对于程序意外退出，目前有一个暂时性的解决方案就是在 执行 lsslocal.exe 或 lssserver.exe 时，添加运行参数 `-k` 或 `--keep-runing`, 该参数会使得 lproxy 服务在退出后重新被拉起。 可用 `--help` 查看使用帮助。
+* 对于程序意外退出，目前有一个暂时性的解决方案就是在 执行 lsslocal.exe 或 lssserver.exe 时，添加运行参数 `-k` 或 `--keep-runing`, 该参数会使得 lproxy 服务在退出后重新被拉起。 可用 `--help` 查看使用帮助。
 
-如果要关闭由 `-k` 或 `--keep-running` 启动的 lss 程序
-* 在 linux 上可以使用下面命令来关闭 (如果失败, 请检查用户权限):
+	如果要关闭由 `-k` 或 `--keep-running` 启动的 lss 程序
 
-	```shell
-	kill -9 $(ps aux | grep 'lss\w\{1,6\}\.exe' | grep -v grep | awk '{print $2}')
-	```
-* 在 windows 上可以使用下面命令来关闭 (以管理员身份运行 cmd.exe): 
+	* 在 linux 上可以使用下面命令来关闭 (如果失败, 请检查用户权限):
 
-	```
-	taskkill /f /im lkeep.exe /t && taskkill /f /im lsslocal.exe /t && taskkill /f /im lssserver.exe /t
-	```
+		```shell
+		kill -9 $(ps aux | grep 'lss\w\{1,6\}\.exe' | grep -v grep | awk '{print $2}')
+		```
+	* 在 windows 上可以使用下面命令来关闭 (以管理员身份运行 cmd.exe):
+
+		```
+		taskkill /f /im lkeep.exe /t
+		taskkill /f /im lsslocal.exe /t
+		taskkill /f /im lssserver.exe /t
+		```
+
+* 测试时遇到的那个 bug，似乎已经修补 [https://github.com/DD-L/lproxy/commit/bf7e675eed6564e4bcc5da8bd43942a5ac1a48b3](https://github.com/DD-L/lproxy/commit/bf7e675eed6564e4bcc5da8bd43942a5ac1a48b3)
+
+	有待进一步观察测试。2016-04-17
+
