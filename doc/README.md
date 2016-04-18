@@ -89,12 +89,6 @@
 
 	* [Makefile Variables](./MakefileVariables.md)
 
-## Releases
-
-包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
-
-* [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
-
 ## Docker 支持
 
 * `lproxy` 
@@ -155,6 +149,12 @@
 		$ sudo docker run --rm --name lproxy_dev -p 8087-8088:8087-8088 -it deel/lproxy-dev
 		```
 		容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里拥有最新的源码。之后就可以在容器里开森的编译、调试运行 lproxy 服务了
+
+## Releases
+
+包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
+
+* [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
 
 ## 即刻体验 `lproxy`
 
