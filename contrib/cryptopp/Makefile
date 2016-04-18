@@ -1,4 +1,5 @@
 RM = rm -rf
+MAKE = make
 .PHONY : all
 .PHONY : git_clone
 .PHONY : clean
@@ -11,7 +12,7 @@ SRCEXIST= $(shell if [ -f $(CRYPTOPP_SRC)/aes.h ]; then echo "exist"; else echo 
 
 all: git_clone
 ifneq ('$(LIBEXIST)', 'exist')
-	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
+	cd $(CRYPTOPP_SRC); $(MAKE) libcryptopp.a -j 4
 	cd $(CRYPTOPP_SRC); $(RM) *.o
 endif
 

@@ -84,7 +84,7 @@ sdata_t lproxy::log::output_format(const std::shared_ptr<LogVal>& val) {
     std::ostringstream oss;
     oss << log_tools::time2string(val->now)
         << " ["
-        << std::right << std::setw(5)
+        //<< std::right << std::setw(5)
         << val->log_type
         << "] " << val->msg << "\t[tid:"
         << val->tid << "] "

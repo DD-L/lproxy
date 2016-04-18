@@ -1,5 +1,6 @@
 RM = rm -rf
 GDB ?= -g
+MAKE := make
 
 TMP = ./~tmp
 BIN = ./bin
@@ -50,25 +51,25 @@ ifndef Container_Type
 	$(info [ err] Container_Type not set!)
 	$(info [info] e.g. )
 	$(info [info] $$ Container_Type=-DLOG_PRIORITY_QUEUE # or '-DLOG_LOCKFREE_QUEUE')
-	$(info [info] $$ make ... Container_Type=$$Container_Type ...)
+	$(info [info] $$ $(MAKE) ... Container_Type=$$Container_Type ...)
 	$(error error)
 endif
 ifndef USE_LOCK
 	$(info [info] USE_LOCK not set!)
 	$(info [info] If you want to output logs in multiple threads, please define USE_LOCK=-DLOG_USE_LOCK)
 	$(info [info] e.g. )
-	$(info [info] $$ make ... USE_LOCK=-DLOG_USE_LOCK ...)
+	$(info [info] $$ $(MAKE) ... USE_LOCK=-DLOG_USE_LOCK ...)
 else 
 ifneq ($(USE_LOCK), -DLOG_USE_LOCK)
 	$(info [warn] Invalid definition: USE_LOCK=$(USE_LOCK))
 	$(info [info] If you want to output logs in multiple threads, please define USE_LOCK=-DLOG_USE_LOCK)
 	$(info [info] e.g. )
-	$(info [info] $$ make ... USE_LOCK=-DLOG_USE_LOCK ...)
+	$(info [info] $$ $(MAKE) ... USE_LOCK=-DLOG_USE_LOCK ...)
 endif
 endif
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(BIN)' ] || mkdir $(BIN)
-	cd $(LOG_DIR); make loglib Container_Type=$(Container_Type)
+	cd $(LOG_DIR); $(MAKE) loglib Container_Type=$(Container_Type)
 
 $(BIN)/demo.static: $(TMP)/demo.o $(ALL_LINK)
 	$(CXX) $^ -o $@  -static  $(LIBS)

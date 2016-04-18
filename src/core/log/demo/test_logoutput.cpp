@@ -23,13 +23,21 @@ void logoutput_thread(void) {
 	// 日志输出到 /tmp/log.1 ;
 	// 只输出日志权重大于等于DEBUG的日志
 	// 日志输出格式采用默认格式
+#if defined(_MSC_VER) || defined(__MINGW32__)
+	std::ofstream ofs1("1.log", std::ofstream::app);	
+#else
 	std::ofstream ofs1("/tmp/log.1", std::ofstream::app);	
+#endif
 	assert(ofs1);
 	logoutput.bind(ofs1, makelevel(DEBUG)); 
 	// 日志输出到 /tmp/log.2
 	// 只输出日志权重大于等于ERROR的日志
 	// 日志输出格式采用自定义格式
+#if defined(_MSC_VER) || defined(__MINGW32__)
+	std::ofstream ofs2("2.log", std::ofstream::app);
+#else
 	std::ofstream ofs2("/tmp/log.2", std::ofstream::app);
+#endif
 	assert(ofs2);
 	logoutput.bind(ofs2, makelevel(ERROR), 
 			[](const std::shared_ptr<LogVal>& val) -> std::string {

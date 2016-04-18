@@ -5,6 +5,7 @@
 	> Created Time: 2016/3/1 4:29:50
  ************************************************************************/
 #include <boost/thread.hpp> // for boost::mutex
+//#include <boost/exception/get_error_info.hpp> // for get_error_info
 #include <lss/session_server.h>
 #include <lss/config_server.h>
 #include <crypto/aes_crypto.h>
@@ -47,7 +48,8 @@ void session::start(void) {
     status = status_hello;
 }
 
-void session::close(void) {
+void session::close(void) throw()
+try {
     // TODO
 //Program received signal SIGSEGV, Segmentation fault.
 //[Switching to Thread 0x7ffff65c3700 (LWP 1597)]
@@ -103,6 +105,19 @@ void session::close(void) {
         // step 2
         //delete this;
     }
+}
+//catch (boost::exception& e) {
+//    // boost::system::system_error
+//    //logerror(*boost::get_error_info<boost::system::system_error>(e));
+//}
+catch (boost::system::system_error const& e) {
+    logerror(e.what());
+}
+catch (std::exception& e) {
+    logerror(e.what());
+}
+catch (...) {
+    logerror("An error has occurred");
 }
 
 tcp::socket& session::get_socket_left(void) {

@@ -1,5 +1,6 @@
 RM = rm -rf
 GDB := -g
+MAKE := make
 
 TMP = ./~tmp
 CRYPTOLIB = ./lib
@@ -39,16 +40,16 @@ CRYPTO_DYNAMIC_LIB = $(CRYPTOLIB)/libcrypto.so
 all: init $(CRYPTO_STATIC_LIB)
 
 test:
-	cd $(TESTDIR); make
+	cd $(TESTDIR); $(MAKE)
 
 init:
 	[ -d '$(TMP)' ] || mkdir $(TMP)
 	[ -d '$(CRYPTOLIB)' ] || mkdir $(CRYPTOLIB)
 ifneq ('$(SRCEXIST)', 'exist')
-	cd $(CRYPTOPP); make git_clone
+	cd $(CRYPTOPP); $(MAKE) git_clone
 endif
 #ifneq ('$(LIBEXIST)', 'exist')
-#	cd $(CRYPTOPP_SRC); make libcryptopp.a -j 4
+#	cd $(CRYPTOPP_SRC); $(MAKE) libcryptopp.a -j 4
 #endif
 
 $(CRYPTO_STATIC_LIB): $(ALL_LINK)
@@ -65,4 +66,4 @@ $(TMP)/%.o: %.cpp
 
 clean:
 	$(RM) $(TMP) $(CRYPTOLIB)
-	cd $(TESTDIR); make clean
+	cd $(TESTDIR); $(MAKE) clean
