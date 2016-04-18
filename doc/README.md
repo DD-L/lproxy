@@ -89,6 +89,12 @@
 
 	* [Makefile Variables](./MakefileVariables.md)
 
+## Releases
+
+包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
+
+* [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
+
 ## Docker 支持
 
 * `lproxy` 
