@@ -1,6 +1,6 @@
 ### 编译一个 Windows 平台的 `lproxy`
 
-Windows 平台的 lproxy 二进制程序下载： [稍等](#)
+Windows 平台的 lproxy 二进制程序下载： [Releases](https://github.com/DD-L/lproxy/releases)
 
 **注意这里的编译是在 MinGW32 下完成的**
 
