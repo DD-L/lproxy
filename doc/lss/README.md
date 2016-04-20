@@ -11,6 +11,8 @@
 
 * [压力(并发)测试](./StressTesting.md)
 
+* 追加测试: [负载测试](./LoadTesting.md)
+
 * 编译 lss
 
 	1. 在编译 lss 之前，请先确保已经在 lproxy 的根目录执行了 `make init`.
