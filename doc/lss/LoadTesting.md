@@ -41,7 +41,7 @@
 
 * 下载工具
 
-	Google Chrome 浏览器 “多线程下载 插件 Chrono”
+	Google Chrome 浏览器 “多线程下载 插件 [Chrono](http://www.chronodownloader.net/)”
 
 ##### 实验步骤：
 
