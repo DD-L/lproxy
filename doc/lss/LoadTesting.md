@@ -72,7 +72,7 @@
 		* 服务端：
 
 			```shell
-			docker run -d -p 8088:8088 --name lproxy -i docker.io/deel/lproxy:v0.1.0.20160418_Beta
+			docker run -d -p 8088:8088 --name lproxy -i deel/lproxy:v0.1.0.20160418_Beta
 			docker exec -i lproxy ./lssserver.exe -k
 			```
 			认证 key 集合中包含 “xxxxxxxxx”
