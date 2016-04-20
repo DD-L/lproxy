@@ -22,7 +22,7 @@
 		
 		![图示](https://raw.githubusercontent.com/DD-L/DailyNotes/master/lproxy/img/docker_ss_libev.png)
 
-	2. 客户端：
+	2. 本地端：
 		
 		[Windows 版本 3.0](https://github.com/shadowsocks/shadowsocks-windows/releases/tag/3.0)
 
@@ -35,7 +35,7 @@
 		```
 		lproxy 版本 v0.1.0.20160418_Beta
 
-	2. 客户端：
+	2. 本地端：
 
 		[Windows 版本 v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
 
@@ -56,7 +56,7 @@
 			```shell
 			docker run --name ss -p 8338:8338 shadowsocks/shadowsocks-libev -k xxxxxxxxx -m aes-256-cfb
 			```
-		* 客户端：（Windows）
+		* 本地端：（Windows）
 			
 			* 服务端 IP:  192.168.33.202
 			* 服务端端口：8338
@@ -77,7 +77,7 @@
 			```
 			认证 key 集合中包含 “xxxxxxxxx”
 
-		* 客户端：（Windows）
+		* 本地端：（Windows）
 
 			```javascript
 			{
