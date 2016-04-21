@@ -151,7 +151,7 @@
 		$ # 创建并运行一个 临时(--rm) 容器
 		$ sudo docker run --rm --name lproxy_dev -p 8087-8088:8087-8088 -it deel/lproxy-dev
 		```
-		容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里拥有最新的源码。之后就可以在容器里开森的编译、调试运行 lproxy 服务了
+		默认情况下，容器的 bash 就位前，会先自动拉取 lproxy 的 lss 分支的源码，以确保容器里拥有最新的源码。之后就可以在容器里开森的编译、调试运行 lproxy 服务了
 
 ## Releases
 
@@ -159,13 +159,13 @@
 
 * [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
 
-## 即刻体验 `lproxy`
+## 即刻体验 `lproxy` 远程代理服务
 
 *这只是一个示例*
 
 预先准备：
 
-1. 本地需要一个 `lproxy` local 端程序：`lsslocal.exe`。
+1. 本地需要一个 `lproxy` local 端程序：`lsslocal.exe` （[Download](https://github.com/DD-L/lproxy/releases)）。
 2. 注册一个 [daocloud.io](https://www.daocloud.io/) 账号。
 
 接下来，只需简单的几个步骤，就能即刻体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
