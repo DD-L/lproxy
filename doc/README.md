@@ -13,11 +13,13 @@
 
 2. 编译安装 `lproxy`
 
+	*以 linux 为例*
+
 	```shell
 	$ cd /path/to/lproxy
 	$ make init
-	$ make lss       # 如果是在 Cygwin 上编译，换成 make lss.cygwin
-	$ make install   # 程序文件和配置文件会被复制到 /path/to/lproxy/bin 文件夹内
+	$ make lss GDB= CXXFLAGS=-O2   # 如果是在 Cygwin 上编译，换成 make lss.cygwin
+	$ make install                 # 程序文件和配置文件会被复制到 /path/to/lproxy/bin 文件夹内
 	```
 	若要编译 `DEBUG` 版本的 `lss`，对 `make lss` 添加 `DEBUG=enable` 选项即可。更多信息请查阅 [Makefile Variables](./MakefileVariables.md)。
 
@@ -83,7 +85,8 @@
    * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
    * ~~`lss` 暂未提供在 Windows/MinGW 环境下编译支持。~~ 现已支持
    * 想要编译一个 Windows/MinGW 平台的 `lproxy` ？ *注意，在 MinGW 上编译 lproxy ，目前还没能做到非常简便的操作* ，可以参考这里 [MinGW-Builds](./mingwbuilds.md) 得到 **Windows 平台的 lproxy** 二进制程序。
-   * 强烈不推荐使用 Cygwin 平台的 `lproxy`，该平台的 `lproxy` 的问题较多 （这与 boost.asio 在 Cygwin 上的实现有关）。
+   * 想直接获取二进制程序？:point_right: [Releases](#releases)
+   * 强烈不推荐使用 Cygwin 平台的 `lproxy`，该平台下的 `lproxy` 的问题较多 （这与 boost.asio 在 Cygwin 上的实现有关）。
 
 7. Makefile 变量
 
