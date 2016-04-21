@@ -189,3 +189,10 @@
 | [crypto](./develop.md#11-crypto)                  | 加解密工具 |
 | [program_options](./develop.md#12-program_options)| 命令行选项工具 |
 | [lss](./develop.md#13-lss)                        | lproxy 核心模块 |
+
+## 测试
+
+*待完善*
+
+1. [并发](./lss/StressTesting.md)
+2. [负载](./lss/LoadTesting.md)
