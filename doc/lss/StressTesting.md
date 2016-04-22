@@ -118,7 +118,7 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 
 	极快速的连续按下 `Ctrl+Shift+R` 7次：稍等片刻，仍然运行情况良好。
 
-	极快速的连续按下 `Ctrl+Shift+R` 8次：稍等片刻，lsserver.exe 出现了一个已知的 bug (descriptor_data 被释放了，可能的原因之一是 socket 执行了 close 操作，具体原因仍在跟踪), lssserver.exe 停止。
+	极快速的连续按下 `Ctrl+Shift+R` 8次：稍等片刻，lsserver.exe 出现了一个已知的 bug (descriptor_data 被释放了，可能的原因之一是 socket 执行了 close 操作，~~具体原因仍在跟踪~~。更新：此 bug 已经在 `v0.1.0.20160418_Beta` 中修复), lssserver.exe 停止。
 	
 	```
 	bug 详情：
@@ -170,7 +170,7 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 
 	这次有点奇怪的是，日志显示，百度的页面要请求 Google 的资源（api） www.googleapis.com。这可能是 猎豹浏览器本身需要，也可能是 某些页面的资源真的需要（这也正常），还有一点是 我另外一个 浏览器 Google Chrome 也在用这个端口，也可能是它发出来的。
  
-	目前正在着手解决这个bug (偶现), 暂时无视它，继续测试。
+	目前正在着手解决这个bug (偶现), 暂时无视它，继续测试。（更新：此 bug 已经在 `v0.1.0.20160418_Beta` 中修复）
 	重新 在 gdb 模式下启动 lssserver.exe
 	```
 
@@ -211,4 +211,3 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 * 测试时遇到的那个 bug，似乎已经修补 [https://github.com/DD-L/lproxy/commit/bf7e675eed6564e4bcc5da8bd43942a5ac1a48b3](https://github.com/DD-L/lproxy/commit/bf7e675eed6564e4bcc5da8bd43942a5ac1a48b3)
 
 	有待进一步观察测试。2016-04-17
-
