@@ -36,8 +36,8 @@ void session::start(void) {
     boost::system::error_code ec;
     loginfo("client: " << socket_left.remote_endpoint(ec).address());
     if (ec) {
-        logerror(ec.message() << ", value = " << ec.value() 
-                << ". Terminate this session!!! this = " << this);
+        logerror(ec.message() << ", value=" << ec.value() 
+                << ". Terminate this session!!! this=" << this);
         return;
     }
     // server
@@ -53,8 +53,8 @@ void session::start(void) {
 void session::close(void) throw()
 try {
         // TODO
-//2016-Mar-26 06:01:44.706102 [ERROR] Operation canceled close this, this = 0x1762340	[tid:7ffff65c3700] session_local.cpp:387 right_read_handler
-//2016-Mar-26 06:01:44.706117 [DEBUG] session::~session() this = 0x1762340	[tid:7ffff65c3700] session.h:25 ~session
+//2016-Mar-26 06:01:44.706102 [ERROR] Operation canceled close this, this=0x1762340	[tid:7ffff65c3700] session_local.cpp:387 right_read_handler
+//2016-Mar-26 06:01:44.706117 [DEBUG] session::~session() this=0x1762340	[tid:7ffff65c3700] session.h:25 ~session
 //terminate called without an active exception
 //
 //Program received signal SIGABRT, Aborted.
@@ -86,25 +86,25 @@ try {
         if (socket_left.is_open()) {
             socket_left.shutdown(tcp::socket::shutdown_both, ec);
             if (ec) {
-                logerror(ec.message() << " value = " << ec.value() 
-                        << ", socket_left::shutdown, this = " << this);
+                logerror(ec.message() << " value=" << ec.value() 
+                        << ", socket_left::shutdown, this=" << this);
             }
             socket_left.close(ec);
             if (ec) {
-                logerror(ec.message() << " value = " << ec.value() 
-                        << ", socket_left::close, this = " << this);
+                logerror(ec.message() << " value=" << ec.value() 
+                        << ", socket_left::close, this=" << this);
             }
         }
         if (socket_right.is_open()) {
             socket_right.shutdown(tcp::socket::shutdown_both, ec);
             if (ec) {
-                logerror(ec.message() << " value = " << ec.value() 
-                        << ", socket_right::shutdown, this = " << this);
+                logerror(ec.message() << " value=" << ec.value() 
+                        << ", socket_right::shutdown, this=" << this);
             }
             socket_right.close(ec);
             if (ec) {
-                logerror(ec.message() << " value = " << ec.value() 
-                        << ", socket_right::close, this = " << this);
+                logerror(ec.message() << " value=" << ec.value() 
+                        << ", socket_right::close, this=" << this);
             }
         }
         
@@ -140,7 +140,7 @@ void session::resolve_handler(const boost::system::error_code& ec,
     }
     else {
         // 主机不可达
-        logwarn(ec.message() << " Host unreachable. close this, this = "
+        logwarn(ec.message() << " Host unreachable. close this, this="
                 << this);
         this->close();
     }
@@ -173,7 +173,7 @@ void session::connect_handler(const boost::system::error_code& ec,
     }
     else {
         // 网络不可达
-        logwarn(ec.message() << " Network unreachable. close this, this = "
+        logwarn(ec.message() << " Network unreachable. close this, this="
                 << this);
         this->close();
     }
@@ -196,7 +196,7 @@ void session::hello_handler(const boost::system::error_code& error,
         this->status = status_hello;
     }
     else {
-        logwarn(error.message() << " close this, this = " << this);
+        logwarn(error.message() << " close this, this=" << this);
         this->close();
     }
 }
@@ -214,7 +214,7 @@ void session::exchange_handler(const boost::system::error_code& error,
         status = status_auth;
     }
     else {
-        logwarn(error.message() << " close this, this = " << this);
+        logwarn(error.message() << " close this, this=" << this);
         this->close();
     }
 }
@@ -286,7 +286,7 @@ void session::right_read_handler(const boost::system::error_code& error,
                 // 验证 随机 数
                 if (reply_random_str != this->random_str) {
                     // 非法的server端
-                    logwarn("Illegal server !!! close this. this = " << this);
+                    logwarn("Illegal server !!! close this. this=" << this);
                     this->close();
                     break; 
                 }
@@ -303,12 +303,12 @@ void session::right_read_handler(const boost::system::error_code& error,
                     // 被 server 端拒绝
                     logerror("Connection rejected by the server-side, "
                         "there may be a problem with 'authentication failed'. "
-                        "close this. this = " << this);
+                        "close this. this=" << this);
                     this->close();
                 break;
             case reply::timeout: // 0x05
                     // server端session超时;
-                    logwarn("Server-side session timeout. close this. this = "
+                    logwarn("Server-side session timeout. close this. this="
                             << this);
                     this->close();
                 break;
@@ -370,7 +370,7 @@ void session::right_read_handler(const boost::system::error_code& error,
             case reply::bad: // 0xff
             default:
                     // 数据包 bad
-                    logwarn("lss packet is bad. close this, this = " << this);
+                    logwarn("lss packet is bad. close this, this=" << this);
                     this->close();
                 break;
             }
@@ -379,7 +379,7 @@ void session::right_read_handler(const boost::system::error_code& error,
             // default:
             // TODO
             // 临时方案
-            logwarn("wrong_packet_type. close this, this = " << this);
+            logwarn("wrong_packet_type. close this, this=" << this);
             this->close();
         }
         catch (incomplete_data& ec) {
@@ -419,34 +419,34 @@ void session::right_read_handler(const boost::system::error_code& error,
                             lproxy::placeholders::shared_data));
             }
             else {
-                logwarn("close this, this = " << this);
+                logwarn("close this, this=" << this);
                 this->close();
             }
         }
         catch (wrong_lss_status& ec) {
-            logwarn(ec.what() << ". close this, this = " << this);
+            logwarn(ec.what() << ". close this, this=" << this);
             this->close();
         }
         catch (EncryptException& ec) {
-            logwarn(ec.what() << ". close this, this = " << this);
+            logwarn(ec.what() << ". close this, this=" << this);
             this->close();
         }
         catch (DecryptException& ec) {
-            logwarn(ec.what() << ". close this, this = " << this);
+            logwarn(ec.what() << ". close this, this=" << this);
             this->close();
         }
         catch (std::exception& ec) {
-            logwarn(ec.what() << ". close this, this = " << this);
+            logwarn(ec.what() << ". close this, this=" << this);
             this->close();
         }
         catch (...) {
-            logwarn("close this, this = " << this);
+            logwarn("close this, this=" << this);
             this->close();
         }
         //break;}
     }
     else {
-        logwarn(error.message() << " close this, this = " << this);
+        logwarn(error.message() << " close this, this=" << this);
         this->close();
     }
 }
@@ -509,14 +509,14 @@ void session::left_read_socks5_step1(const boost::system::error_code& error,
             // 非法的 socks5 数据
             is_error = true;
             logwarn("lproxy::socks5::illegal_data_type. send lss_bad to server."
-                    "finally close this, this = " << this);
+                    "finally close this, this=" << this);
 
         }
         catch (lproxy::socks5::unsupported_version) {
             // 不支持的 socks5 版本
             is_error = true;
             logwarn("lproxy::socks5::unsupported_version, "
-                    "send lss_bad to server, finally close this, this = "
+                    "send lss_bad to server, finally close this, this="
                     << this);
         }
         if (is_error) {
@@ -528,7 +528,7 @@ void session::left_read_socks5_step1(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() 
-                << " send lss_bad to server, finally close this, this = " 
+                << " send lss_bad to server, finally close this, this=" 
                 << this);
         boost::asio::async_write(this->socket_right,
                 pack_bad().buffers(),
@@ -552,7 +552,7 @@ void session::left_write_socks5_step1_handler(
     }
     else {
         logwarn(error.message() 
-                << " send lss_bad to server, finally close this, this = " 
+                << " send lss_bad to server, finally close this, this=" 
                 << this);
         boost::asio::async_write(this->socket_right,
                 pack_bad().buffers(),
@@ -587,7 +587,7 @@ void session::left_read_handler(const boost::system::error_code& error,
     else {
         //if (error == boost::asio::error::eof) {
         //    // for HTTP Connection: Keep-Alive
-        //    logwarn(error.message() << " value = " << error.value() 
+        //    logwarn(error.message() << " value=" << error.value() 
         //            << ". Restart async-read-left with timeout");
         //    auto&& data_left = lproxy::make_shared_data(max_length, 0);
         //    this->socket_left.async_read_some(
@@ -602,12 +602,12 @@ void session::left_read_handler(const boost::system::error_code& error,
         //                shared_from_this(), _1));
         //}
         //else {
-            //logwarn(error.message() << " value = " << error.value()
-            //        << " close this, this = " << this);
+            //logwarn(error.message() << " value=" << error.value()
+            //        << " close this, this=" << this);
             //this->close();
 
-            logwarn(error.message() << ", value = " << error.value()
-                    << ", send lss_bad to server, then close this, this = "
+            logwarn(error.message() << ", value=" << error.value()
+                    << ", send lss_bad to server, then close this, this="
                     << this);
             boost::asio::async_write(this->socket_right,
                     pack_bad().buffers(),
@@ -618,8 +618,8 @@ void session::left_read_handler(const boost::system::error_code& error,
 
 
 void session::left_read_timeout_handler(const boost::system::error_code& error) {
-    logwarn(error.message() << " value = " << error.value() 
-            << " close this, this = " << this);
+    logwarn(error.message() << " value=" << error.value() 
+            << " close this, this=" << this);
     /*
     if (error == boost::asio::error::operation_aborted) {
     }
@@ -641,7 +641,7 @@ void session::right_write_handler(const boost::system::error_code& error,
                     shared_from_this(), _1, _2, data_left));
     }
     else {
-        logwarn(error.message() << " close this, this = " << this);
+        logwarn(error.message() << " close this, this=" << this);
         this->close();
     }
 }
@@ -658,7 +658,7 @@ void session::left_write_handler(const boost::system::error_code& error,
                     lproxy::placeholders::shared_data));
     }
     else {
-        logwarn(error.message() << " close this, this = " << this);
+        logwarn(error.message() << " close this, this=" << this);
         this->close();
     }
 }

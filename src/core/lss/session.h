@@ -22,7 +22,7 @@ public:
     virtual void close(void) throw() = 0;
     virtual tcp::socket& get_socket_left(void) = 0;
     virtual ~session(void) {
-        lsslogdebug("session::~session() this = " << this);
+        lsslogdebug("session::~session() this=" << this);
     }
 protected:
     //enum             { max_length = 1024 };
