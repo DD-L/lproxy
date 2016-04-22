@@ -9,6 +9,7 @@
 //#include <boost/exception/get_error_info.hpp> // for get_error_info
 #include <lss/session_local.h>
 #include <lss/config_local.h>
+#include <lss/socks5_protocol.h>
 #include <crypto/md5_crypto.h>
 #include <crypto/rsa_crypto.h>
 #include <except/except.h>
@@ -452,12 +453,17 @@ void session::right_read_handler(const boost::system::error_code& error,
 
 void session::transport(void) {
     auto&& data_left = lproxy::make_shared_data(max_length, 0);
+    /*
     this->socket_left.async_read_some(
             boost::asio::buffer(&(*data_left)[0], max_length),
             boost::bind(&session::left_read_handler, 
                 shared_from_this(), _1, _2, data_left));
-                //boost::asio::placeholders::error,
-                //boost::asio::placeholders::bytes_transferred));
+    */
+    // https://github.com/DD-L/lproxy/issues/127
+    this->socket_left.async_read_some(
+            boost::asio::buffer(&(*data_left)[0], max_length),
+            boost::bind(&session::left_read_socks5_step1, 
+                shared_from_this(), _1, _2, data_left));
 
     auto&& lss_reply = make_shared_reply();
     this->socket_right.async_read_some(lss_reply->buffers(), 
@@ -465,6 +471,93 @@ void session::transport(void) {
                 shared_from_this(), _1, _2, 
                 lss_reply, lproxy::placeholders::shared_data,
                 lproxy::placeholders::shared_data));
+}
+
+// https://github.com/DD-L/lproxy/issues/127
+void session::left_read_socks5_step1(const boost::system::error_code& error,
+        std::size_t bytes_transferred, shared_data_type data_left) {
+    lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
+
+    if (! error) {
+         
+        lsslogdebug("read data from client: " 
+                << _debug_format_data(*data_left, int(), ' ', std::hex));
+
+        bool is_error = false;
+        try {
+            // VER NMETHODS METHODS
+            lproxy::socks5::ident_req ir(&(*data_left)[0], 
+                    data_left->size());
+
+            // VER METHOD
+            data_t socks5_resp;
+            lproxy::socks5::ident_resp::pack(socks5_resp, &ir);
+
+            lsslogdebug("send socks5_data to client: " 
+                    << _debug_format_data(socks5_resp, int(), ' ', std::hex));
+
+            // send to client
+            auto&& data_reply = lproxy::make_shared_data(
+                        std::move(socks5_resp));
+            boost::asio::async_write(this->socket_left,
+                boost::asio::buffer(&(*data_reply)[0], data_reply->size()),
+                boost::bind(&session::left_write_socks5_step1_handler,
+                    shared_from_this(), _1, _2, data_reply));
+
+        }
+        catch (lproxy::socks5::illegal_data_type) {
+            // 非法的 socks5 数据
+            is_error = true;
+            logwarn("lproxy::socks5::illegal_data_type. send lss_bad to server."
+                    "finally close this, this = " << this);
+
+        }
+        catch (lproxy::socks5::unsupported_version) {
+            // 不支持的 socks5 版本
+            is_error = true;
+            logwarn("lproxy::socks5::unsupported_version, "
+                    "send lss_bad to server, finally close this, this = "
+                    << this);
+        }
+        if (is_error) {
+            // close
+            boost::asio::async_write(this->socket_right,
+                    pack_bad().buffers(),
+                    boost::bind(&session::close, shared_from_this()));
+        }
+    }
+    else {
+        logwarn(error.message() 
+                << " send lss_bad to server, finally close this, this = " 
+                << this);
+        boost::asio::async_write(this->socket_right,
+                pack_bad().buffers(),
+                boost::bind(&session::close, shared_from_this()));
+    }
+}
+
+void session::left_write_socks5_step1_handler(
+        const boost::system::error_code& error,
+        std::size_t bytes_transferred, shared_data_type __data) {
+    (void)__data;
+    lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
+
+    if (! error) {
+        lsslogdebug("begin async_read_some from client");
+        auto&& data_left = lproxy::make_shared_data(max_length, 0);
+        this->socket_left.async_read_some(
+                boost::asio::buffer(&(*data_left)[0], max_length),
+                boost::bind(&session::left_read_handler, 
+                    shared_from_this(), _1, _2, data_left));
+    }
+    else {
+        logwarn(error.message() 
+                << " send lss_bad to server, finally close this, this = " 
+                << this);
+        boost::asio::async_write(this->socket_right,
+                pack_bad().buffers(),
+                boost::bind(&session::close, shared_from_this()));
+    }
 }
 
 void session::left_read_handler(const boost::system::error_code& error,

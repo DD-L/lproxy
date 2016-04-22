@@ -102,10 +102,25 @@ private:
             shared_data_type __data_right_rest, // 分包后，遗留的数据
             shared_data_type __write_data); // left_write 数据
 
+    /**
+     * function:left_read_socks5_step1 {
+     *      async_write:socket_left [bind: left_write_socks5_step1_handler]
+     * }
+     */
+    void left_read_socks5_step1(const boost::system::error_code& error,
+        std::size_t bytes_transferred, shared_data_type data_left);
+
+    /**
+     * function:left_write_socks5_step1_handler {
+     *      socket_left.async_read_some  [bind: left_read_handler]
+     * }
+     */
+    void left_write_socks5_step1_handler(const boost::system::error_code& error,
+            std::size_t bytes_transferred, shared_data_type __data);
 private:
     /**
      * function:transport {
-     *      socket_left.async_read_some  [bind: left_read_handler]
+     *      socket_left.async_read_some  [bind: left_read_socks5_step1]
      *      socket_right.async_read_some [bind: right_read_handler]
      * }
      */

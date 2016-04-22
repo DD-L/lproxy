@@ -48,12 +48,15 @@ private:
      *          unpack_data
      *          cut_lss
      *          // sock5
-     *          case (socks5::server::OPENING) {
-     *             'VER NMETHODS METHODS' -> socks5::ident_req
-     *             'VER NMETHOD' -> sock5::ident_resp
-     *             sock5::ident_resp -> rply_data 
-     *             async_write:socket_left [bind: left_write_handler]
-     *          }
+     *          // https://github.com/DD-L/lproxy/issues/127
+     *          //case (socks5::server::OPENING) {
+     *          //   'VER NMETHODS METHODS' -> socks5::ident_req
+     *          //   'VER NMETHOD' -> sock5::ident_resp
+     *          //   sock5::ident_resp -> rply_data 
+     *          //   async_write:socket_left [bind: left_write_handler]
+     *          //}
+     *          if (socks5::server::OPENING)
+     *              this->socks5_state = lproxy::socks5::server::CONNECTING
      *          case (socks5::server::CONNECTING) {
      *              'VER CMD RSV ATYP DST-ADDR DST-PROT' -> socks5::req rq
      *              socks5_request_processing(rq);

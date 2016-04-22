@@ -253,35 +253,42 @@ void session::left_read_handler(const boost::system::error_code& error,
                 // step 2
                 //  将 plain_data 交付给 socks5 处理
                 switch (this->socks5_state) {
-                case lproxy::socks5::server::OPENING: {
-                    // 用 plain_data 得到 package
-                    lproxy::socks5::ident_req ir(&plain_data[0], 
-                            plain_data.size());
-                    data_t package;
-                    lproxy::socks5::ident_resp::pack(package, &ir);
 
-                    lsslogdebug("socks5::ident_resp::pack: " <<
-                        _debug_format_data(package, int(), ' ', std::hex));
+                // https://github.com/DD-L/lproxy/issues/127
+
+                //case lproxy::socks5::server::OPENING: {
+                //    // 用 plain_data 得到 package
+                //    lproxy::socks5::ident_req ir(&plain_data[0], 
+                //            plain_data.size());
+                //    data_t package;
+                //    lproxy::socks5::ident_resp::pack(package, &ir);
+
+                //    lsslogdebug("socks5::ident_resp::pack: " <<
+                //        _debug_format_data(package, int(), ' ', std::hex));
 
 
-                    // 将 package 加密封包
-                    //auto&& rply_data = pack_data(package, package.size());
-                    // 发给 local
-                    auto&& data_reply = make_shared_reply(
-                            pack_data(package, package.size()));
-                    boost::asio::async_write(this->socket_left, 
-                      data_reply->buffers(),
-                      boost::bind(&session::left_write_handler, 
-                          shared_from_this(), _1, _2, data_reply));
+                //    // 将 package 加密封包
+                //    //auto&& rply_data = pack_data(package, package.size());
+                //    // 发给 local
+                //    auto&& data_reply = make_shared_reply(
+                //            pack_data(package, package.size()));
+                //    boost::asio::async_write(this->socket_left, 
+                //      data_reply->buffers(),
+                //      boost::bind(&session::left_write_handler, 
+                //          shared_from_this(), _1, _2, data_reply));
 
-                    this->socks5_state = lproxy::socks5::server::CONNECTING; 
+                //    this->socks5_state = lproxy::socks5::server::CONNECTING; 
 
-                    lsslogdebug("send data to local (socks5::ident_resp) " <<
-                        _debug_format_data(get_vdata_from_lss_pack(
-                                *data_reply), int(), ' ', std::hex));
+                //    lsslogdebug("send data to local (socks5::ident_resp) " <<
+                //        _debug_format_data(get_vdata_from_lss_pack(
+                //                *data_reply), int(), ' ', std::hex));
 
-                    break;
-                }
+                //    break;
+                //}
+
+                // https://github.com/DD-L/lproxy/issues/127
+                case lproxy::socks5::server::OPENING:
+                    this->socks5_state = lproxy::socks5::server::CONNECTING;
                 case lproxy::socks5::server::CONNECTING: {
                     // 用 plain_data 得到 package
                     lproxy::socks5::req rq(&plain_data[0], plain_data.size());
