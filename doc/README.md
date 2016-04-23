@@ -157,7 +157,7 @@
 
 包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
 
-**版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
+> **lproxy 版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
 
 * [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
 
@@ -170,7 +170,7 @@
 1. 本地需要一个 `lproxy` local 端程序：`lsslocal.exe` （[Download](https://github.com/DD-L/lproxy/releases)）。
 2. 注册一个 [daocloud.io](https://www.daocloud.io/) 账号。
 
-接下来，只需简单的几个步骤，就能即刻体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
+接下来，只需简单的几个步骤，就能即刻免费体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
 
 ## 开发文档
 
