@@ -31,7 +31,7 @@ static void process_program_options(const program_options& po,
         exit(0);
     }
     if (po.count("-v") || po.count("--version")) {
-        _print_s(__LSS_VERSION__);
+        _print_s(__LSS_VERSION__ << std::endl);
         exit(0);
     }
     if (po.count("-k") || po.count("--keep-running")) {
