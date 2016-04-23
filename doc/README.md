@@ -157,6 +157,8 @@
 
 包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
 
+**版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
+
 * [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
 
 ## 即刻体验 `lproxy` 远程代理服务
@@ -193,6 +195,8 @@
 ## 测试
 
 *待完善*
+
+*Help wanted:  希望得到更专业测试*
 
 1. [并发](./lss/StressTesting.md)
 2. [负载](./lss/LoadTesting.md)
