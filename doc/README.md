@@ -172,6 +172,14 @@
 
 接下来，只需简单的几个步骤，就能即刻免费体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
 
+## `lproxy` server 端集群部署（简易）方案
+
+*正在完善中...*
+
+## `lproxy` 前进计划
+
+*正在完善中...*
+
 ## 开发文档
 
 [`lproxy/src/` 中的所有组件](./develop.md)
