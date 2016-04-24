@@ -6,7 +6,7 @@
 
 *由于这里只是演示，前后端服务器暂且都部署在同一主机上。*
 
-* nginx 监听端口 `8088`
+* nginx 监听端口：`8088`
 * lproxy-server 监听端口：`10001-10008` (比如部署 8 个 lproxy-server，每一个 lproxy-server 监听一个端口)
 
 *`lproxy-server` 可以原生运行并监听 `10001-10008`端口，但是为了在一台主机上 YY 出逼真的集群环境，这里采用 docker 容器来部署 `lproxy-server`*。 **当然，你也可以使用 `Docker Compose`来部署这一整套集群系统。**
@@ -14,7 +14,9 @@
 注意事项：
 
 1. nginx 直到 `1.9.0` 版本才开始支持 TCP 转发（及负载均衡），而且默认不开启，需要编译前对 `./configure` 添加 ` --with-stream` 选项。
+
 	> nginx-1.9.0 mainline version has been released, with the stream module for generic TCP proxying and load balancing.
+
 2. 因为 lproxy-server 是基于 session 的，所以 Nginx 负载均衡 upstream 的分配策略需要是 `ip hash`（`hash $remote_addr consistent;`），即分配的依据是访客的 ip，进而这就要求 nginx 必须是**最前端**的服务器。
 
 
