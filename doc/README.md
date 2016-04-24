@@ -1,4 +1,35 @@
-# lproxy
+目录
+
+1. [lproxy](#lproxy)
+	1. 获取 lproxy 源码
+	2. 编译安装 lproxy
+	3. 运行 lproxy 服务
+	4. 配置文件
+	5. /path/to/lproxy/Makefile “伪目标”
+	7. Makefile 公共变量
+	6. 补充说明
+		* boost 源码
+		* 从零配置编译环境
+		* Windows/MinGW 下编译 lproxy
+		* 直接获取 lproxy 二进制程序
+		* 不推荐在Cygwin 平台下使用 lproxy
+2. [Docker-支持](#docker-支持)
+	1. lproxy 镜像
+		1. 获取 lproxy Docker 镜像
+		2. 在容器中运行 lproxy 服务
+	2. lproxy-dev 镜像
+		1. 获取 lproxy-dev Docker 镜像
+		2. 运行 lproxy-dev 容器
+3. [Releases](#Releases)
+4. [即刻免费体验 lproxy 远程代理服务](#即刻体验+lproxy+远程代理服务)
+5. [简易的 lproxy server 端集群部署方案](#简易的+lproxy+server+端集群部署方案)
+6. [lproxy 前进计划](#lproxy+前进计划)
+7. [开发文档](#开发文档)
+8. [测试](#测试)
+9. [TODO list](#TODO+list)
+
+
+## lproxy
 
 `lproxy` 是一套轻巧的、一对多的、安全的 Socks5 网络代理服务。
 
@@ -51,18 +82,18 @@
 
 5. `/path/to/lproxy/Makefile` “伪目标”说明：[PHONY_TARGET](./lproxy_Makefile_phony_target.md)
 
-6. 补充说明
+6. Makefile 变量
 
-   * 在释放 `boost` 库源码时，会检测系统是否安装 `7z` 工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`；Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
+	* [Makefile Variables](./MakefileVariables.md)
+
+7. 补充说明
+
+   * 在执行 `make init`，释放 `boost` 库源码时，会检测系统是否安装 `7z` 工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`；Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
    * ~~`lss` 暂未提供在 Windows/MinGW 环境下编译支持。~~ 现已支持
    * 想要编译一个 Windows/MinGW 平台的 `lproxy` ？ *注意，在 MinGW 上编译 lproxy ，目前还没能做到非常简便的操作* ，可以参考这里 [MinGW-Builds](./mingwbuilds.md) 得到 **Windows 平台的 lproxy** 二进制程序。
    * 想直接获取二进制程序？:point_right: [Releases](#releases)
    * 强烈不推荐使用 Cygwin 平台的 `lproxy`，该平台下的 `lproxy` 的问题较多 （这与 boost.asio 在 Cygwin 上的实现有关）。
-
-7. Makefile 变量
-
-	* [Makefile Variables](./MakefileVariables.md)
 
 ## Docker 支持
 
@@ -177,7 +208,7 @@
 
 *待完善*
 
-*Help wanted:  希望得到更专业测试*
+*Help wanted:  希望得到专业测试帮助*
 
 1. [并发](./lss/StressTesting.md)
 2. [负载](./lss/LoadTesting.md)
