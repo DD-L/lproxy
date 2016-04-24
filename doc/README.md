@@ -14,7 +14,7 @@
 		* Windows/MinGW 下编译 lproxy
 		* 直接获取 lproxy 二进制程序
 		* 不推荐在Cygwin 平台下使用 lproxy
-2. [Docker-支持](#docker-支持)
+2. [Docker 支持](#docker-支持)
 	1. lproxy 镜像
 		1. 获取 lproxy Docker 镜像
 		2. 在容器中运行 lproxy 服务
