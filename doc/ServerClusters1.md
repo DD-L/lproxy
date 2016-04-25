@@ -52,7 +52,6 @@
 		worker_processes auto;
 		
 		error_log  /var/log/nginx/error.log warn;
-		pid        /var/run/nginx.pid;
 		
 		events {
 		    worker_connections  1024;
