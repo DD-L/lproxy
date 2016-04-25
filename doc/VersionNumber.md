@@ -55,5 +55,6 @@
 
 	* 调试版本（`Debug`）
 
+-------
 
 *特别地，由于第一个公开版本 `v0.1.0.20160418_Beta` 发布的太着急，没有能够支持 `-v` 和 `--version` 选项。如果尝试对 `v0.1.0.20160418_Beta` 版本的 lssserver.exe 或 lsslocal.exe 执行 `-v` 或 `--version` 行为，会得到 `[FATAL] Unsupported options` 的信息。*
