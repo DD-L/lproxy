@@ -110,8 +110,9 @@
 	$ sudo docker run -d -p 10005:8088 --name lproxy5 -i deel/lproxy ./lssserver.exe -k
 	$ sudo docker run -d -p 10006:8088 --name lproxy6 -i deel/lproxy ./lssserver.exe -k
 	$ sudo docker run -d -p 10007:8088 --name lproxy7 -i deel/lproxy ./lssserver.exe -k
-	$ sduo docker run -d -p 10008:8088 --name lproxy8 -i deel/lproxy ./lssserver.exe -k
+	$ sudo docker run -d -p 10008:8088 --name lproxy8 -i deel/lproxy ./lssserver.exe -k
 	$ # ...
 	```
+	*可用 `sudo docker logs -f lproxy1` 查看 lproxy1 的运行日志，其它类推*
 
 3. 至此，server 端的所有配置都已完成。lproxy-local 端配置文件（`local-config.json`）中的 `server_name` 及 `server_port` 字段填写前端服务器 nginx 监听的 ip (或域名) 和 端口（8088）即可使用。
