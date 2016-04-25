@@ -24,6 +24,7 @@ public:
 public:
     session(boost::asio::io_service& io_service_left,
                   boost::asio::io_service& io_service_right);
+    virtual ~session(void);
 
     /**
      * function:start {resolver_right.async_resolve [bind: resolve_handler]}
@@ -205,8 +206,8 @@ private:
     tcp::socket      socket_left;     // client socket
     tcp::socket      socket_right;    // server socket
     tcp::resolver    resolver_right;  // server resolver
-    std::atomic_flag close_flag = ATOMIC_FLAG_INIT;
-    boost::mutex     close_mutex;
+    //std::atomic_flag close_flag = ATOMIC_FLAG_INIT;
+    //boost::mutex     close_mutex;
 
 }; // class lproxy::local::session
 

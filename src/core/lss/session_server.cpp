@@ -25,6 +25,10 @@ session::session(boost::asio::io_service& io_service_left,
     this->socks5_state = lproxy::socks5::server::OPENING;            
 }
 
+session::~session(void) {
+    this->close();
+}
+
 void session::start(void) {
     boost::system::error_code ec;
     loginfo("client: " << socket_left.remote_endpoint(ec).address());
@@ -58,8 +62,8 @@ try {
 //219	  if (descriptor_data->shutdown_)
 //descriptor_data == 0x0
     // 测试 close 加锁, 是否能避免 上述 bug
-    boost::mutex::scoped_lock lock(close_mutex);
-    if (! close_flag.test_and_set()) {
+    //boost::mutex::scoped_lock lock(close_mutex);
+    //if (! close_flag.test_and_set()) {
 
         // step 1
         // cancel session 上所有的异步
@@ -104,7 +108,7 @@ try {
 
         // step 2
         //delete this;
-    }
+    //}
 }
 //catch (boost::exception& e) {
 //    // boost::system::system_error
@@ -204,7 +208,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 将打包好的"认证失败"数据 发送至 local, 然后再close this
                     //auto& rply_deny = pack_deny();
                     boost::asio::async_write(socket_left, pack_deny().buffers(),
-                            boost::bind(&session::close, shared_from_this()));
+                            boost::bind(&session::empty, shared_from_this()));
 
                     // "认证失败"
                     logwarn("authentication failed, close this, this="
@@ -364,7 +368,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                                 "this=" << this);
                         boost::asio::async_write(this->socket_left, 
                              pack_bad().buffers(),
-                             boost::bind(&session::close, shared_from_this()));
+                             boost::bind(&session::empty, shared_from_this()));
                         break;
                     case CMD_UDP: {
 
@@ -411,7 +415,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                                 " finally close this, this=" << this);
                         boost::asio::async_write(this->socket_left, 
                             pack_bad().buffers(),
-                            boost::bind(&session::close, shared_from_this()));
+                            boost::bind(&session::empty, shared_from_this()));
                     }
                     } // switch (this->socks5_cmd)
                     break;
@@ -426,7 +430,8 @@ void session::left_read_handler(const boost::system::error_code& error,
             default:
                 // 数据包 bad
                 logwarn("lss packet is bad. close this, this=" << this);
-                this->close();
+                //this->close();
+                return;
                 break;
             } // switch (lss_request->type())
         }
@@ -436,7 +441,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                     "this, this=" << this);
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
         }
         catch (incomplete_data& ec) {
             // 不完整数据
@@ -478,7 +483,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                         << this);
                 boost::asio::async_write(this->socket_left, 
                         pack_bad().buffers(),
-                        boost::bind(&session::close, shared_from_this()));
+                        boost::bind(&session::empty, shared_from_this()));
             }
         }
         catch (lproxy::socks5::illegal_data_type&) { // 非法的socks5数据
@@ -488,7 +493,7 @@ void session::left_read_handler(const boost::system::error_code& error,
                     "finally close this, this=" << this);
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
         }
         catch (lproxy::socks5::unsupported_version&) { // 不支持的 socks5 版本
             // deny
@@ -498,27 +503,32 @@ void session::left_read_handler(const boost::system::error_code& error,
                     << this);
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
         }
         catch (wrong_lss_status& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (EncryptException& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (DecryptException& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (std::exception& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (...) {
             logwarn("close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
     } 
     else { // error
@@ -530,7 +540,8 @@ void session::left_read_handler(const boost::system::error_code& error,
             _print_s_err("\n------------------------------------------------------------- this=" << this << " tid=" << std::hex << std::this_thread::get_id() <<"\n\n");
         }
 #endif
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -548,7 +559,8 @@ void session::hello_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -569,9 +581,9 @@ void session::exchange_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
-
 }
 
 void session::left_write_handler(const boost::system::error_code& error,
@@ -579,6 +591,18 @@ void session::left_write_handler(const boost::system::error_code& error,
     (void)lss_reply;
     lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
     if (! error) {
+        if ((this->status >= status_data) 
+                && (this->socks5_resp_reply != 0x00)) {
+            // socks5 服务器  不能响应 客户端请求命令
+            // TODO
+            //delete_this();
+            lsslogdebug("socks5_resp_reply = " << std::hex 
+                    << uint32_t(this->socks5_resp_reply));
+            logwarn("SOCKS5 server cant respond to client request. close this,"
+                    " this=" << this);
+            //this->close();
+            return;
+        }
         if (lproxy::socks5::server::CONNECTED == this->socks5_state) {
             auto&& data_right = lproxy::make_shared_data(max_length, 0);
             switch (this->socks5_cmd) {
@@ -614,7 +638,7 @@ void session::left_write_handler(const boost::system::error_code& error,
                         " finally close this, this=" << this);
                 boost::asio::async_write(this->socket_left,
                         pack_bad().buffers(),
-                        boost::bind(&session::close, shared_from_this()));
+                        boost::bind(&session::empty, shared_from_this()));
             } // switch (this->socks5_cmd)
         }
         else {
@@ -629,8 +653,9 @@ void session::left_write_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " value=" << error.value() 
-                << " . close this, this=" << this);
-        this->close();
+                << ". close this, this=" << this);
+        //this->close();
+        return;
     }
 } 
 
@@ -697,7 +722,7 @@ void session::right_write_handler(const boost::system::error_code& error,
             logwarn("Unsuported socks5_cmd. send lss_bad to local, "
                     "finally close this, this=" << this);
             boost::asio::async_write(this->socket_left, pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
             break;
         } // switch (this->socks5_cmd)
     }
@@ -705,7 +730,7 @@ void session::right_write_handler(const boost::system::error_code& error,
         logwarn(error.message() << " close this, this=" << this);
         boost::asio::async_write(this->socket_left, 
                 pack_bad().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+                boost::bind(&session::empty, shared_from_this()));
     }
 }
 
@@ -784,7 +809,7 @@ void session::right_read_handler(const boost::system::error_code& error,
                     << this);
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
         //}
     }
 }
@@ -798,7 +823,8 @@ void session::right_read_timeout_handler(
         // 2. 或者调用 expires_at, expires_from_now 重新设置超时时间
         logwarn(error.message() << " value=" << error.value() 
                 << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
     else {
         // timeout
@@ -807,7 +833,7 @@ void session::right_read_timeout_handler(
                 << this);
         boost::asio::async_write(this->socket_left, 
                 pack_timeout().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+                boost::bind(&session::empty, shared_from_this()));
     }
 }
 
@@ -870,7 +896,7 @@ const reply session::pack_data(const data_t& data, std::size_t data_len) {
 
         //发送 deny, 并 close_this
         boost::asio::async_write(this->socket_left, pack_deny().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+                boost::bind(&session::empty, shared_from_this()));
         return pack_deny();
     }
     else {
@@ -941,7 +967,7 @@ const int session::unpack_data(data_t& plain,
 
         //发送 deny, 并 close this
         boost::asio::async_write(this->socket_left, pack_deny().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+                boost::bind(&session::empty, shared_from_this()));
     }
     const data_t&         cipher = request.get_data();
     const std::size_t cipher_len = request.data_len();
@@ -1223,7 +1249,6 @@ void session::udp_connect_handler(const boost::system::error_code& err,
             this->socks5_resp_reply = 0x00; //  成功
         }
 
-
         // 反馈给 local, 并将状态设置为连接
         socks5_resp_to_local();
     }
@@ -1296,15 +1321,16 @@ void session::socks5_resp_to_local() {
         << _debug_format_data(get_vdata_from_lss_pack(*data_reply), 
             int(), ' ', std::hex));
 
-    if (this->socks5_resp_reply != 0x00) {
-        // socks5 服务器  不能响应 客户端请求命令
-        // TODO
-        //delete_this();
-        lsslogdebug("socks5_resp_reply = " << std::hex 
-                << uint32_t(this->socks5_resp_reply));
-        logwarn("SOCKS5 server cant respond to client request. close this,"
-                " this=" << this);
-        this->close();
-        // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
-    }
+    //if (this->socks5_resp_reply != 0x00) {
+    //    // socks5 服务器  不能响应 客户端请求命令
+    //    // TODO
+    //    //delete_this();
+    //    lsslogdebug("socks5_resp_reply = " << std::hex 
+    //            << uint32_t(this->socks5_resp_reply));
+    //    logwarn("SOCKS5 server cant respond to client request. close this,"
+    //            " this=" << this);
+    //    //this->close();
+    //    return;
+    //    // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
+    //}
 }

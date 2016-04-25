@@ -21,6 +21,7 @@ public:
 public:
     session(boost::asio::io_service& io_service_left,
             boost::asio::io_service& io_service_right);
+    virtual ~session(void);
     /**
      * function:start {socket_left.async_read_some [bind: left_read_handler]}
      */
@@ -388,8 +389,8 @@ private:
     lproxy::socks5::server::state socks5_state = lproxy::socks5::server::OPENING;
 
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
-    std::atomic_flag                   close_flag = ATOMIC_FLAG_INIT;
-    boost::mutex                       close_mutex;
+    //std::atomic_flag                   close_flag = ATOMIC_FLAG_INIT;
+    //boost::mutex                       close_mutex;
 }; // class lproxy::server::session
 } // namespace lproxy::server
 } // namespace lproxy

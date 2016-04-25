@@ -137,6 +137,7 @@ protected:
         lss = LSSTYPE(std::move(pack));
         return true;
     }
+    void empty(void) {} // do nothing    
 
 }; // class lproxy::session
 

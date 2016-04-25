@@ -32,6 +32,10 @@ session::session(boost::asio::io_service& io_service_left,
     //socket_right.set_option(keepalive);
 }
 
+session::~session(void) {
+    this->close();
+}
+
 void session::start(void) {
     boost::system::error_code ec;
     loginfo("client: " << socket_left.remote_endpoint(ec).address());
@@ -74,9 +78,9 @@ try {
 //#7  0x0000000000412cf1 in main (argc=1, argv=0x7fffffffe608) at local.cpp:29
  
     // 测试 close 加锁, 是否能避免 上述 bug
-    boost::mutex::scoped_lock lock(close_mutex);
+    //boost::mutex::scoped_lock lock(close_mutex);
     
-    if (! close_flag.test_and_set()) {
+    //if (! close_flag.test_and_set()) {
         // step 1
         // http://www.boost.org/doc/libs/1_59_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
         // 
@@ -111,7 +115,7 @@ try {
         // step 2
         //delete this;
         //flag = false;
-    }
+    //}
 }
 //catch (boost::exception& e) {
 //    // boost::system::system_error
@@ -142,7 +146,8 @@ void session::resolve_handler(const boost::system::error_code& ec,
         // 主机不可达
         logwarn(ec.message() << " Host unreachable. close this, this="
                 << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -175,7 +180,8 @@ void session::connect_handler(const boost::system::error_code& ec,
         // 网络不可达
         logwarn(ec.message() << " Network unreachable. close this, this="
                 << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -197,7 +203,8 @@ void session::hello_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -215,7 +222,8 @@ void session::exchange_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -287,7 +295,8 @@ void session::right_read_handler(const boost::system::error_code& error,
                 if (reply_random_str != this->random_str) {
                     // 非法的server端
                     logwarn("Illegal server !!! close this. this=" << this);
-                    this->close();
+                    //this->close();
+                    return;
                     break; 
                 }
 
@@ -304,13 +313,15 @@ void session::right_read_handler(const boost::system::error_code& error,
                     logerror("Connection rejected by the server-side, "
                         "there may be a problem with 'authentication failed'. "
                         "close this. this=" << this);
-                    this->close();
+                    //this->close();
+                    return;
                 break;
             case reply::timeout: // 0x05
                     // server端session超时;
                     logwarn("Server-side session timeout. close this. this="
                             << this);
-                    this->close();
+                    //this->close();
+                    return;
                 break;
             case reply::zipdata:// 0x17
                 is_zip_data = true;
@@ -371,7 +382,8 @@ void session::right_read_handler(const boost::system::error_code& error,
             default:
                     // 数据包 bad
                     logwarn("lss packet is bad. close this, this=" << this);
-                    this->close();
+                    //this->close();
+                    return;
                 break;
             }
         }
@@ -380,7 +392,8 @@ void session::right_read_handler(const boost::system::error_code& error,
             // TODO
             // 临时方案
             logwarn("wrong_packet_type. close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (incomplete_data& ec) {
             // 不完整数据
@@ -420,34 +433,41 @@ void session::right_read_handler(const boost::system::error_code& error,
             }
             else {
                 logwarn("close this, this=" << this);
-                this->close();
+                //this->close();
+                return;
             }
         }
         catch (wrong_lss_status& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (EncryptException& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (DecryptException& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (std::exception& ec) {
             logwarn(ec.what() << ". close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         catch (...) {
             logwarn("close this, this=" << this);
-            this->close();
+            //this->close();
+            return;
         }
         //break;}
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -523,7 +543,7 @@ void session::left_read_socks5_step1(const boost::system::error_code& error,
             // close
             boost::asio::async_write(this->socket_right,
                     pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
         }
     }
     else {
@@ -532,7 +552,7 @@ void session::left_read_socks5_step1(const boost::system::error_code& error,
                 << this);
         boost::asio::async_write(this->socket_right,
                 pack_bad().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+                boost::bind(&session::empty, shared_from_this()));
     }
 }
 
@@ -556,7 +576,7 @@ void session::left_write_socks5_step1_handler(
                 << this);
         boost::asio::async_write(this->socket_right,
                 pack_bad().buffers(),
-                boost::bind(&session::close, shared_from_this()));
+                boost::bind(&session::empty, shared_from_this()));
     }
 }
 
@@ -604,14 +624,15 @@ void session::left_read_handler(const boost::system::error_code& error,
         //else {
             //logwarn(error.message() << " value=" << error.value()
             //        << " close this, this=" << this);
-            //this->close();
+            ////this->close();
+            //return;
 
             logwarn(error.message() << ", value=" << error.value()
                     << ", send lss_bad to server, then close this, this="
                     << this);
             boost::asio::async_write(this->socket_right,
                     pack_bad().buffers(),
-                    boost::bind(&session::close, shared_from_this()));
+                    boost::bind(&session::empty, shared_from_this()));
         //}
     }
 }
@@ -619,14 +640,15 @@ void session::left_read_handler(const boost::system::error_code& error,
 
 void session::left_read_timeout_handler(const boost::system::error_code& error) {
     logwarn(error.message() << " value=" << error.value() 
-            << " close this, this=" << this);
+            << ". close this, this=" << this);
     /*
     if (error == boost::asio::error::operation_aborted) {
     }
     else {
     }
     */
-    this->close();
+    //this->close();
+    return;
 }
 
 void session::right_write_handler(const boost::system::error_code& error,
@@ -642,7 +664,8 @@ void session::right_write_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
@@ -659,7 +682,8 @@ void session::left_write_handler(const boost::system::error_code& error,
     }
     else {
         logwarn(error.message() << " close this, this=" << this);
-        this->close();
+        //this->close();
+        return;
     }
 }
 
