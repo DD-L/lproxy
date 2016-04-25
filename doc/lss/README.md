@@ -4,10 +4,16 @@
 
 * lss 基本架构 及其 session 大致流程示意图.
 
-	* [pdf](./lproxy.pdf) 
-	* [svg](./lproxy.svg)
+	* lproxy v0.2.x
+
+		* [svg](./lproxy_v0.2.x.svg)
+
+		![lproxy](./lproxy_v0.2.x.png)
 	
-	![lproxy](./lproxy.png)
+	* lproxy v0.1.x
+
+		* [svg](./lproxy_v0.1.x.svg)
+		* [png](./lproxy_v0.1.x.png)
 
 * [压力(并发)测试](./StressTesting.md)
 
