@@ -47,7 +47,7 @@
 		```shell
 		$ mkdir -p /var/log/nginx/
 		$ cd $_DIR/nginx/conf
-		$ # 修改 nginx.conf 如下：
+		$ # 修改 nginx.conf 如下（示例）：
 		$ cat nginx.conf
 		worker_processes auto;
 		
@@ -85,6 +85,14 @@
 		    }
 		}
 		```
+
+		*附资料（仅供参考）*
+		> 1. nginx 作为 http 服务器时的理论公式：`max_clients = worker_processes * worker_connections`
+		>
+		> 2. nginx 作为反向代理服务器时的理论公式：`max_clients = worker_processes * worker_connections/4`
+		>
+		这里是将 nginx 用作“反代”，请根据环境需要修改 nginx 配置文件。*`lproxy` 本身即可应对较高的并发，所以上面示例中的 `worker_connections` 1024 的配置，显然是不合理的，仅是演示而已。*
+
 	3. 运行 nginx
 
 		```shell
