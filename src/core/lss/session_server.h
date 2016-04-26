@@ -367,6 +367,7 @@ private:
     udp::socket       socket_right_udp; // remote udp
     std::shared_ptr<tcp::resolver> resolver_right_tcp;// 
     std::shared_ptr<udp::resolver> resolver_right_udp;// 
+    boost::asio::deadline_timer    timer_right;
 
     enum {
         CMD_CONNECT   = 0x01,

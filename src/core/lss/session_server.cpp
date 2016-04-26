@@ -19,7 +19,7 @@ using lproxy::data_t;
 session::session(boost::asio::io_service& io_service_left,
                   boost::asio::io_service& io_service_right)
             : socket_left(io_service_left), socket_right_tcp(io_service_right),
-            socket_right_udp(io_service_right)
+            socket_right_udp(io_service_right), timer_right(io_service_right)
 {
     this->status = status_not_connected;
     this->socks5_state = lproxy::socks5::server::OPENING;            
@@ -55,6 +55,7 @@ void session::start(void) {
 
 void session::close(void) throw()
 try {
+    timer_right.cancel();
     // TODO
 //Program received signal SIGSEGV, Segmentation fault.
 //[Switching to Thread 0x7ffff65c3700 (LWP 1597)]
@@ -1136,6 +1137,29 @@ void session::resovle_connect_tcp(const char* name, uint16_t port) {
             this->socket_right_tcp.get_io_service());
     ip::tcp::resolver::query qry(name, boost::lexical_cast<std::string>(port));
 
+    // set timeout
+    timer_right.expires_from_now(boost::posix_time::seconds(
+                config::get_instance().get_timeout()));
+    timer_right.async_wait(
+        [this] (const boost::system::error_code& error) {
+            // On error, such as cancellation, return early.
+            if (error) return;
+            // Timer has expired, but the read operation's completion handler
+            // may have already ran, setting expiration to be in the future.
+            if (timer_right.expires_at() 
+                    > boost::asio::deadline_timer::traits_type::now()) {
+                return;
+            }
+            // The read operation's completion handler has not ran.
+            // timeout
+            logwarn(error.message() << " value=" << error.value() 
+                    << ", send lss_timeout to local, then close this, this="
+                    << this);
+            boost::asio::async_write(this->socket_left, 
+                    pack_timeout().buffers(),
+                    boost::bind(&session::empty, shared_from_this()));
+    });
+
     // async_resolve
     this->resolver_right_tcp->async_resolve(qry, 
             boost::bind(&session::tcp_resolve_handler, 
@@ -1160,6 +1184,30 @@ void session::resovle_open_udp(const char* name, uint16_t port) {
 void session::tcp_resolve_handler(const boost::system::error_code& err, 
         tcp::resolver::iterator endpoint_iterator) {
     if (! err) {
+
+        // set timeout
+        timer_right.expires_from_now(boost::posix_time::seconds(
+                    config::get_instance().get_timeout()));
+        timer_right.async_wait(
+            [this] (const boost::system::error_code& error) {
+                // On error, such as cancellation, return early.
+                if (error) return;
+                // Timer has expired, but the read operation's completion handler
+                // may have already ran, setting expiration to be in the future.
+                if (timer_right.expires_at() 
+                        > boost::asio::deadline_timer::traits_type::now()) {
+                    return;
+                }
+                // The read operation's completion handler has not ran.
+                // timeout
+                logwarn(error.message() << " value=" << error.value() 
+                       << ", send lss_timeout to local, then close this, this="
+                       << this);
+                boost::asio::async_write(this->socket_left, 
+                        pack_timeout().buffers(),
+                        boost::bind(&session::empty, shared_from_this()));
+        });
+
         // Attempt a connection to the first endpoint in the list. Each endpoint
         // will be tried until we successfully establish a connection.
         tcp::endpoint endpoint = *endpoint_iterator;
@@ -1207,6 +1255,31 @@ void session::tcp_connect_handler(const boost::system::error_code& err,
     else if (endpoint_iterator != tcp::resolver::iterator()) {
         // The connection failed. Try the next endpoint in the list.
         this->socket_right_tcp.close();
+
+        // set timeout
+        timer_right.expires_from_now(boost::posix_time::seconds(
+                    config::get_instance().get_timeout()));
+        timer_right.async_wait(
+            [this] (const boost::system::error_code& error) {
+                // On error, such as cancellation, return early.
+                if (error) return;
+                // Timer has expired, but the read operation's completion handler
+                // may have already ran, setting expiration to be in the future.
+                if (timer_right.expires_at() 
+                        > boost::asio::deadline_timer::traits_type::now()) {
+                    return;
+                }
+                // The read operation's completion handler has not ran.
+                // timeout
+                logwarn(error.message() << " value=" << error.value() 
+                       << ", send lss_timeout to local, then close this, this="
+                       << this);
+                boost::asio::async_write(this->socket_left, 
+                        pack_timeout().buffers(),
+                        boost::bind(&session::empty, shared_from_this()));
+        });
+
+
         tcp::endpoint endpoint = *endpoint_iterator;
         this->socket_right_tcp.async_connect(endpoint,
                 boost::bind(&session::tcp_connect_handler, shared_from_this(),
