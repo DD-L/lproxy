@@ -1152,7 +1152,10 @@ void session::resovle_connect_tcp(const char* name, uint16_t port) {
             }
             // The read operation's completion handler has not ran.
             // timeout
-            logwarn(error.message() << " value=" << error.value() 
+            // always Success value=0
+            //logwarn(error.message() << " value=" << error.value() 
+            logwarn("Timer has expired, timeout=" 
+                    << config::get_instance().get_timeout()
                     << ", send lss_timeout to local, then close this, this="
                     << this);
             boost::asio::async_write(this->socket_left, 
@@ -1200,7 +1203,8 @@ void session::tcp_resolve_handler(const boost::system::error_code& err,
                 }
                 // The read operation's completion handler has not ran.
                 // timeout
-                logwarn(error.message() << " value=" << error.value() 
+                logwarn("Timer has expired, timeout=" 
+                       << config::get_instance().get_timeout()
                        << ", send lss_timeout to local, then close this, this="
                        << this);
                 boost::asio::async_write(this->socket_left, 
@@ -1271,7 +1275,8 @@ void session::tcp_connect_handler(const boost::system::error_code& err,
                 }
                 // The read operation's completion handler has not ran.
                 // timeout
-                logwarn(error.message() << " value=" << error.value() 
+                logwarn("Timer has expired, timeout=" 
+                       << config::get_instance().get_timeout()
                        << ", send lss_timeout to local, then close this, this="
                        << this);
                 boost::asio::async_write(this->socket_left, 
