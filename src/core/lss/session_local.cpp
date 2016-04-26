@@ -38,7 +38,8 @@ session::~session(void) {
 
 void session::start(void) {
     boost::system::error_code ec;
-    loginfo("client: " << socket_left.remote_endpoint(ec).address());
+    loginfo("client: " << socket_left.remote_endpoint(ec).address()
+            << ", this=" << this);
     if (ec) {
         logerror(ec.message() << ", value=" << ec.value() 
                 << ". Terminate this session!!! this=" << this);
