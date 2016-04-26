@@ -608,20 +608,73 @@ void session::left_write_handler(const boost::system::error_code& error,
         if (lproxy::socks5::server::CONNECTED == this->socks5_state) {
             auto&& data_right = lproxy::make_shared_data(max_length, 0);
             switch (this->socks5_cmd) {
-            case CMD_CONNECT:
+            case CMD_CONNECT: {
 
                 //lsslogdebug("start async_read_some from socket_right_tcp");
                 lsslogdebug("begin to async-read data from remote");
+
+                // set timeout
+                timer_right.expires_from_now(boost::posix_time::seconds(
+                            config::get_instance().get_timeout()));
+                timer_right.async_wait(
+                    [this] (const boost::system::error_code& error) {
+                        // On error, such as cancellation, return early.
+                        if (error) return;
+                        // Timer has expired, but the read operation's 
+                        // completion handler may have already ran, 
+                        // setting expiration to be in the future.
+                        if (timer_right.expires_at() > 
+                            boost::asio::deadline_timer::traits_type::now()) {
+                            return;
+                        }
+                        // The read operation's completion handler has not ran.
+                        // timeout
+                        logwarn("Timer has expired, timeout=" 
+                            << config::get_instance().get_timeout()
+                            << ", send lss_timeout to local, "
+                            "then close this, this=" << this);
+                        boost::asio::async_write(this->socket_left, 
+                                pack_timeout().buffers(),
+                                boost::bind(&session::empty, 
+                                    shared_from_this()));
+                });
 
                 socket_right_tcp.async_read_some(
                     boost::asio::buffer(&(*data_right)[0], max_length), 
                     boost::bind(&session::right_read_handler, 
                         shared_from_this(), _1, _2, data_right));
                 break;
+            }
             case CMD_UDP: {
 
                 //lsslogdebug("start async_receive_from socket_right_udp");
                 lsslogdebug("begin to async-receive data from remote");
+
+                // set timeout
+                timer_right.expires_from_now(boost::posix_time::seconds(
+                            config::get_instance().get_timeout()));
+                timer_right.async_wait(
+                    [this] (const boost::system::error_code& error) {
+                        // On error, such as cancellation, return early.
+                        if (error) return;
+                        // Timer has expired, but the read operation's 
+                        // completion handler may have already ran, 
+                        // setting expiration to be in the future.
+                        if (timer_right.expires_at() > 
+                            boost::asio::deadline_timer::traits_type::now()) {
+                            return;
+                        }
+                        // The read operation's completion handler has not ran.
+                        // timeout
+                        logwarn("Timer has expired, timeout=" 
+                            << config::get_instance().get_timeout()
+                            << ", send lss_timeout to local, "
+                            "then close this, this=" << this);
+                        boost::asio::async_write(this->socket_left, 
+                                pack_timeout().buffers(),
+                                boost::bind(&session::empty, 
+                                    shared_from_this()));
+                });
 
                 ip::udp::endpoint destination(
                     ip::address::from_string(this->dest_name), this->dest_port);
