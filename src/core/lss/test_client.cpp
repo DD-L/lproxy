@@ -4,6 +4,9 @@
 	> Mail:         deel@d-l.top
 	> Created Time: 2016/3/10 9:06:52
  ************************************************************************/
+#ifndef LSS_DEBUG
+#define LSS_DEBUG
+#endif
 #include <lss/typedefine.h>
 //#include <boost/asio.hpp>
 #include <iostream>
