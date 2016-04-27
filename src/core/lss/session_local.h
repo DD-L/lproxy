@@ -31,7 +31,9 @@ public:
      */
     virtual void start(void) override;
     virtual tcp::socket& get_socket_left(void) override;
+private:
     virtual void close(void) throw() override;
+    virtual void cancel(void) throw() override;
 private:
     /**
      * function:resolve_handler {

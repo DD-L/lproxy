@@ -26,8 +26,10 @@ public:
      * function:start {socket_left.async_read_some [bind: left_read_handler]}
      */
     virtual void start(void) override;
-    virtual void close(void) throw() override;
     virtual tcp::socket& get_socket_left(void) override;
+private:
+    virtual void close(void) throw() override;
+    virtual void cancel(void) throw() override;
 private:
     /**
      * function:left_read_handler {
