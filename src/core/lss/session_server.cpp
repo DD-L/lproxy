@@ -545,7 +545,7 @@ void session::left_read_handler(const boost::system::error_code& error,
         }
     } 
     else { // error
-        logwarn(error.message() << " value=" << error.value() 
+        logwarn(error.message() << ", value=" << error.value() 
                 << ". cancel this, this=" << this);
 #ifdef LSS_DEBUG
         if (error == boost::asio::error::eof) {
@@ -817,7 +817,7 @@ void session::right_read_handler(const boost::system::error_code& error,
         //}
         //else {
             logwarn(error.message() << ", value=" << error.value() 
-                    << ", send lss_bad to local, then cancel this, this=" 
+                    << ", send lss_bad to local, finally cancel this, this=" 
                     << this);
             boost::asio::async_write(this->socket_left, 
                     pack_bad().buffers(),
@@ -841,7 +841,7 @@ void session::right_read_timeout_handler(
     else {
         // timeout
         logwarn(error.message() << " value=" << error.value() 
-                << " send lss_timeout to local, then cancel this, this="
+                << " send lss_timeout to local, finally cancel this, this="
                 << this);
         boost::asio::async_write(this->socket_left, 
                 pack_timeout().buffers(),
@@ -1287,7 +1287,7 @@ void session::tcp_connect_handler(const boost::system::error_code& err,
                 // timeout
                 logwarn("Timer has expired, timeout=" 
                        << config::get_instance().get_timeout()
-                       << ", send lss_timeout to local, then cancel this, this="
+                       << ", send lss_timeout to local, finally cancel this, this="
                        << this);
                 boost::asio::async_write(this->socket_left, 
                         pack_timeout().buffers(),
