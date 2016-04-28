@@ -60,12 +60,12 @@ try {
     boost::system::error_code ec;
     socket_left.cancel(ec);
     if (ec) {
-        logwarn(ec.message() << " value=" << ec.value() 
+        lsslogdebug(ec.message() << " value=" << ec.value() 
                 << ", socket_left::cancel, this=" << this);
     }
     socket_right.cancel(ec);
     if (ec) {
-        logwarn(ec.message() << " value=" << ec.value() 
+        lsslogdebug(ec.message() << " value=" << ec.value() 
                 << ", socket_right::cancel, this=" << this);
     }
 }
@@ -85,24 +85,24 @@ try {
     if (socket_left.is_open()) {
         socket_left.shutdown(tcp::socket::shutdown_both, ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_left::shutdown, this=" << this);
         }
         socket_left.close(ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_left::close, this=" << this);
         }
     }
     if (socket_right.is_open()) {
         socket_right.shutdown(tcp::socket::shutdown_both, ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_right::shutdown, this=" << this);
         }
         socket_right.close(ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_right::close, this=" << this);
         }
     }

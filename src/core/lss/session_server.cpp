@@ -58,17 +58,17 @@ try {
     boost::system::error_code ec;
     socket_left.cancel(ec);
     if (ec) {
-        logwarn(ec.message() << " value=" << ec.value() 
+        lsslogdebug(ec.message() << " value=" << ec.value() 
                 << ", socket_left::cancel, this=" << this);
     }
     socket_right_tcp.cancel(ec);
     if (ec) {
-        logwarn(ec.message() << " value=" << ec.value() 
+        lsslogdebug(ec.message() << " value=" << ec.value() 
                 << ", socket_right_tcp::cancel, this=" << this);
     }
     socket_right_udp.cancel(ec);
     if (ec) {
-        logwarn(ec.message() << " value=" << ec.value() 
+        lsslogdebug(ec.message() << " value=" << ec.value() 
                 << ", socket_right_udp::cancel, this=" << this);
     }
 }
@@ -89,36 +89,36 @@ try {
     if (socket_left.is_open()) {
         socket_left.shutdown(tcp::socket::shutdown_both, ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_left::shutdown, this=" << this);
         }
         socket_left.close(ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_left::close, this=" << this);
         }
     }
     if (socket_right_tcp.is_open()) {
         socket_right_tcp.shutdown(tcp::socket::shutdown_both, ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_right_tcp::shutdown, this=" << this);
         }
         socket_right_tcp.close(ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_right_tcp::close, this=" << this);
         }
     }
     if (socket_right_udp.is_open()) {
         socket_right_udp.shutdown(udp::socket::shutdown_both, ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value()
+            lsslogdebug(ec.message() << " value=" << ec.value()
                     << ", socket_right_udp::shutdown, this=" << this);
         }
         socket_right_udp.close(ec);
         if (ec) {
-            logerror(ec.message() << " value=" << ec.value() 
+            lsslogdebug(ec.message() << " value=" << ec.value() 
                     << ", socket_right_udp::close, this=" << this);
         }
     }
