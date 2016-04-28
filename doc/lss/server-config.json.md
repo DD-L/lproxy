@@ -13,7 +13,7 @@
         "bind_addr_type_socks5": "ipv4", // "bind_addr_socks5" 地址的类型, 可选值 [ "ipv4" | "ipv6" | "domain" ]
         "bind_port_socks5": 8088,        // socks5 响应时返回的端口，一般和 "bind_port" 保持一致. 必须为数字类型.
         "zip_on": false,                 // 是否对流量进行压缩. 布尔类型数据. 如果未设置则默认值为 false
-        "timeout": 30,                   // 超时设置 (秒). 必须为数字类型. 如果未设置则默认值为 30
+        "timeout": 90,                   // 超时设置 (秒). 必须为数字类型. 如果未设置则默认值为 90
         //"logfile": "/var/log/lproxy/server.err", // (错误)运行日志. 如果未设置则不保存日志
         
         // lsslocal 的认证 key 集合, 重复无效. 
