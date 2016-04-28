@@ -59,7 +59,7 @@ try {
     m_bind_addr_type_socks5= pt.get<sdata_t>("lssserver.bind_addr_type_socks5");
     m_bind_port_socks5     = pt.get<uint16_t>("lssserver.bind_port_socks5");
     m_zip_on    = pt.get<bool>("lssserver.zip_on", false);
-    m_timeout   = pt.get<uint32_t>("lssserver.timeout", 30);
+    m_timeout   = pt.get<uint32_t>("lssserver.timeout", 90);
     m_logfile   = pt.get<sdata_t>("lsslocal.logfile", "");
 
     for (auto& cipher_auth_key 

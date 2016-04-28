@@ -79,7 +79,7 @@ private:
     sdata_t  m_bind_addr_type_socks5;
     uint16_t m_bind_port_socks5;
 
-    uint32_t m_timeout = 30; /* in sec*/
+    uint32_t m_timeout = 90; /* in sec*/
     sdata_t  m_logfile;
 
 }; // lproxy::server::config
