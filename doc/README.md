@@ -1,33 +1,33 @@
 
 *目录*
 
-1. [lproxy](#lproxy)
-	1. 获取 lproxy 源码
-	2. 编译安装 lproxy
-	3. 运行 lproxy 服务
-	4. 配置文件
-	5. /path/to/lproxy/Makefile “伪目标”
-	7. Makefile 公共变量
-	6. 补充说明
-		* boost 源码
-		* 从零配置编译环境
-		* Windows/MinGW 下编译 lproxy
-		* 直接获取 lproxy 二进制程序
-		* 不推荐在Cygwin 平台下使用 lproxy
-2. [Docker 支持](#docker-支持)
-	1. lproxy 镜像
-		1. 获取 lproxy Docker 镜像
-		2. 在容器中运行 lproxy 服务
-	2. lproxy-dev 镜像
-		1. 获取 lproxy-dev Docker 镜像
-		2. 运行 lproxy-dev 容器
-3. [Releases](#releases)
-4. [即刻免费体验 lproxy 远程代理服务](#即刻体验-lproxy-远程代理服务)
-5. [简易的 lproxy server 端集群部署方案](#简易的-lproxy-server-端集群部署方案)
-6. [lproxy 前进计划](#lproxy-前进计划)
-7. [开发文档](#开发文档)
-8. [测试](#测试)
-9. [TODO list](#todo-list)
+1. *[lproxy](#lproxy)*
+	1. *获取 lproxy 源码*
+	2. *编译安装 lproxy*
+	3. *运行 lproxy 服务*
+	4. *配置文件*
+	5. */path/to/lproxy/Makefile “伪目标”*
+	7. *Makefile 公共变量*
+	6. *补充说明*
+		* *boost 源码*
+		* *从零配置编译环境*
+		* *Windows/MinGW 下编译 lproxy*
+		* *直接获取 lproxy 二进制程序*
+		* *不推荐在Cygwin 平台下使用 lproxy*
+2. *[Docker 支持](#docker-支持)*
+	1. *lproxy 镜像*
+		1. *获取 lproxy Docker 镜像*
+		2. *在容器中运行 lproxy 服务*
+	2. *lproxy-dev 镜像*
+		1. *获取 lproxy-dev Docker 镜像*
+		2. *运行 lproxy-dev 容器*
+3. *[Releases](#releases)*
+4. *[即刻免费体验 lproxy 远程代理服务](#即刻体验-lproxy-远程代理服务)*
+5. *[简易的 lproxy server 端集群部署方案](#简易的-lproxy-server-端集群部署方案)*
+6. *[lproxy 前进计划](#lproxy-前进计划)*
+7. *[开发者文档](#开发文档)*
+8. *[测试](#测试)*
+9. *[TODO list](#todo-list)*
 
 
 ## lproxy
