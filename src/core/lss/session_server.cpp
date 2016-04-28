@@ -739,7 +739,8 @@ void session::right_write_handler(const boost::system::error_code& error,
         } // switch (this->socks5_cmd)
     }
     else {
-        logwarn(error.message() << ". cancel this, this=" << this);
+        logwarn(error.message() << ". send lss_bad to local, "
+                "finally cancel this, this=" << this);
         boost::asio::async_write(this->socket_left, 
                 pack_bad().buffers(),
                 boost::bind(&session::cancel, shared_from_this()));
@@ -1147,31 +1148,31 @@ void session::resovle_connect_tcp(const char* name, uint16_t port) {
             this->socket_right_tcp.get_io_service());
     ip::tcp::resolver::query qry(name, boost::lexical_cast<std::string>(port));
 
-    //// set timeout-s
-    //timer_right.expires_from_now(boost::posix_time::seconds(
-    //            config::get_instance().get_timeout()));
-    //timer_right.async_wait(
-    //    [this] (const boost::system::error_code& error) {
-    //        // On error, such as cancellation, return early.
-    //        if (error) return;
-    //        // Timer has expired, but the read operation's completion handler
-    //        // may have already ran, setting expiration to be in the future.
-    //        if (timer_right.expires_at() 
-    //                > boost::asio::deadline_timer::traits_type::now()) {
-    //            return;
-    //        }
-    //        // The read operation's completion handler has not ran.
-    //        // timeout
-    //        // always Success value=0
-    //        //logwarn(error.message() << " value=" << error.value() 
-    //        logwarn("Timer has expired, timeout=" 
-    //                << config::get_instance().get_timeout()
-    //                << ", send lss_timeout to local, finally cancel this, this="
-    //                << this);
-    //        boost::asio::async_write(this->socket_left, 
-    //                pack_timeout().buffers(),
-    //                boost::bind(&session::cancel, shared_from_this()));
-    //});
+    // set timeout-s
+    timer_right.expires_from_now(boost::posix_time::seconds(
+                config::get_instance().get_timeout()));
+    timer_right.async_wait(
+        [this] (const boost::system::error_code& error) {
+            // On error, such as cancellation, return early.
+            if (error) return;
+            // Timer has expired, but the read operation's completion handler
+            // may have already ran, setting expiration to be in the future.
+            if (timer_right.expires_at() 
+                    > boost::asio::deadline_timer::traits_type::now()) {
+                return;
+            }
+            // The read operation's completion handler has not ran.
+            // timeout
+            // always Success value=0
+            //logwarn(error.message() << " value=" << error.value() 
+            logwarn("Timer has expired, timeout=" 
+                    << config::get_instance().get_timeout()
+                    << ", send lss_timeout to local, finally cancel this, this="
+                    << this);
+            boost::asio::async_write(this->socket_left, 
+                    pack_timeout().buffers(),
+                    boost::bind(&session::cancel, shared_from_this()));
+    });
 
     // async_resolve
     this->resolver_right_tcp->async_resolve(qry, 
