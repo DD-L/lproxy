@@ -171,6 +171,7 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 	这次有点奇怪的是，日志显示，百度的页面要请求 Google 的资源（api） www.googleapis.com。这可能是 猎豹浏览器本身需要，也可能是 某些页面的资源真的需要（这也正常），还有一点是 我另外一个 浏览器 Google Chrome 也在用这个端口，也可能是它发出来的。
  
 	目前正在着手解决这个bug (偶现), 暂时无视它，继续测试。（更新：此 bug 已经在 `lproxy v0.2.0` 中被修复）
+
 	重新 在 gdb 模式下启动 lssserver.exe
 	```
 
@@ -209,3 +210,4 @@ lproxy 服务(lsslocal 和 lssserver)两个运行情况都良好。如果编译 
 		```
 
 * 测试时遇到的那个 bug，已经在 `lproxy v0.2.0` 中被修复， see [#130](https://github.com/DD-L/lproxy/issues/130)
+

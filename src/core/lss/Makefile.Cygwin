@@ -4,13 +4,16 @@ GDB := -g
 TMP = ./~tmp
 BIN = ./bin
 
+include ./VERSION.LSS
+
 CYGWIN_MACROS = -D__USE_W32_SOCKETS -D_WIN32_WINDOWS
 CYGWIN_SOCKET_LIB = -lws2_32
 CYGWIN_INCLUDE_FILE = -include w32api/_mingw_mac.h
 
 MACROS = -D_REENTRANT -DBOOST_REGEX_NO_LIB \
 		 -DBOOST_DATE_TIME_SOURCE -DBOOST_SYSTEM_NO_LIB \
-		 $(CYGWIN_MACROS) $(Log_Container_Type) $(LSS_DEBUG) $(ASIO_DEBUG)
+		 $(CYGWIN_MACROS) $(Log_Container_Type) $(LSS_DEBUG) $(ASIO_DEBUG) \
+		 -D__LSS_VERSION__="\"$(LSS_VERSION)\""
 
 override CFLAGS   += -Wall -Wno-unused-local-typedefs $(GDB) $(CYGWIN_INCLUDE_FILE)
 override CXXFLAGS += -Wall -Wno-unused-local-typedefs $(MACROS) $(CYGWIN_INCLUDE_FILE) $(GDB) -std=c++1y
