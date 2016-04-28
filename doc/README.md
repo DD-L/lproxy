@@ -194,7 +194,7 @@
 | [static_analysis](./develop.md#1-static_analysis) | cpp 代码静态检查 |
 | [boost_build](./develop.md#2-boost_build)         | -                |
 | [store](./develop.md#3-store)                     | 适用于“多生产者-多消费者” 的模板仓库 |
-| [log](./develop.md#4-log)                         | 日志库 |
+| [log](./develop.md#4-log)                         | *非常优秀的* 日志库 |
 | [exception](./develop.md#5-exception)             | 异常类型组件 |
 | [language](./develop.md#6-language)               | 多国语言组件 |
 | [deel.boost.python](./develop.md#7-deelboostpython) | - |
