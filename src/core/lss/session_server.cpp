@@ -90,11 +90,11 @@ catch (...) {
 void session::close(void) throw()
 try {
     boost::system::error_code ec;
-    //timer_right.cancel(ec);
-    //if (ec) {
-    //    lsslogdebug(ec.message() << " value=" << ec.value() 
-    //            << ", this=" << this);
-    //}
+    timer_right.cancel(ec);
+    if (ec) {
+        lsslogdebug(ec.message() << " value=" << ec.value() 
+                << ", this=" << this);
+    }
     if (socket_left.is_open()) {
         socket_left.shutdown(tcp::socket::shutdown_both, ec);
         if (ec) {
