@@ -1,6 +1,6 @@
 # lproxy Stress Testing
 
-这里的压力测试重点是并发测试。
+这里的压力测试重点是并发测试。测试版本有些陈旧： `lproxy 未发布的较早期内部版本`
 
 使用 WEB 压力测试工具  [http_load](https://github.com/DD-L/DailyNotes/blob/centos/centos/centos-config.md#http_load) 对 lproxy 服务进行压力测试（并发）。HTTP 短连接特性，比较容易测得出并发性能。
 
