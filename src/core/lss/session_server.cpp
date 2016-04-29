@@ -56,6 +56,11 @@ void session::start(void) {
 void session::cancel(void) throw()
 try {
     boost::system::error_code ec;
+    timer_right.cancel(ec);
+    if (ec) {
+        lsslogdebug(ec.message() << " value=" << ec.value() 
+                << ", this=" << this);
+    }
     socket_left.cancel(ec);
     if (ec) {
         lsslogdebug(ec.message() << " value=" << ec.value() 
@@ -84,8 +89,12 @@ catch (...) {
 
 void session::close(void) throw()
 try {
-    timer_right.cancel();
     boost::system::error_code ec;
+    timer_right.cancel(ec);
+    if (ec) {
+        lsslogdebug(ec.message() << " value=" << ec.value() 
+                << ", this=" << this);
+    }
     if (socket_left.is_open()) {
         socket_left.shutdown(tcp::socket::shutdown_both, ec);
         if (ec) {
@@ -1197,9 +1206,16 @@ void session::resovle_open_udp(const char* name, uint16_t port) {
 // resolve_handler
 void session::tcp_resolve_handler(const boost::system::error_code& err, 
         tcp::resolver::iterator endpoint_iterator) {
+    {
+        boost::system::error_code ec;
+        timer_right.cancel(ec);
+        if (ec) {
+            lsslogdebug(ec.message() << " value=" << ec.value() 
+                    << ", this=" << this);
+        }
+    }
     if (! err) {
-
-        // set timeout-s ???? 
+        // set timeout-s 
         timer_right.expires_from_now(boost::posix_time::seconds(
                     config::get_instance().get_timeout()));
         timer_right.async_wait(
@@ -1257,9 +1273,16 @@ void session::udp_resolve_handler(const boost::system::error_code& err,
 // connect_handler
 void session::tcp_connect_handler(const boost::system::error_code& err,
         tcp::resolver::iterator endpoint_iterator) {
+    {
+        boost::system::error_code ec;
+        timer_right.cancel(ec);
+        if (ec) {
+            lsslogdebug(ec.message() << " value=" << ec.value() 
+                    << ", this=" << this);
+        }
+    }
     if (! err) {
         // The connection was successful. Send the request to local.
-        timer_right.cancel(); 
         lsslogdebug("remote connected.");
 
         // 连接成功
