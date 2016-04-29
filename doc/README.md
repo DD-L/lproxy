@@ -163,14 +163,14 @@
 
 > **lproxy 版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
 
-* [v0.2.0.20160429_Beta](https://github.com/DD-L/lproxy/releases/tag/0.2.0.20160429_Beta)
+* **[v0.2.0.20160429_Beta](https://github.com/DD-L/lproxy/releases/tag/0.2.0.20160429_Beta)**
 
 	* 优化 socks5 处理，**issue [#127](https://github.com/DD-L/lproxy/issues/127)**。减轻 lproxy-server 端负担，进一步提升 lproxy 并发能力；减少 local 与 server 之间的网络 I/O，提高网络利用率。但是，这种优化，导致其**与之前的 `v0.1.x` 版本的程序互不兼容**，*各个版本号之间的兼容规则请在 [VersionNumber](./VersionNumber.md) 中查阅*。
 	* bug 修复，**fixed [#130](https://github.com/DD-L/lproxy/issues/130)**。
 	* lproxy-server 端 timeout 优化。
 	* 支持 `-v` 和 `--version` 选项。
 
-* [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
+* **[v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)**
 
 	* 匆匆发布的第一个测试版本
 
