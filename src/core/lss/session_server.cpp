@@ -1197,9 +1197,9 @@ void session::resovle_open_udp(const char* name, uint16_t port) {
 // resolve_handler
 void session::tcp_resolve_handler(const boost::system::error_code& err, 
         tcp::resolver::iterator endpoint_iterator) {
+    timer_right.cancel();
     if (! err) {
-
-        // set timeout-s ???? 
+        // set timeout-s 
         timer_right.expires_from_now(boost::posix_time::seconds(
                     config::get_instance().get_timeout()));
         timer_right.async_wait(
@@ -1257,9 +1257,9 @@ void session::udp_resolve_handler(const boost::system::error_code& err,
 // connect_handler
 void session::tcp_connect_handler(const boost::system::error_code& err,
         tcp::resolver::iterator endpoint_iterator) {
+    timer_right.cancel(); 
     if (! err) {
         // The connection was successful. Send the request to local.
-        timer_right.cancel(); 
         lsslogdebug("remote connected.");
 
         // 连接成功
