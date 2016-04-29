@@ -1,0 +1,2 @@
+LSS_VERSION ?= lproxy v0.2.0.20160429_Beta
+#LSS_VERSION ?= lproxy v0.2.0

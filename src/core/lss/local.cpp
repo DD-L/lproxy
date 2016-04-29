@@ -11,6 +11,11 @@
 #include <program_options/program_options.h>
 #include <cstdlib> // for ::system() exit()
 
+
+#ifndef __LSS_VERSION__
+#define __LSS_VERSION__ "build - Alpha"
+#endif
+
 static void process_program_options(const program_options& po,
         std::string& local_config_file) {
     if (po.empty()) {
@@ -21,6 +26,10 @@ static void process_program_options(const program_options& po,
         std::string message = po.show_help(
                 "\"local\" side of \"lproxy service\"");
         _print_s(message);
+        exit(0);
+    }
+    if (po.count("-v") || po.count("--version")) {
+        _print_s(__LSS_VERSION__ << std::endl);
         exit(0);
     }
     if (po.count("-k") || po.count("--keep-running")) {
@@ -76,7 +85,7 @@ void option(int argc, char** argv, std::string& local_config_file) {
     program_options po("lsslocal.exe [option]");
 
     po.add_option("-h, --help", "Show this message.");
-    //po.add_option("-v, --version", "Show current version.");
+    po.add_option("-v, --version", "Show current version.");
     po.add_option("-c, --config <profile>", 
             "Specify which configuration file lsslocal.exe should\n"
             "use instead of the default.\n"

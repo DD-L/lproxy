@@ -1,4 +1,36 @@
-# lproxy
+
+*目录*
+
+1. *[lproxy](#lproxy)*
+	1. *获取 lproxy 源码*
+	2. *编译安装 lproxy*
+	3. *运行 lproxy 服务*
+	4. *配置文件*
+	5. */path/to/lproxy/Makefile “伪目标”*
+	7. *Makefile 公共变量*
+	6. *补充说明*
+		* *boost 源码*
+		* *从零配置编译环境*
+		* *Windows/MinGW 下编译 lproxy*
+		* *直接获取 lproxy 二进制程序*
+		* *不推荐在Cygwin 平台下使用 lproxy*
+2. *[Docker 支持](#docker-支持)*
+	1. *lproxy 镜像*
+		1. *获取 lproxy Docker 镜像*
+		2. *在容器中运行 lproxy 服务*
+	2. *lproxy-dev 镜像*
+		1. *获取 lproxy-dev Docker 镜像*
+		2. *运行 lproxy-dev 容器*
+3. *[Releases](#releases)*
+4. *[即刻免费体验 lproxy 远程代理服务](#即刻体验-lproxy-远程代理服务)*
+5. *[简易的 lproxy server 端集群部署方案](#简易的-lproxy-server-端集群部署方案)*
+6. *[lproxy 前进计划](#lproxy-前进计划)*
+7. *[开发者文档](#开发文档)*
+8. *[测试](#测试)*
+9. *[TODO list](#todo-list)*
+
+
+## lproxy
 
 `lproxy` 是一套轻巧的、一对多的、安全的 Socks5 网络代理服务。
 
@@ -49,48 +81,20 @@
 	* server 端配置文件 [server-config.json](./lss/server-config.json.md)
 
 
-5. `/path/to/lproxy/Makefile` “伪目标”说明
+5. `/path/to/lproxy/Makefile` “伪目标”说明：[PHONY_TARGET](./lproxy_Makefile_phony_target.md)
 
-	| 伪目标             | 作用       |
-	|--------------------|------------|
-	| `all`              | do nothing |
-	| `init`             | 依次执行伪目标 `check` `boost` `cryptopp`|
-	| `init.force`       | 依次执行伪目标 `check` `boost.force` `cryptopp`|
-	| `check`            | 检查编译环境：1.系统是否安装`dos2unix`; 2. 是否支持 C++11|
-	| `boost`            | 释放 boost 库源码 （lproxy 是以 boost 源码嵌入的方式完成编译的）|
-	| `boost.force`      | 强制释放 boost 库源码|
-	| `cryptopp`         | 下载并编译 `cryptopp` 静态库|
-	| `lss`              | 编译 lss, 执行 `cd /path/to/lproxy/src/core/lss; $(MAKE) -f Makefile`|
-	| `lss.cygwin`       | 在 Cygwin 环境下编译 lss，执行 `cd /path/to/lproxy/src/core/lss; $(MAKE) -f Makefile.Cygwin`|
-	| `lss.clean`        | 执行 `cd /path/to/lproxy/src/core/lss; $(MAKE) clean` |
-	| `install`          | 会将编译好的 lss 二进制程序及配置文件拷贝到 `/path/to/lproxy/bin` 目录下|
-	| `uninstall`        | 删除安装， 会执行 `$(RM) /path/to/lproxy/bin` |
-	| `boost_build.clean`| 执行 `cd src/core/boost_build; $(MAKE) clean` |
-	| `except.clean`     | 执行 `cd src/core/except; $(MAKE) clean` |
-	| `language.clean`   | 执行 `cd src/core/language; $(MAKE) clean` |
-	| `store.clean`      | 执行 `cd src/core/store; $(MAKE) clean` |
-	| `crypto.clean`     | 执行 `cd src/core/crypto; $(MAKE) clean` |
-	| `log.clean`        | 执行 `cd src/core/log; $(MAKE) clean` |
-	| `python.clean`     | 执行 `cd src/core/python; $(MAKE) clean` |
-	| `logrotate.clean`  | 执行 `cd src/core/logrotate; $(MAKE) clean` |
-	| `src.clean`        | 清理 src 中的二进制文件，依次执行伪目标 `boost_build.clean` `except.clean` `language.clean` `store.clean` `crypto.clean` `log.clean` `python.clean` `logrotate.clean` `lss.clean` |
-	| `contrib.clean`    | 依次清除 “先前释放的 boost 库源码”，“cryptocpp 源码及其静态库”|
-	| `all.clean`        | 依次执行伪目标 `src.clean` `contrib.clean` |
-	| `clean`            | do nothing |
+6. Makefile 变量
 
+	* [Makefile Variables](./MakefileVariables.md)
 
-6. 补充说明
+7. 补充说明
 
-   * 在释放 `boost` 库源码时，会检测系统是否安装 `7z` 工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`；Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
+   * 在执行 `make init`，释放 `boost` 库源码时，会检测系统是否安装 `7z` 工具，如果检测不到 `7z` `7za` `7zr` 当中的任何一个，则会尝试编译一个 `7zr`；Windows 环境下（`cd path\to\lproxy\contrib\boost; make -f Makefile.win32`）如果在系统中检测不到 `7z` 工具，会直接使用 `path\to\lproxy\tools\7zip\bin.win32\7za.exe.win32`。
    * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
    * ~~`lss` 暂未提供在 Windows/MinGW 环境下编译支持。~~ 现已支持
    * 想要编译一个 Windows/MinGW 平台的 `lproxy` ？ *注意，在 MinGW 上编译 lproxy ，目前还没能做到非常简便的操作* ，可以参考这里 [MinGW-Builds](./mingwbuilds.md) 得到 **Windows 平台的 lproxy** 二进制程序。
    * 想直接获取二进制程序？:point_right: [Releases](#releases)
    * 强烈不推荐使用 Cygwin 平台的 `lproxy`，该平台下的 `lproxy` 的问题较多 （这与 boost.asio 在 Cygwin 上的实现有关）。
-
-7. Makefile 变量
-
-	* [Makefile Variables](./MakefileVariables.md)
 
 ## Docker 支持
 
@@ -157,18 +161,38 @@
 
 包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
 
+> **lproxy 版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
+
+* [v0.2.0.20160429_Beta](https://github.com/DD-L/lproxy/releases/tag/0.2.0.20160429_Beta)
+
+	* 优化 socks5 处理，**issue [#127](https://github.com/DD-L/lproxy/issues/127)**。减轻 lproxy-server 端负担，进一步提升 lproxy 并发能力；减少 local 与 server 之间的网络 I/O，提高网络利用率。但是，这种优化，导致其**与之前的 `v0.1.x` 版本的程序互不兼容**，*各个版本号之间的兼容规则请在 [VersionNumber](./VersionNumber.md) 中查阅*。
+	* bug 修复，**fixed [#130](https://github.com/DD-L/lproxy/issues/130)**。
+	* lproxy-server 端 timeout 优化。
+	* 支持 `-v` 和 `--version` 选项。
+
 * [v0.1.0.20160418_Beta](https://github.com/DD-L/lproxy/releases/tag/0.1.0.20160418_Beta)
+
+	* 匆匆发布的第一个测试版本
 
 ## 即刻体验 `lproxy` 远程代理服务
 
-*这只是一个示例*
+*这只是一个演示*
 
 预先准备：
 
 1. 本地需要一个 `lproxy` local 端程序：`lsslocal.exe` （[Download](https://github.com/DD-L/lproxy/releases)）。
 2. 注册一个 [daocloud.io](https://www.daocloud.io/) 账号。
 
-接下来，只需简单的几个步骤，就能即刻体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
+接下来，只需简单的几个步骤，就能即刻免费体验 `lproxy`：[详尽的图文教程](https://github.com/DD-L/DailyNotes/blob/master/lproxy/demo_on_daocloud/README.md)
+
+## 简易的 `lproxy` server 端集群部署方案
+
+1. 方案一：[ServerClusters1](./ServerClusters1.md)
+2. 方案二：*正在完善中...*
+
+## `lproxy` 前进计划
+
+*正在完善中...*
 
 ## 开发文档
 
@@ -179,7 +203,7 @@
 | [static_analysis](./develop.md#1-static_analysis) | cpp 代码静态检查 |
 | [boost_build](./develop.md#2-boost_build)         | -                |
 | [store](./develop.md#3-store)                     | 适用于“多生产者-多消费者” 的模板仓库 |
-| [log](./develop.md#4-log)                         | 日志库 |
+| [log](./develop.md#4-log)                         | *非常优秀的* 日志库 |
 | [exception](./develop.md#5-exception)             | 异常类型组件 |
 | [language](./develop.md#6-language)               | 多国语言组件 |
 | [deel.boost.python](./develop.md#7-deelboostpython) | - |
@@ -193,6 +217,8 @@
 ## 测试
 
 *待完善*
+
+*Help wanted:  希望得到专业测试帮助*
 
 1. [并发](./lss/StressTesting.md)
 2. [负载](./lss/LoadTesting.md)

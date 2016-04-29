@@ -8,7 +8,7 @@
         "bind_addr_type_socks5": "ipv4",
         "bind_port_socks5": 8088,
         "zip_on": false,
-        "timeout": 30,
+        "timeout": 90,
         //"logfile": "/var/log/lproxy/server.err",
         
         // upper(md5-32(lsslocal.auth_key))

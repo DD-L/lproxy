@@ -21,12 +21,15 @@ public:
 public:
     session(boost::asio::io_service& io_service_left,
             boost::asio::io_service& io_service_right);
+    virtual ~session(void);
     /**
      * function:start {socket_left.async_read_some [bind: left_read_handler]}
      */
     virtual void start(void) override;
-    virtual void close(void) throw() override;
     virtual tcp::socket& get_socket_left(void) override;
+private:
+    virtual void close(void) throw() override;
+    virtual void cancel(void) throw() override;
 private:
     /**
      * function:left_read_handler {
@@ -48,12 +51,15 @@ private:
      *          unpack_data
      *          cut_lss
      *          // sock5
-     *          case (socks5::server::OPENING) {
-     *             'VER NMETHODS METHODS' -> socks5::ident_req
-     *             'VER NMETHOD' -> sock5::ident_resp
-     *             sock5::ident_resp -> rply_data 
-     *             async_write:socket_left [bind: left_write_handler]
-     *          }
+     *          // https://github.com/DD-L/lproxy/issues/127
+     *          //case (socks5::server::OPENING) {
+     *          //   'VER NMETHODS METHODS' -> socks5::ident_req
+     *          //   'VER NMETHOD' -> sock5::ident_resp
+     *          //   sock5::ident_resp -> rply_data 
+     *          //   async_write:socket_left [bind: left_write_handler]
+     *          //}
+     *          if (socks5::server::OPENING)
+     *              this->socks5_state = lproxy::socks5::server::CONNECTING
      *          case (socks5::server::CONNECTING) {
      *              'VER CMD RSV ATYP DST-ADDR DST-PROT' -> socks5::req rq
      *              socks5_request_processing(rq);
@@ -363,6 +369,7 @@ private:
     udp::socket       socket_right_udp; // remote udp
     std::shared_ptr<tcp::resolver> resolver_right_tcp;// 
     std::shared_ptr<udp::resolver> resolver_right_udp;// 
+    boost::asio::deadline_timer    timer_right;
 
     enum {
         CMD_CONNECT   = 0x01,
@@ -385,8 +392,8 @@ private:
     lproxy::socks5::server::state socks5_state = lproxy::socks5::server::OPENING;
 
     std::shared_ptr<crypto::Encryptor> aes_encryptor;
-    std::atomic_flag                   close_flag = ATOMIC_FLAG_INIT;
-    boost::mutex                       close_mutex;
+    //std::atomic_flag                   close_flag = ATOMIC_FLAG_INIT;
+    //boost::mutex                       close_mutex;
 }; // class lproxy::server::session
 } // namespace lproxy::server
 } // namespace lproxy
