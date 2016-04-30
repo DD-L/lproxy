@@ -2,10 +2,9 @@
 
 这里的压力测试重点是并发测试。测试版本有些陈旧： `lproxy 未发布的较早期内部版本`
 
-使用 WEB 压力测试工具  [http_load](https://github.com/DD-L/DailyNotes/blob/centos/centos/centos-config.md#http_load) 对 lproxy 服务进行压力测试（并发）。HTTP 短连接特性，比较容易测得出并发性能。
+使用 WEB 压力测试工具  [http_load](https://github.com/DD-L/DailyNotes/blob/centos/centos/centos-config.md#http_load) 对 lproxy 服务进行压力测试（并发）。
 
 虽然测试不专业，但绝对详尽。
-
 
 说明：*因为 http_load 的代理设置只支持 http 的代理方式，所以又使用了 Privoxy（ver 3.0.24） 进行了 http -> socks5 的转换。*
 
