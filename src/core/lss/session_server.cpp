@@ -468,7 +468,8 @@ void session::left_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
+            logwarn("incomplete_data. ec.less() = " << ec.less() 
+                    << " byte. this=" << this);
 
             if (ec.less() > 0) {
                 auto&& data_left_rest = lproxy::make_shared_data(

@@ -63,7 +63,6 @@ private:
      *          case (socks5::server::CONNECTING) {
      *              'VER CMD RSV ATYP DST-ADDR DST-PROT' -> socks5::req rq
      *              socks5_request_processing(rq);
-     *              socket_left.async_read_some [bind: left_read_handler]
      *          }
      *          case (socks5::server::CONNECTED) {
      *              case (CMD_CONNECT) {
@@ -352,6 +351,8 @@ private:
      *      async_write:socket_left [bind: left_write_handler]
      *      if (this->socks_resp_reply == 0x00) {
      *          this->socks5_state = lproxy::socks5::server::CONNECTED;
+     *          
+     *          socket_left.async_read_some [bind: left_read_handler]
      *      }
      * }
      */

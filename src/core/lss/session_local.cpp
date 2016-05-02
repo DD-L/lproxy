@@ -287,7 +287,6 @@ void session::right_read_handler(const boost::system::error_code& error,
                 // 通过验证
                 lsslogdebug("Verify completed");
 
-                //transport(); 
                 // 开始处理 socks5 第一波数据
                 auto&& data_left = lproxy::make_shared_data(max_length, 0);
                 // https://github.com/DD-L/lproxy/issues/127
@@ -386,7 +385,8 @@ void session::right_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
+            logwarn("incomplete_data. ec.less() = " << ec.less() 
+                    << " byte. this=" << this);
             if (ec.less() > 0) {
                 //  
                 auto&& data_right_rest = lproxy::make_shared_data(
@@ -456,22 +456,6 @@ void session::right_read_handler(const boost::system::error_code& error,
         logwarn(error.message() << ". cancel this, this=" << this);
         this->cancel();
     }
-}
-
-void session::transport(void) {
-//    auto&& data_left = lproxy::make_shared_data(max_length, 0);
-//    // https://github.com/DD-L/lproxy/issues/127
-//    this->socket_left.async_read_some(
-//            boost::asio::buffer(&(*data_left)[0], max_length),
-//            boost::bind(&session::left_read_socks5_step1, 
-//                shared_from_this(), _1, _2, data_left));
-//
-//    //auto&& lss_reply = make_shared_reply();
-//    //this->socket_right.async_read_some(lss_reply->buffers(), 
-//    //        boost::bind(&session::right_read_handler, 
-//    //            shared_from_this(), _1, _2, 
-//    //            lss_reply, lproxy::placeholders::shared_data,
-//    //            lproxy::placeholders::shared_data));
 }
 
 // https://github.com/DD-L/lproxy/issues/127
