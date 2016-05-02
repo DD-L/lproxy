@@ -324,15 +324,15 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 分析 rq , 该干啥干啥...
                     socks5_request_processing(rq);
 
-                    auto&& lss_request = make_shared_request();
-                    this->socket_left.async_read_some(
-                            lss_request->buffers(),
-                            boost::bind(&session::left_read_handler, 
-                                shared_from_this(), _1, _2, lss_request,
-                                lproxy::placeholders::shared_data,
-                                lproxy::placeholders::shared_data)); 
+                    //auto&& lss_request = make_shared_request();
+                    //this->socket_left.async_read_some(
+                    //        lss_request->buffers(),
+                    //        boost::bind(&session::left_read_handler, 
+                    //            shared_from_this(), _1, _2, lss_request,
+                    //            lproxy::placeholders::shared_data,
+                    //            lproxy::placeholders::shared_data)); 
 
-                    lsslogdebug("start async_read local...");
+                    //lsslogdebug("start async_read local...");
                     
                     break;
                 }
@@ -616,8 +616,6 @@ void session::left_write_handler(const boost::system::error_code& error,
         if ((this->status >= status_data) 
                 && (this->socks5_resp_reply != 0x00)) {
             // socks5 服务器  不能响应 客户端请求命令
-            // TODO
-            //delete_this();
             lsslogdebug("socks5_resp_reply = " << std::hex 
                     << uint32_t(this->socks5_resp_reply));
             logwarn("SOCKS5 server cant respond to client request. cancel this,"
@@ -1410,7 +1408,7 @@ lproxy::data_t& session::pack_socks5_resp(data_t& data) {
     return data;
 }
 
-// 打包 socks5::resp 发给 local
+// 打包 socks5::resp 发给 local, 并发起 read_left -> write_right 循环
 void session::socks5_resp_to_local() {
     data_t data;
     // socks5::resp 封包
@@ -1445,4 +1443,15 @@ void session::socks5_resp_to_local() {
     //    return;
     //    // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
     //}
+
+    if (this->socks5_resp_reply == 0x00) {
+        lsslogdebug("start async_read local...");
+        auto&& lss_request = make_shared_request();
+        this->socket_left.async_read_some(
+                lss_request->buffers(),
+                boost::bind(&session::left_read_handler, 
+                    shared_from_this(), _1, _2, lss_request,
+                    lproxy::placeholders::shared_data,
+                    lproxy::placeholders::shared_data)); 
+    }
 }
