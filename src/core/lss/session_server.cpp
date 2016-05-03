@@ -5,7 +5,6 @@
 	> Created Time: 2016/3/1 4:29:50
  ************************************************************************/
 #include <boost/thread.hpp> // for boost::mutex
-//#include <boost/exception/get_error_info.hpp> // for get_error_info
 #include <lss/session_server.h>
 #include <lss/config_server.h>
 #include <crypto/aes_crypto.h>
@@ -324,16 +323,6 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 分析 rq , 该干啥干啥...
                     socks5_request_processing(rq);
 
-                    //auto&& lss_request = make_shared_request();
-                    //this->socket_left.async_read_some(
-                    //        lss_request->buffers(),
-                    //        boost::bind(&session::left_read_handler, 
-                    //            shared_from_this(), _1, _2, lss_request,
-                    //            lproxy::placeholders::shared_data,
-                    //            lproxy::placeholders::shared_data)); 
-
-                    //lsslogdebug("start async_read local...");
-                    
                     break;
                 }
                 case lproxy::socks5::server::CONNECTED: {
@@ -662,6 +651,7 @@ void session::left_write_handler(const boost::system::error_code& error,
             } // switch (this->socks5_cmd)
         }
         else {
+            // 这里, 应该从 0.2.x 开始就不可达了. test
             // lproxy::socks5::server::CONNECTED != this->socks5_state
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
@@ -687,7 +677,7 @@ void session::right_write_handler(const boost::system::error_code& error,
         switch (this->socks5_cmd) {
         case CMD_CONNECT: {
 
-            auto&& lss_request = make_shared_request();
+            auto&& lss_request = make_shared_request(max_length);
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
@@ -710,7 +700,7 @@ void session::right_write_handler(const boost::system::error_code& error,
         case CMD_UDP: {
             // 每次异步读数据之前，清空 data
             //this->lss_request.assign_data(max_length, 0);
-            auto&& lss_request = make_shared_request();
+            auto&& lss_request = make_shared_request(max_length);
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
@@ -1447,7 +1437,7 @@ void session::socks5_resp_to_local() {
 
     if (this->socks5_resp_reply == 0x00) {
         lsslogdebug("start async_read local...");
-        auto&& lss_request = make_shared_request();
+        auto&& lss_request = make_shared_request(max_length);
         this->socket_left.async_read_some(
                 lss_request->buffers(),
                 boost::bind(&session::left_read_handler, 

@@ -358,8 +358,10 @@ private:
      */
     void socks5_resp_to_local();
 private:
-    inline shared_request_type make_shared_request(void) {
-        return std::make_shared<request>(max_length);
+    inline shared_request_type make_shared_request(
+            std::size_t length = length_handshake) {
+        //return std::make_shared<request>(max_length);
+        return std::make_shared<request>(length);
     }
     inline shared_reply_type make_shared_reply(const reply& lss_reply) {
         return std::make_shared<reply>(std::move(lss_reply));

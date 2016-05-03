@@ -182,8 +182,10 @@ private:
             const reply& reply, bool is_zip = false);
 
 private:
-    inline shared_reply_type make_shared_reply(void) {
-        return std::make_shared<reply>(max_length);
+    inline shared_reply_type make_shared_reply(
+            std::size_t length = length_handshake) {
+        //return std::make_shared<reply>(max_length);
+        return std::make_shared<reply>(length);
     }
     inline shared_request_type make_shared_request(const request& lss_request) {
         return std::make_shared<request>(std::move(lss_request));

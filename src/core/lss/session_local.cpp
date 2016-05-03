@@ -645,7 +645,7 @@ void session::left_write_handler(const boost::system::error_code& error,
     (void)__data;
     lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
     if (! error) {
-        auto&& lss_reply = make_shared_reply();
+        auto&& lss_reply = make_shared_reply(max_length);
         this->socket_right.async_read_some(lss_reply->buffers(),
                 boost::bind(&session::right_read_handler, shared_from_this(), 
                     _1, _2, lss_reply, lproxy::placeholders::shared_data,
