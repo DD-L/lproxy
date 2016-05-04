@@ -4,11 +4,17 @@
 
 * lss 基本架构 及其 session 大致流程示意图.
 
-	* lproxy v0.2.x
+	* lproxy v0.2.1
 
-		* [svg](./lproxy_v0.2.x.svg)
+		* [svg](./lproxy_v0.2.1.svg)
 
-		![lproxy](./lproxy_v0.2.x.png)
+		![lproxy](./lproxy_v0.2.1.png)
+
+	* lproxy v0.2.0
+
+		* [svg](./lproxy_v0.2.0.svg)
+
+		* [png](./lproxy_v0.2.0.png)
 	
 	* lproxy v0.1.x
 

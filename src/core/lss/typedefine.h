@@ -193,7 +193,8 @@ static auto&& shared_data = make_shared_data();
 // lproxy::readbuffer
 namespace readbuffer {
     // lproxy::readbuffer::max_length
-    enum             { max_length = 1024 };
+    //enum             { max_length = 1024 };
+    enum             { max_length = 4096, length_handshake = 1024 };
 } // namespace lproxy::readbuffer
 
 

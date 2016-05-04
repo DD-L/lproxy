@@ -63,7 +63,6 @@ private:
      *          case (socks5::server::CONNECTING) {
      *              'VER CMD RSV ATYP DST-ADDR DST-PROT' -> socks5::req rq
      *              socks5_request_processing(rq);
-     *              socket_left.async_read_some [bind: left_read_handler]
      *          }
      *          case (socks5::server::CONNECTED) {
      *              case (CMD_CONNECT) {
@@ -352,13 +351,17 @@ private:
      *      async_write:socket_left [bind: left_write_handler]
      *      if (this->socks_resp_reply == 0x00) {
      *          this->socks5_state = lproxy::socks5::server::CONNECTED;
+     *          
+     *          socket_left.async_read_some [bind: left_read_handler]
      *      }
      * }
      */
     void socks5_resp_to_local();
 private:
-    inline shared_request_type make_shared_request(void) {
-        return std::make_shared<request>(max_length);
+    inline shared_request_type make_shared_request(
+            std::size_t length = length_handshake) {
+        //return std::make_shared<request>(max_length);
+        return std::make_shared<request>(length);
     }
     inline shared_reply_type make_shared_reply(const reply& lss_reply) {
         return std::make_shared<reply>(std::move(lss_reply));

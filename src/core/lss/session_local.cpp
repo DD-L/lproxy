@@ -28,8 +28,6 @@ session::session(boost::asio::io_service& io_service_left,
     status = status_not_connected;    
     // 是否 发心跳?
     // TODO
-    //ip::tcp::socket::keep_alive keepalive(true);
-    //socket_right.set_option(keepalive);
 }
 
 session::~session(void) {
@@ -45,6 +43,15 @@ void session::start(void) {
                 << ". Terminate this session!!! this=" << this);
         return;
     }
+
+    // keepalive 必须在 socket open 的状态下才能设置
+    //ip::tcp::socket::keep_alive keepalive(true);
+    //socket_right.set_option(keepalive, ec);
+    //if (ec) {
+    //    logwarn(ec.message() << ", value=" << ec.value() 
+    //            << ", socket_right.set_option:keep_alive");
+    //}
+
     // server
     const auto& server_name = config::get_instance().get_server_name();
     const auto& server_port = config::get_instance().get_server_port();
@@ -287,7 +294,13 @@ void session::right_read_handler(const boost::system::error_code& error,
                 // 通过验证
                 lsslogdebug("Verify completed");
 
-                transport(); 
+                // 开始处理 socks5 第一波数据
+                auto&& data_left = lproxy::make_shared_data(max_length, 0);
+                // https://github.com/DD-L/lproxy/issues/127
+                this->socket_left.async_read_some(
+                        boost::asio::buffer(&(*data_left)[0], max_length),
+                        boost::bind(&session::left_read_socks5_step1, 
+                            shared_from_this(), _1, _2, data_left));
 
                 status = status_data;
                 break;
@@ -379,7 +392,8 @@ void session::right_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
+            logwarn("incomplete_data. ec.less() = " << ec.less() 
+                    << " byte. this=" << this);
             if (ec.less() > 0) {
                 //  
                 auto&& data_right_rest = lproxy::make_shared_data(
@@ -449,28 +463,6 @@ void session::right_read_handler(const boost::system::error_code& error,
         logwarn(error.message() << ". cancel this, this=" << this);
         this->cancel();
     }
-}
-
-void session::transport(void) {
-    auto&& data_left = lproxy::make_shared_data(max_length, 0);
-    /*
-    this->socket_left.async_read_some(
-            boost::asio::buffer(&(*data_left)[0], max_length),
-            boost::bind(&session::left_read_handler, 
-                shared_from_this(), _1, _2, data_left));
-    */
-    // https://github.com/DD-L/lproxy/issues/127
-    this->socket_left.async_read_some(
-            boost::asio::buffer(&(*data_left)[0], max_length),
-            boost::bind(&session::left_read_socks5_step1, 
-                shared_from_this(), _1, _2, data_left));
-
-    auto&& lss_reply = make_shared_reply();
-    this->socket_right.async_read_some(lss_reply->buffers(), 
-            boost::bind(&session::right_read_handler, 
-                shared_from_this(), _1, _2, 
-                lss_reply, lproxy::placeholders::shared_data,
-                lproxy::placeholders::shared_data));
 }
 
 // https://github.com/DD-L/lproxy/issues/127
@@ -549,6 +541,14 @@ void session::left_write_socks5_step1_handler(
                 boost::asio::buffer(&(*data_left)[0], max_length),
                 boost::bind(&session::left_read_handler, 
                     shared_from_this(), _1, _2, data_left));
+
+        lsslogdebug("begin async_read_some from server");
+        auto&& lss_reply = make_shared_reply();
+        this->socket_right.async_read_some(lss_reply->buffers(), 
+                boost::bind(&session::right_read_handler, 
+                    shared_from_this(), _1, _2, 
+                    lss_reply, lproxy::placeholders::shared_data,
+                    lproxy::placeholders::shared_data));
     }
     else {
         logwarn(error.message() 
@@ -652,7 +652,7 @@ void session::left_write_handler(const boost::system::error_code& error,
     (void)__data;
     lsslogdebug("---> bytes_transferred = " << std::dec << bytes_transferred);
     if (! error) {
-        auto&& lss_reply = make_shared_reply();
+        auto&& lss_reply = make_shared_reply(max_length);
         this->socket_right.async_read_some(lss_reply->buffers(),
                 boost::bind(&session::right_read_handler, shared_from_this(), 
                     _1, _2, lss_reply, lproxy::placeholders::shared_data,

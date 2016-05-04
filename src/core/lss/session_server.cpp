@@ -5,7 +5,6 @@
 	> Created Time: 2016/3/1 4:29:50
  ************************************************************************/
 #include <boost/thread.hpp> // for boost::mutex
-//#include <boost/exception/get_error_info.hpp> // for get_error_info
 #include <lss/session_server.h>
 #include <lss/config_server.h>
 #include <crypto/aes_crypto.h>
@@ -38,6 +37,14 @@ void session::start(void) {
                 << ". Terminate this session!!! this=" << this);
         return;
     }
+    // set keepalive
+    boost::asio::socket_base::keep_alive option(true);
+    socket_left.set_option(option, ec);
+    if (ec) {
+        logwarn(ec.message() << ", value=" << ec.value() 
+                << ", socket_left.set_option:keep_alive");
+    }
+
     status = status_connected;
 
     lsslogdebug("start read msg from local..");
@@ -324,16 +331,6 @@ void session::left_read_handler(const boost::system::error_code& error,
                     // 分析 rq , 该干啥干啥...
                     socks5_request_processing(rq);
 
-                    auto&& lss_request = make_shared_request();
-                    this->socket_left.async_read_some(
-                            lss_request->buffers(),
-                            boost::bind(&session::left_read_handler, 
-                                shared_from_this(), _1, _2, lss_request,
-                                lproxy::placeholders::shared_data,
-                                lproxy::placeholders::shared_data)); 
-
-                    lsslogdebug("start async_read local...");
-                    
                     break;
                 }
                 case lproxy::socks5::server::CONNECTED: {
@@ -468,7 +465,8 @@ void session::left_read_handler(const boost::system::error_code& error,
         catch (incomplete_data& ec) {
             // 不完整数据
             // 少了 ec.less() 字节
-            logwarn("incomplete_data. ec.less() = " << ec.less() << " byte.");
+            logwarn("incomplete_data. ec.less() = " << ec.less() 
+                    << " byte. this=" << this);
 
             if (ec.less() > 0) {
                 auto&& data_left_rest = lproxy::make_shared_data(
@@ -616,8 +614,6 @@ void session::left_write_handler(const boost::system::error_code& error,
         if ((this->status >= status_data) 
                 && (this->socks5_resp_reply != 0x00)) {
             // socks5 服务器  不能响应 客户端请求命令
-            // TODO
-            //delete_this();
             lsslogdebug("socks5_resp_reply = " << std::hex 
                     << uint32_t(this->socks5_resp_reply));
             logwarn("SOCKS5 server cant respond to client request. cancel this,"
@@ -663,6 +659,7 @@ void session::left_write_handler(const boost::system::error_code& error,
             } // switch (this->socks5_cmd)
         }
         else {
+            // 这里, 应该从 0.2.0 开始就不可达了. 
             // lproxy::socks5::server::CONNECTED != this->socks5_state
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
@@ -688,7 +685,7 @@ void session::right_write_handler(const boost::system::error_code& error,
         switch (this->socks5_cmd) {
         case CMD_CONNECT: {
 
-            auto&& lss_request = make_shared_request();
+            auto&& lss_request = make_shared_request(max_length);
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
@@ -711,7 +708,7 @@ void session::right_write_handler(const boost::system::error_code& error,
         case CMD_UDP: {
             // 每次异步读数据之前，清空 data
             //this->lss_request.assign_data(max_length, 0);
-            auto&& lss_request = make_shared_request();
+            auto&& lss_request = make_shared_request(max_length);
             this->socket_left.async_read_some(lss_request->buffers(),
                     boost::bind(&session::left_read_handler, 
                         shared_from_this(), _1, _2, lss_request,
@@ -1410,7 +1407,7 @@ lproxy::data_t& session::pack_socks5_resp(data_t& data) {
     return data;
 }
 
-// 打包 socks5::resp 发给 local
+// 打包 socks5::resp 发给 local, 并发起 read_left -> write_right 循环
 void session::socks5_resp_to_local() {
     data_t data;
     // socks5::resp 封包
@@ -1445,4 +1442,15 @@ void session::socks5_resp_to_local() {
     //    return;
     //    // or this->socks5_state = lprxoy::socks5::server::OPENING; ????
     //}
+
+    if (this->socks5_resp_reply == 0x00) {
+        lsslogdebug("start async_read local...");
+        auto&& lss_request = make_shared_request(max_length);
+        this->socket_left.async_read_some(
+                lss_request->buffers(),
+                boost::bind(&session::left_read_handler, 
+                    shared_from_this(), _1, _2, lss_request,
+                    lproxy::placeholders::shared_data,
+                    lproxy::placeholders::shared_data)); 
+    }
 }
