@@ -13,6 +13,7 @@
 
 namespace lproxy {
 using lproxy::readbuffer::max_length;
+using lproxy::readbuffer::length_handshake;
 
 class session {
 public:

@@ -82,7 +82,8 @@ private:
      *      case (reply::exchange) {
      *          unpack_reply_exchange
      *          'verify_random_string'
-     *          transport
+     *          socket_left.async_read_some [bind: left_read_socks5_step1]
+     *
      *      }
      *      case (reply::zipdata or reply::data) {
      *          unpack_reply_data
@@ -116,18 +117,11 @@ private:
     /**
      * function:left_write_socks5_step1_handler {
      *      socket_left.async_read_some  [bind: left_read_handler]
+     *      socket_right.async_read_some [bind: right_read_handler]
      * }
      */
     void left_write_socks5_step1_handler(const boost::system::error_code& error,
             std::size_t bytes_transferred, shared_data_type __data);
-private:
-    /**
-     * function:transport {
-     *      socket_left.async_read_some  [bind: left_read_socks5_step1]
-     *      socket_right.async_read_some [bind: right_read_handler]
-     * }
-     */
-    void transport(void);
 
 private:
     /**
@@ -188,8 +182,10 @@ private:
             const reply& reply, bool is_zip = false);
 
 private:
-    inline shared_reply_type make_shared_reply(void) {
-        return std::make_shared<reply>(max_length);
+    inline shared_reply_type make_shared_reply(
+            std::size_t length = length_handshake) {
+        //return std::make_shared<reply>(max_length);
+        return std::make_shared<reply>(length);
     }
     inline shared_request_type make_shared_request(const request& lss_request) {
         return std::make_shared<request>(std::move(lss_request));
