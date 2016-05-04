@@ -37,6 +37,14 @@ void session::start(void) {
                 << ". Terminate this session!!! this=" << this);
         return;
     }
+    // set keepalive
+    boost::asio::socket_base::keep_alive option(true);
+    socket_left.set_option(option, ec);
+    if (ec) {
+        logwarn(ec.message() << ", value=" << ec.value() 
+                << ", socket_left.set_option:keep_alive");
+    }
+
     status = status_connected;
 
     lsslogdebug("start read msg from local..");

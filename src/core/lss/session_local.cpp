@@ -28,8 +28,6 @@ session::session(boost::asio::io_service& io_service_left,
     status = status_not_connected;    
     // 是否 发心跳?
     // TODO
-    //ip::tcp::socket::keep_alive keepalive(true);
-    //socket_right.set_option(keepalive);
 }
 
 session::~session(void) {
@@ -45,6 +43,15 @@ void session::start(void) {
                 << ". Terminate this session!!! this=" << this);
         return;
     }
+
+    // keepalive 必须在 socket open 的状态下才能设置
+    //ip::tcp::socket::keep_alive keepalive(true);
+    //socket_right.set_option(keepalive, ec);
+    //if (ec) {
+    //    logwarn(ec.message() << ", value=" << ec.value() 
+    //            << ", socket_right.set_option:keep_alive");
+    //}
+
     // server
     const auto& server_name = config::get_instance().get_server_name();
     const auto& server_port = config::get_instance().get_server_port();
