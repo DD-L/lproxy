@@ -163,6 +163,13 @@
 
 > **lproxy 版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
 
+* **[v0.2.1](https://github.com/DD-L/lproxy/releases/tag/0.2.1)**
+
+	* 优化转发逻辑。在网络欠佳的情况下，减少丢包。
+	* 优化 buffer_size。转发数据的 buffer 字节大小，由 `1024` 修订为 `4096`，据说这样可以提升吞吐量。
+	* 启用 keepalive 支持。 **issue [#146](https://github.com/DD-L/lproxy/issues/146)**
+	* `v0.2.x` 与 `v0.1.x` 互不兼容，*各个版本号之间的兼容规则请在 [VersionNumber](./VersionNumber.md) 中查阅*。
+
 * **[v0.2.0.20160429_Beta](https://github.com/DD-L/lproxy/releases/tag/0.2.0.20160429_Beta)**
 
 	* 优化 socks5 处理，**issue [#127](https://github.com/DD-L/lproxy/issues/127)**。减轻 lproxy-server 端负担，进一步提升 lproxy 并发能力；减少 local 与 server 之间的网络 I/O，提高网络利用率。但是，这种优化，导致其**与之前的 `v0.1.x` 版本的程序互不兼容**，*各个版本号之间的兼容规则请在 [VersionNumber](./VersionNumber.md) 中查阅*。
