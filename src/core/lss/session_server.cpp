@@ -651,7 +651,7 @@ void session::left_write_handler(const boost::system::error_code& error,
             } // switch (this->socks5_cmd)
         }
         else {
-            // 这里, 应该从 0.2.x 开始就不可达了. test
+            // 这里, 应该从 0.2.0 开始就不可达了. 
             // lproxy::socks5::server::CONNECTED != this->socks5_state
             auto&& lss_request = make_shared_request();
             this->socket_left.async_read_some(lss_request->buffers(),
