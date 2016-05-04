@@ -14,7 +14,7 @@
 
 		* [svg](./lproxy_v0.2.0.svg)
 
-		* [lproxy](./lproxy_v0.2.0.png)
+		* [png](./lproxy_v0.2.0.png)
 	
 	* lproxy v0.1.x
 
