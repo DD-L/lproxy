@@ -6,8 +6,8 @@
     
 2. build libcryptopp.a
     $ cd cryptopp
-    $ make libcryptopp.a -j 4
-    $ #make libcryptopp.a libcryptopp.so cryptest.exe
+    $ make CXXFLAGS="-DNDEBUG -O2 -march=native -pipe" libcryptopp.a -j 4
+    $ #make CXXFLAGS="-DNDEBUG -O2 -march=native -pipe" libcryptopp.a libcryptopp.so cryptest.exe
 
 3. build libcryptopp.a for Android on Linux
 
