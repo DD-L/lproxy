@@ -6,8 +6,8 @@
     
 2. build libcryptopp.a
     $ cd cryptopp
-    $ make libcryptopp.a -j 4
-    $ #make libcryptopp.a libcryptopp.so cryptest.exe
+    $ make CXXFLAGS="-DNDEBUG -O2 -march=native -pipe" libcryptopp.a -j 4
+    $ #make CXXFLAGS="-DNDEBUG -O2 -march=native -pipe" libcryptopp.a libcryptopp.so cryptest.exe
 
 3. build libcryptopp.a for Android on Linux
 
@@ -19,8 +19,8 @@
 	$ cd cryptopp
 	$ mv GNUmakefile-cross GNUmakefile-cross.old
 	$ cp ../GNUmakefile-cross ./GNUmakefile-cross
-	$ #make -f GNUmakefile-cross static dynamic cryptest.exe
-	$ make -f GNUmakefile-cross static
+	$ #make CXXFLAGS="-DNDEBUG -O2 -pipe" -f GNUmakefile-cross static dynamic cryptest.exe
+	$ make CXXFLAGS="-DNDEBUG -O2 -pipe" -f GNUmakefile-cross static
 	$ mv GNUmakefile-cross.old GNUmakefile-cross
       
 4. build libcryptopp.a for Android on 'Cygwin-win32 / NDK for win32-64bit'
@@ -37,7 +37,7 @@
 	$ cd cryptopp
 	$ mv GNUmakefile-cross GNUmakefile-cross.old
 	$ cp ../GNUmakefile-cross ./GNUmakefile-cross
-	$ #make -f GNUmakefile-cross static dynamic cryptest.exe
-	$ make -f GNUmakefile-cross static
+	$ #make CXXFLAGS="-DNDEBUG -O2 -pipe" -f GNUmakefile-cross static dynamic cryptest.exe
+	$ make CXXFLAGS="-DNDEBUG -O2 -pipe" -f GNUmakefile-cross static
 	$ mv GNUmakefile-cross.old GNUmakefile-cross
 
