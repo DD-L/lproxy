@@ -31,8 +31,8 @@ class LogStore_lockfree : public LogStoreInterface {
                 // TODO
                 std::this_thread::yield();
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(29));
-                // sleep 29 / 1000 sec
+                std::this_thread::sleep_for(std::chrono::milliseconds(70));
+                // sleep 70 / 1000 sec
                 //std::this_thread::sleep_for(std::chrono::nanoseconds(50));
                 // sleep 50 * 1 / 1000,000,000 sec
                 // 初步测试的结果是, [可能结果并不可靠, 遗留 TODO ]
