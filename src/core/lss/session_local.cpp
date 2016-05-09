@@ -675,10 +675,11 @@ const request session::pack_exchange(const keysize_t& keysize,
     // step 1 生成随机数
     this->random_str = lproxy::random_string::generate_number();
     // step 2 认证 key
-    const sdata_t& auth_key = config::get_instance().get_auth_key();
-    crypto::Encryptor md5(new crypto::Md5());
-    sdata_t md5_auth_key;
-    md5.encrypt(md5_auth_key, &auth_key[0], auth_key.size());
+    //const sdata_t& auth_key = config::get_instance().get_auth_key();
+    //crypto::Encryptor md5(new crypto::Md5());
+    //sdata_t md5_auth_key;
+    //md5.encrypt(md5_auth_key, &auth_key[0], auth_key.size());
+    const sdata_t& md5_auth_key = config::get_instance().get_auth_key();
     // step 3 组装 data
     sdata_t&& data_ = md5_auth_key + this->random_str;
     //data_t data(data_.begin(), data_.end());
@@ -753,10 +754,11 @@ void session::unpack_reply_exchange(sdata_t& reply_random_str,
     const data_t&     data     = reply.get_data(); // 当前是密文
     const std::size_t data_len = reply.data_len();
     // 用this->auth_key 构造aes 加解密器
-    const sdata_t& auth_key = config::get_instance().get_auth_key();
-    auto&& md5 = crypto::Encryptor(new crypto::Md5());
-    sdata_t cipher_auth_key;
-    md5.encrypt(cipher_auth_key, (const_byte_ptr)&auth_key[0], auth_key.size());
+    //const sdata_t& auth_key = config::get_instance().get_auth_key();
+    //auto&& md5 = crypto::Encryptor(new crypto::Md5());
+    //sdata_t cipher_auth_key;
+    //md5.encrypt(cipher_auth_key, (const_byte_ptr)&auth_key[0], auth_key.size());
+    const sdata_t& cipher_auth_key = config::get_instance().get_auth_key();
     auto&& aes = std::make_shared<crypto::Encryptor>(
             new crypto::Aes(cipher_auth_key, crypto::Aes::raw256keysetting()));
     vdata_t plaintext;

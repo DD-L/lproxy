@@ -10,6 +10,7 @@
 #include <boost/property_tree/json_parser.hpp>
 using namespace boost::property_tree;
 
+#include <crypto/md5_crypto.h>
 #include <lss/config_local.h>
 #include <lss/log.h>
 
@@ -39,8 +40,20 @@ try {
     _print_s("[INFO] zip_on:      " << std::boolalpha << m_zip_on << std::endl);
     _print_s("[INFO] logfile:     " << m_logfile     << std::endl);
     _print_s("[INFO] timeout:     " << m_timeout     << std::endl);
+
+    // gen cipher m_auth_key
+    crypto::Encryptor md5(new crypto::Md5());
+    sdata_t cipher_key;
+    md5.encrypt(cipher_key, &m_auth_key[0], m_auth_key.size());
+    m_auth_key = cipher_key;
 }
 catch (const ptree_error& e) {
+    _print_s_err("[FATAL] " << e.what() 
+            << ". An error occurred when reading the configuration file '" 
+            << config_file << "'" << std::endl);
+    exit(2);
+}
+catch (std::exception& e) {
     _print_s_err("[FATAL] " << e.what() 
             << ". An error occurred when reading the configuration file '" 
             << config_file << "'" << std::endl);
