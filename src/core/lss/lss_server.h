@@ -60,6 +60,13 @@ public:
         // 避免析构 this->thread_right 时, std::terminate() 被调用
         this->thread_right.detach();
     }
+    boost::asio::io_service& io_service_left(void) {
+        return this->io_service_;
+    }
+    boost::asio::io_service& io_service_right(void) {
+        static boost::asio::io_service io_service;
+        return io_service;
+    }
 private:
     void start_accept() {
         /*
@@ -93,13 +100,6 @@ private:
         start_accept();
     }
 
-    boost::asio::io_service& io_service_left(void) {
-        return this->io_service_;
-    }
-    boost::asio::io_service& io_service_right(void) {
-        static boost::asio::io_service io_service;
-        return io_service;
-    }
     // thread function
     static void handle_thread_right(boost::asio::io_service& io_service) {
         lsslogdebug("thread io_service_right start..");
