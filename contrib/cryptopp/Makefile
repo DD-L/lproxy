@@ -10,9 +10,11 @@ LIBEXIST = $(shell if [ -f $(CRYPTOPP_STATIC_LIB) ]; then echo "exist"; else ech
 #SRCEXIST= $(shell if [ -d $(CRYPTOPP_SRC) ]; then echo "exist"; else echo "notexist"; fi; )
 SRCEXIST= $(shell if [ -f $(CRYPTOPP_SRC)/aes.h ]; then echo "exist"; else echo "notexist"; fi; )
 
+CXXFLAGS ?= -DNDEBUG -O2 -march=native -pipe
+
 all: git_clone
 ifneq ('$(LIBEXIST)', 'exist')
-	cd $(CRYPTOPP_SRC); $(MAKE) CXXFLAGS="-DNDEBUG -O2 -march=native -pipe" libcryptopp.a -j 4
+	cd $(CRYPTOPP_SRC); $(MAKE) CXXFLAGS="$(CXXFLAGS)" libcryptopp.a -j 4
 	cd $(CRYPTOPP_SRC); $(RM) *.o
 endif
 
