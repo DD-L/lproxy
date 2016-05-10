@@ -60,6 +60,7 @@ public:
         // 避免析构 this->thread_right 时, std::terminate() 被调用
         this->thread_right.detach();
     }
+
     void stop(void) {
         io_service_right().stop();
         loginfo("Stopping io_service_right...");
@@ -71,7 +72,12 @@ public:
         while (! io_service_left().stopped()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
+        stopped_ = true;
         loginfo("lss_server stopped.");
+    }
+
+    bool stopped(void) const {
+        return stopped_;
     }
 private:
     void start_accept() {
@@ -140,6 +146,7 @@ private:
     }
 
 private:
+    bool                     stopped_ = false;
     boost::asio::io_service& io_service_;
     tcp::acceptor            acceptor_;
     std::thread              thread_right;
