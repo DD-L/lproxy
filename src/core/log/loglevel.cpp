@@ -46,6 +46,7 @@ LogLevelManage::LogLevels;
 
 LogLevelManage::__default_log_level::__default_log_level() {
 	// 默认内置 6 种日志级别
+#undef ERROR // https://github.com/DD-L/lproxy/issues/159
 	MAKE_LOGLEVEL_INSIDE(TRACE,  0); // TRACE 权重为0
 	MAKE_LOGLEVEL_INSIDE(DEBUG, 10); // DEBUG 权重为10
 	MAKE_LOGLEVEL_INSIDE(INFO , 20); // INFO  权重为20
