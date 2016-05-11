@@ -129,25 +129,10 @@ try {
         = lproxy::server::config::get_instance().get_bind_port(); 
 
     // 启动 lss_server
-    boost::asio::io_service io_service;
-
-    lproxy::server::lss_server s(io_service, bind_addr, bind_port);
-    for (;;) {
-        try {
-            io_service.run();
-            break;
-        }
-        catch (boost::system::system_error const& e) {
-            logerror(e.what());
-        }
-        catch (const std::exception& e) {
-            logerror(e.what());
-        }
-        catch (...) {
-            logerror("An error has occurred. io_service_left.run()");
-        }
-    }
-
+    boost::asio::io_service io_service_left, io_service_right;
+    lproxy::server::lss_server s(io_service_left, bind_addr, bind_port,
+            io_service_right);
+    s.run();
     _print_s("[INFO] Exit\n");
     return 0;
 }

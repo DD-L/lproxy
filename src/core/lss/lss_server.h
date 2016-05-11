@@ -8,6 +8,7 @@
  ************************************************************************/
 #include <type_traits>
 #include <thread>
+#include <system_error>
 #include <lss/config.h>
 #include <lss/session.h>
 #include <lss/log.h>
@@ -21,16 +22,14 @@ class lss_server {
 static_assert(std::is_base_of<session, SESSION>::value, 
         "SESSION should be derived from 'session'.");
 public:
-    lss_server(boost::asio::io_service& io_service, 
-            const sdata_t& bind_addr, const uint16_t bind_port)
-            : io_service_(io_service), 
-            acceptor_(io_service, {
-                    ip::address::from_string(bind_addr), bind_port}) {
+    lss_server(boost::asio::io_service& ios_left, 
+            const sdata_t& bind_addr, const uint16_t bind_port,
+            boost::asio::io_service& ios_right)
+        : acceptor_(ios_left, {ip::address::from_string(bind_addr), bind_port}),
+          io_service_right_(&ios_right)
+    {
         loginfo("bind addr: " << bind_addr << " bind port: " << bind_port);
         start_accept();
-        std::thread thread_right(handle_thread_right, 
-                std::ref(io_service_right()));
-        this->thread_right = std::move(thread_right);
 
         // register signal
         boost::asio::signal_set sig_left(io_service_left(), SIGINT, SIGTERM);
@@ -39,6 +38,27 @@ public:
                     &io_service_left(), _1, _2));
         sig_right.async_wait(boost::bind(&config::signal_handler, 
                     &io_service_right(), _1, _2));
+    }
+    void run(void) {
+        std::thread thread_right(handle_thread_right, 
+                std::ref(io_service_right()));
+        this->thread_right = std::move(thread_right);
+
+        for (;;) {
+            try {
+                io_service_left().run();
+                break;
+            }
+            catch (boost::system::system_error const& e) {
+                logerror(e.what());
+            }
+            catch (const std::exception& e) {
+                logerror(e.what());
+            }
+            catch (...) {
+                logerror("An error has occurred. io_service_left.run()");
+            }
+        }
     }
     virtual ~lss_server() {
 // Program received signal SIGABRT, Aborted.
@@ -55,10 +75,15 @@ public:
 //#7  0x0000000000412cf1 in main (argc=1, argv=0x7fffffffe608) at local.cpp:29
  
         // TODO
-        // 尝试修复上述bug:
+        // 修复上述bug:
         // 析构前添加 thread::detach(), 使 joinable == false, 
         // 避免析构 this->thread_right 时, std::terminate() 被调用
-        this->thread_right.detach();
+        try {
+            this->thread_right.detach();
+        }
+        catch (const std::system_error& e) {
+            lsslogdebug(e.what());
+        }
     }
 
     void stop(void) {
@@ -138,18 +163,18 @@ private:
     }
 
     boost::asio::io_service& io_service_left(void) {
-        return this->io_service_;
+        return this->acceptor_.get_io_service();
     }
     boost::asio::io_service& io_service_right(void) {
-        static boost::asio::io_service io_service;
-        return io_service;
+        assert(io_service_right_);
+        return *io_service_right_;
     }
 
 private:
-    bool                     stopped_ = false;
-    boost::asio::io_service& io_service_;
-    tcp::acceptor            acceptor_;
-    std::thread              thread_right;
+    bool                      stopped_ = false;
+    tcp::acceptor             acceptor_;
+    boost::asio::io_service*  io_service_right_;
+    std::thread               thread_right;
 }; // class lproxy::lss_server
 
 
