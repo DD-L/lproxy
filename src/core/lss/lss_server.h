@@ -26,7 +26,7 @@ public:
             const sdata_t& bind_addr, const uint16_t bind_port,
             boost::asio::io_service& ios_right)
         : acceptor_(ios_left, {ip::address::from_string(bind_addr), bind_port}),
-          io_service_right_(&ios_right)
+          io_service_right_(ios_right)
     {
         loginfo("bind addr: " << bind_addr << " bind port: " << bind_port);
         start_accept();
@@ -166,14 +166,13 @@ private:
         return this->acceptor_.get_io_service();
     }
     boost::asio::io_service& io_service_right(void) {
-        assert(io_service_right_);
-        return *io_service_right_;
+        return io_service_right_;
     }
 
 private:
     bool                      stopped_ = false;
     tcp::acceptor             acceptor_;
-    boost::asio::io_service*  io_service_right_;
+    boost::asio::io_service&  io_service_right_; // 析构lss_server类对象时，不会析构该引用的目标
     std::thread               thread_right;
 }; // class lproxy::lss_server
 
