@@ -26,6 +26,11 @@ public:
             boost::asio::io_service& ios_right)
         : acceptor_(ios_left), io_service_right_(ios_right)
     {
+        // init
+        // 使 ios 的初始状态为 stopped
+        ios_left.stop();
+        ios_right.stop();
+
         // register signal
         boost::asio::signal_set sig_left(io_service_left(), SIGINT, SIGTERM);
         boost::asio::signal_set sig_right(io_service_right(), SIGINT, SIGTERM);
@@ -34,9 +39,18 @@ public:
         sig_right.async_wait(boost::bind(&config::signal_handler, 
                     &io_service_right(), _1, _2));
     }
+
     void run(const sdata_t& bind_addr, const uint16_t bind_port) {
         tcp::acceptor acceptor(io_service_left(),
             { ip::address::from_string(bind_addr), bind_port} );
+
+        { // 复用 acceptor_
+            boost::system::error_code ec;
+            acceptor_.cancel(ec);
+            if (ec) {}
+            acceptor_.close(ec);
+            if (ec) {}
+        }
         acceptor_ = std::move(acceptor);
 
         loginfo("bind addr: " << bind_addr << " bind port: " << bind_port);
@@ -46,9 +60,16 @@ public:
         std::thread thread_right(
                     std::bind(&lss_server::handle_thread_right, this,
                        std::ref(io_service_right())));
+        // 复用 thread_right
+        try {
+            this->thread_right.detach();
+        }
+        catch (const std::system_error& e) {
+            lsslogdebug(e.what());
+        }
         this->thread_right = std::move(thread_right);
 
-        left_stopped_ = false;
+        io_service_left().reset(); // 复用 io_service
         for (;;) {
             try {
                 io_service_left().run();
@@ -64,7 +85,27 @@ public:
                 logerror("An error has occurred. io_service_left.run()");
             }
         }
-        left_stopped_ = true;
+    }
+
+    void stop(void) {
+        io_service_right().stop();
+        loginfo("Stopping io_service_right...");
+        if (this->thread_right.joinable()) {
+            this->thread_right.join();
+        }
+        while (! io_service_right().stopped()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+        io_service_left().stop();
+        loginfo("Stopping io_service_left...");
+        while (! io_service_left().stopped()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+        loginfo("lss_server stopped.");
+    }
+
+    bool stopped(void) const {
+        return io_service_left().stopped() && io_service_right().stopped();
     }
 
     virtual ~lss_server() {
@@ -81,8 +122,7 @@ public:
 //    at /opt/lproxy/src/core/lss/../../..//src/core/lss/lss_server.h:20
 //#7  0x0000000000412cf1 in main (argc=1, argv=0x7fffffffe608) at local.cpp:29
  
-        // TODO
-        // 修复上述bug:
+        // 修复上述 bug:
         // 析构前添加 thread::detach(), 使 joinable == false, 
         // 避免析构 this->thread_right 时, std::terminate() 被调用
         try {
@@ -91,24 +131,6 @@ public:
         catch (const std::system_error& e) {
             lsslogdebug(e.what());
         }
-    }
-
-    void stop(void) {
-        io_service_right().stop();
-        loginfo("Stopping io_service_right...");
-        while (! io_service_right().stopped()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-        io_service_left().stop();
-        loginfo("Stopping io_service_left...");
-        while (! io_service_left().stopped()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-        loginfo("lss_server stopped.");
-    }
-
-    bool stopped(void) const {
-        return left_stopped_ && right_stopped_;
     }
 private:
     void start_accept() {
@@ -149,7 +171,7 @@ private:
 
         // 为了不使"ios没有任务, ios.run就立刻返回"
         boost::asio::io_service::work work(io_service); 
-        right_stopped_ = false;
+        io_service.reset(); // 复用 io_service
         for (;;) {
             try {
                 io_service.run();
@@ -165,7 +187,6 @@ private:
                 logerror("An error has occurred. io_service_right.run()");
             }
         }
-        right_stopped_ = true;
 
         lsslogdebug("thread io_service_right exit!");
     }
@@ -177,8 +198,15 @@ private:
         return io_service_right_;
     }
 
+    boost::asio::io_service& io_service_left(void) const {
+        return const_cast<lss_server*>(this)->io_service_left();
+    }
+    boost::asio::io_service& io_service_right(void) const {
+        return const_cast<lss_server*>(this)->io_service_right();
+    }
+
+
 private:
-    bool   left_stopped_ = true, right_stopped_ = true;
     tcp::acceptor             acceptor_;
     boost::asio::io_service&  io_service_right_; // 析构lss_server类对象时，不会析构该引用的目标
     std::thread               thread_right;
