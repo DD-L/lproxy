@@ -129,9 +129,8 @@ try {
 
     // 启动 lss_server
     boost::asio::io_service io_service_left, io_server_right;
-    lproxy::local::lss_server s(io_service_left, bind_addr, bind_port, 
-            io_server_right);
-    s.run();
+    lproxy::local::lss_server s(io_service_left, io_server_right);
+    s.run(bind_addr, bind_port);
     _print_s("[INFO] Exit\n");
     return 0;
 }

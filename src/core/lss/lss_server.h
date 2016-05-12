@@ -23,14 +23,9 @@ static_assert(std::is_base_of<session, SESSION>::value,
         "SESSION should be derived from 'session'.");
 public:
     lss_server(boost::asio::io_service& ios_left, 
-            const sdata_t& bind_addr, const uint16_t bind_port,
             boost::asio::io_service& ios_right)
-        : acceptor_(ios_left, {ip::address::from_string(bind_addr), bind_port}),
-          io_service_right_(ios_right)
+        : acceptor_(ios_left), io_service_right_(ios_right)
     {
-        loginfo("bind addr: " << bind_addr << " bind port: " << bind_port);
-        start_accept();
-
         // register signal
         boost::asio::signal_set sig_left(io_service_left(), SIGINT, SIGTERM);
         boost::asio::signal_set sig_right(io_service_right(), SIGINT, SIGTERM);
@@ -39,11 +34,21 @@ public:
         sig_right.async_wait(boost::bind(&config::signal_handler, 
                     &io_service_right(), _1, _2));
     }
-    void run(void) {
-        std::thread thread_right(handle_thread_right, 
-                std::ref(io_service_right()));
+    void run(const sdata_t& bind_addr, const uint16_t bind_port) {
+        tcp::acceptor acceptor(io_service_left(),
+            { ip::address::from_string(bind_addr), bind_port} );
+        acceptor_ = std::move(acceptor);
+
+        loginfo("bind addr: " << bind_addr << " bind port: " << bind_port);
+
+        start_accept();
+
+        std::thread thread_right(
+                    std::bind(&lss_server::handle_thread_right, this,
+                       std::ref(io_service_right())));
         this->thread_right = std::move(thread_right);
 
+        left_stopped_ = false;
         for (;;) {
             try {
                 io_service_left().run();
@@ -59,7 +64,9 @@ public:
                 logerror("An error has occurred. io_service_left.run()");
             }
         }
+        left_stopped_ = true;
     }
+
     virtual ~lss_server() {
 // Program received signal SIGABRT, Aborted.
 //0x00007ffff6dfbcc9 in raise () from /lib/x86_64-linux-gnu/libc.so.6
@@ -97,12 +104,11 @@ public:
         while (! io_service_left().stopped()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-        stopped_ = true;
         loginfo("lss_server stopped.");
     }
 
     bool stopped(void) const {
-        return stopped_;
+        return left_stopped_ && right_stopped_;
     }
 private:
     void start_accept() {
@@ -138,11 +144,12 @@ private:
     }
 
     // thread function
-    static void handle_thread_right(boost::asio::io_service& io_service) {
+    void handle_thread_right(boost::asio::io_service& io_service) {
         lsslogdebug("thread io_service_right start..");
 
         // 为了不使"ios没有任务, ios.run就立刻返回"
         boost::asio::io_service::work work(io_service); 
+        right_stopped_ = false;
         for (;;) {
             try {
                 io_service.run();
@@ -158,6 +165,7 @@ private:
                 logerror("An error has occurred. io_service_right.run()");
             }
         }
+        right_stopped_ = true;
 
         lsslogdebug("thread io_service_right exit!");
     }
@@ -170,7 +178,7 @@ private:
     }
 
 private:
-    bool                      stopped_ = false;
+    bool   left_stopped_ = true, right_stopped_ = true;
     tcp::acceptor             acceptor_;
     boost::asio::io_service&  io_service_right_; // 析构lss_server类对象时，不会析构该引用的目标
     std::thread               thread_right;
