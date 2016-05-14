@@ -211,13 +211,22 @@ typename Store<T, Container>::mutex_t Store<T, Container>::_mutex_cap;
 #include <boost/lockfree/queue.hpp>
 template <typename T>
 class Store<T, boost::lockfree::queue<T> > : 
-		public boost::serialization::singleton<
-                    Store<T, boost::lockfree::queue<T> > >,
+        //public boost::serialization::singleton<
+        //            Store<T, boost::lockfree::queue<T> > >,
 		public boost::lockfree::queue<T> {
 public:
 	//using boost::lockfree::queue<T>::push;
 	//using boost::lockfree::queue<T>::pop;
     typedef boost::lockfree::queue<T> BASETTPE;
+
+    static Store& get_mutable_instance(void) {
+        static Store __store;
+        return __store;
+    }
+
+    static const Store& get_const_instance(void) {
+        return Store::get_mutable_instance();
+    }
 
 	bool push(const T* element_ptr) {
 		if (element_ptr) {
@@ -262,13 +271,22 @@ private:
 #include <boost/lockfree/stack.hpp>
 template <typename T>
 class Store<T, boost::lockfree::stack<T> > : 
-		public boost::serialization::singleton<
-                    Store<T, boost::lockfree::stack<T> > >,
+        //public boost::serialization::singleton<
+        //            Store<T, boost::lockfree::stack<T> > >,
 		public boost::lockfree::stack<T> {
 public:
     //using boost::lockfree::stack<T>::push;
     //using boost::lockfree::stack<T>::pop;
     typedef boost::lockfree::stack<T> BASETTPE;
+
+    static Store& get_mutable_instance(void) {
+        static Store __store;
+        return __store;
+    }
+
+    static const Store& get_const_instance(void) {
+        return Store::get_mutable_instance();
+    }
 
     bool push(const T* element_ptr) {
         if (element_ptr) {
