@@ -87,9 +87,9 @@
 #include <boost/thread.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <queue>
-using boost::serialization::singleton;
+//using boost::serialization::singleton;
 
-const size_t _STORECAPACITY = 200000; // default capacity of Store
+static const size_t __STORECAPACITY__s = 2000000; // default capacity of Store
 
 //
 // class std_priority_queue
@@ -108,7 +108,7 @@ class std_priority_queue : public std::priority_queue<T> {
 // class Store
 //
 template <typename T, typename Container = std::queue<T> >
-class Store : public singleton<Store<T, Container> > {
+class Store : public boost::serialization::singleton<Store<T, Container> > {
 	public:
 		void push(const T& element) {
 			mutex_t::scoped_lock lock(_store_lock);
@@ -200,7 +200,7 @@ class Store : public singleton<Store<T, Container> > {
 		static mutex_t                  _mutex_cap;     // for reserve()
 };
 template <typename T, typename Container>
-size_t Store<T, Container>::_capacity = _STORECAPACITY;
+size_t Store<T, Container>::_capacity = __STORECAPACITY__s;
 template <typename T, typename Container>
 typename Store<T, Container>::mutex_t Store<T, Container>::_mutex_cap;
 
@@ -211,32 +211,52 @@ typename Store<T, Container>::mutex_t Store<T, Container>::_mutex_cap;
 #include <boost/lockfree/queue.hpp>
 template <typename T>
 class Store<T, boost::lockfree::queue<T> > : 
-		public singleton<Store<T, boost::lockfree::queue<T> > >,
+        //public boost::serialization::singleton<
+        //            Store<T, boost::lockfree::queue<T> > >,
 		public boost::lockfree::queue<T> {
 public:
-	using boost::lockfree::queue<T>::push;
-	using boost::lockfree::queue<T>::pop;
+	//using boost::lockfree::queue<T>::push;
+	//using boost::lockfree::queue<T>::pop;
+    typedef boost::lockfree::queue<T> BASETTPE;
+
+    static Store& get_mutable_instance(void) {
+        static Store __store;
+        return __store;
+    }
+
+    static const Store& get_const_instance(void) {
+        return Store::get_mutable_instance();
+    }
+
 	bool push(const T* element_ptr) {
 		if (element_ptr) {
-			return push(*element_ptr);
+			return this->push(*element_ptr);
 		}
 		else {
 			return false;
 		}
 	}
+    bool push(const T& element) {
+        return BASETTPE::push(element);
+    }
+
 	bool pop(T* element_ptr) {
 		if (element_ptr) {
-			return pop(*element_ptr);
+			return this->pop(*element_ptr);
 		}
 		else {
 			return false;
 		}
 	}
+    bool pop(T& element) {
+        return BASETTPE::pop(element);
+    }
+
 	// 继承父类的reserve
 	//void reserve(size_t);
 	//void reserve_unsafe(size_t);
 protected:
-	Store(size_t _capacity = _STORECAPACITY) :
+	Store(size_t _capacity = __STORECAPACITY__s) :
 		boost::lockfree::queue<T>(_capacity) {}
 	Store(const Store&) {}
 private:
@@ -251,37 +271,57 @@ private:
 #include <boost/lockfree/stack.hpp>
 template <typename T>
 class Store<T, boost::lockfree::stack<T> > : 
-		public singleton<Store<T, boost::lockfree::stack<T> > >,
+        //public boost::serialization::singleton<
+        //            Store<T, boost::lockfree::stack<T> > >,
 		public boost::lockfree::stack<T> {
-	public:
-		using boost::lockfree::stack<T>::push;
-		using boost::lockfree::stack<T>::pop;
-		bool push(const T* element_ptr) {
-			if (element_ptr) {
-				return push(*element_ptr);
-			}
-			else {
-				return false;
-			}
-		}
-		bool pop(T* element_ptr) {
-			if (element_ptr) {
-				return pop(*element_ptr);
-			}
-			else {
-				return false;
-			}
-		}
-		// 继承父类的reserve
-		//void reserve(size_t);
-		//void reserve_unsafe(size_t);
-	protected:
-		Store(size_t _capacity = _STORECAPACITY) :
-			boost::lockfree::stack<T>(_capacity) {}
-		Store(const Store&) {}
-	private:
-		// 屏蔽下面接口
-		size_t size() const { return 0; }  
-		bool full()	  const { return false; }
+public:
+    //using boost::lockfree::stack<T>::push;
+    //using boost::lockfree::stack<T>::pop;
+    typedef boost::lockfree::stack<T> BASETTPE;
+
+    static Store& get_mutable_instance(void) {
+        static Store __store;
+        return __store;
+    }
+
+    static const Store& get_const_instance(void) {
+        return Store::get_mutable_instance();
+    }
+
+    bool push(const T* element_ptr) {
+        if (element_ptr) {
+            return this->push(*element_ptr);
+        }
+        else {
+            return false;
+        }
+    }
+    bool push(const T& element) {
+        return BASETTPE::push(element);
+    }
+
+    bool pop(T* element_ptr) {
+        if (element_ptr) {
+            return this->pop(*element_ptr);
+        }
+        else {
+            return false;
+        }
+    }
+    bool pop(T& element) {
+        return BASETTPE::pop(element);
+    }
+
+    // 继承父类的reserve
+    //void reserve(size_t);
+    //void reserve_unsafe(size_t);
+protected:
+    Store(size_t _capacity = __STORECAPACITY__s) :
+        boost::lockfree::stack<T>(_capacity) {}
+    Store(const Store&) {}
+private:
+    // 屏蔽下面接口
+    size_t size() const { return 0; }
+    bool full()	  const { return false; }
 };
 #endif // STORE_H
