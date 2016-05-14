@@ -67,7 +67,7 @@ using ip::udp;
  * @return              返回一个容器长度为 data_length, 且被 v 
  *                      填充的 shared_data_type 类型临时对象 
  */
-inline shared_data_type make_shared_data(const std::size_t data_length,
+static inline shared_data_type make_shared_data(const std::size_t data_length,
         data_t::value_type v) {
     return std::make_shared<data_t>(data_length, v);
 }
@@ -77,10 +77,10 @@ inline shared_data_type make_shared_data(const std::size_t data_length,
  * @return     返回一个shared_data_type 类型临时对象, 此对象指向一个 data 的副本
  */
 template<typename DATATYPE>
-inline shared_data_type make_shared_data(DATATYPE&& data = data_t()) {
+static inline shared_data_type make_shared_data(DATATYPE&& data = data_t()) {
     return std::make_shared<DATATYPE>(std::forward<DATATYPE>(data));
 }
-inline shared_data_type make_shared_data(void) {
+static inline shared_data_type make_shared_data(void) {
     return std::make_shared<data_t>();
 }
 
