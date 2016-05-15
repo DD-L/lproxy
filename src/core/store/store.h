@@ -217,7 +217,7 @@ class Store<T, boost::lockfree::queue<T> > :
 public:
 	//using boost::lockfree::queue<T>::push;
 	//using boost::lockfree::queue<T>::pop;
-    typedef boost::lockfree::queue<T> BASETTPE;
+    typedef boost::lockfree::queue<T> BASETYPE;
 
     static Store& get_mutable_instance(void) {
         static Store __store;
@@ -237,7 +237,7 @@ public:
 		}
 	}
     bool push(const T& element) {
-        return BASETTPE::push(element);
+        return BASETYPE::push(element);
     }
 
 	bool pop(T* element_ptr) {
@@ -249,7 +249,7 @@ public:
 		}
 	}
     bool pop(T& element) {
-        return BASETTPE::pop(element);
+        return BASETYPE::pop(element);
     }
 
 	// 继承父类的reserve
@@ -277,7 +277,7 @@ class Store<T, boost::lockfree::stack<T> > :
 public:
     //using boost::lockfree::stack<T>::push;
     //using boost::lockfree::stack<T>::pop;
-    typedef boost::lockfree::stack<T> BASETTPE;
+    typedef boost::lockfree::stack<T> BASETYPE;
 
     static Store& get_mutable_instance(void) {
         static Store __store;
@@ -297,7 +297,7 @@ public:
         }
     }
     bool push(const T& element) {
-        return BASETTPE::push(element);
+        return BASETYPE::push(element);
     }
 
     bool pop(T* element_ptr) {
@@ -309,7 +309,7 @@ public:
         }
     }
     bool pop(T& element) {
-        return BASETTPE::pop(element);
+        return BASETYPE::pop(element);
     }
 
     // 继承父类的reserve
