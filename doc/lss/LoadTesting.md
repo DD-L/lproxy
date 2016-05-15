@@ -10,7 +10,11 @@
 
 相同环境下，对比 SS 和 lproxy 下行速度。
 
-> **更新：`lproxy v0.2.1` 和 SS 的对比结果在这里：[LoadTesting_v0.2.1](./LoadTesting_v0.2.1.md)，lproxy 在下行速度方面，取得了微弱的优势。**
+> **更新 1：`lproxy v0.2.1` 和 SS 的对比结果在这里：[LoadTesting_v0.2.1](./LoadTesting_v0.2.1.md)，lproxy 在下行速度方面，取得了微弱的优势。**
+
+> **更新 2：`lproxy v0.2.2` 和 SS 相同条件下，lproxy `v0.2.2` 在满载时，server 端 CPU 占用率 <= SS。（试验报告待补充）**
+
+*以下是 SS 与 较早版本的 lproxy 的对比报告：*
 
 ##### 实验原料：
 
