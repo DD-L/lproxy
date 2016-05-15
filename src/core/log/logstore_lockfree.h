@@ -44,13 +44,19 @@ class LogStore_lockfree : public LogStoreInterface {
             assert(value);
             val.reset(value);
         }
-        LogStore_lockfree(void) 
-            : m_logstore(__Log_Store::get_mutable_instance()) {}
+        //LogStore_lockfree(void)
+        //    : m_logstore(__Log_Store::get_mutable_instance()) {}
+        LogStore_lockfree(void)
+            //: m_logstore(__store_private_::STORECAPACITY) {}
+            : m_logstore(0) {}
         LogStore_lockfree(const LogStore_lockfree&) = delete;
         LogStore_lockfree& operator=(const LogStore_lockfree&) = delete;
     private:
-        typedef Store<LogVal*, boost::lockfree::queue<LogVal*> > __Log_Store;
-        __Log_Store&                                             m_logstore;
+        // https://github.com/DD-L/lproxy/issues/166
+        //typedef Store<LogVal*, boost::lockfree::queue<LogVal*> > __Log_Store;
+        //__Log_Store&                                             m_logstore;
+        typedef boost::lockfree::queue<LogVal*>  __Log_Store;
+        __Log_Store                              m_logstore;
 };
 
 #endif // _LOGSTORE_LOCKFREE_H_1
