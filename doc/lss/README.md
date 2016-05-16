@@ -2,7 +2,9 @@
 
 * [lss 包结构介绍](./pack.md)
 
-* lss 基本架构 及其 session 大致流程示意图.
+* lss 基本架构 及其 session 大致流程示意图。
+
+    * lproxy v0.2.2 （与 `v0.2.1` 相同）
 
 	* lproxy v0.2.1
 
