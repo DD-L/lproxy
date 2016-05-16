@@ -161,7 +161,20 @@
 
 包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
 
+*`Android 平台的 lproxy-local` 二进制程序请移步 [https://github.com/DD-L/lproxy-local-android/releases](https://github.com/DD-L/lproxy-local-android/releases)*
+
 > **lproxy 版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
+
+* **[v0.2.2](https://github.com/DD-L/lproxy/releases/tag/0.2.2)**
+
+	此次修订，除了部分优化外，主要为 Android 平台的移植扫清了底层障碍。Android 项目链接：[lproxy-local-android](https://github.com/DD-L/lproxy-local-android/releases)
+
+	* 优化调用接口，为以后提供 API 做准备。
+	* 优化加解密底层库。在 linux 平台下，release 二进制程序总体积（文件大小）被缩减到原来的 20%；满载时 CPU 占用率也大大降低 （*[相关链接](./lss/LoadTesting.md)）*。
+	* 修复 Windows 平台的程序在关闭退出时短暂的假死现象。
+	* 去除 local 端无必要的重复加密指令。
+	* 修复 bug [#166](https://github.com/DD-L/lproxy/issues/166)。
+	* *`v0.2.x` 与 `v0.1.x` 互不兼容。*
 
 * **[v0.2.1](https://github.com/DD-L/lproxy/releases/tag/0.2.1)**
 
