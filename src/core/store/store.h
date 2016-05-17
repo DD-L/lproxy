@@ -89,7 +89,9 @@
 #include <queue>
 //using boost::serialization::singleton;
 
-static const size_t __STORECAPACITY__s = 2000000; // default capacity of Store
+namespace __store_private_ {
+static const size_t STORECAPACITY = 2000000; // default capacity of Store
+} // namespace __store_private_
 
 //
 // class std_priority_queue
@@ -200,11 +202,30 @@ class Store : public boost::serialization::singleton<Store<T, Container> > {
 		static mutex_t                  _mutex_cap;     // for reserve()
 };
 template <typename T, typename Container>
-size_t Store<T, Container>::_capacity = __STORECAPACITY__s;
+size_t Store<T, Container>::_capacity = __store_private_::STORECAPACITY;
 template <typename T, typename Container>
 typename Store<T, Container>::mutex_t Store<T, Container>::_mutex_cap;
 
 
+
+//////////
+// note //
+//////////
+//
+// lockfree::queue 和 lock::stack 的特化版本的 Store 
+// 在 Android 平台遇到了些问题:
+// https://github.com/DD-L/lproxy/issues/166
+// 其他平台目前还未发现同样的问题
+//
+//
+// 所以如果非必须, 不建议使用对 boost::lockfree::queue
+// 和 boost::lockfree::stack 的偏特化版本的 Store
+//
+// 推荐裸用 boost::lockfree::queue 和 boost::lockfree::stack
+//
+//////////
+// note //
+//////////
 
 // class Store 对 boost::lockfree::queue 偏特化版本
 // defaults to boost::lockfree::fixed_sized<false>  , Dynamic Size
@@ -217,7 +238,7 @@ class Store<T, boost::lockfree::queue<T> > :
 public:
 	//using boost::lockfree::queue<T>::push;
 	//using boost::lockfree::queue<T>::pop;
-    typedef boost::lockfree::queue<T> BASETTPE;
+    typedef boost::lockfree::queue<T> BASETYPE;
 
     static Store& get_mutable_instance(void) {
         static Store __store;
@@ -237,7 +258,7 @@ public:
 		}
 	}
     bool push(const T& element) {
-        return BASETTPE::push(element);
+        return BASETYPE::push(element);
     }
 
 	bool pop(T* element_ptr) {
@@ -249,14 +270,15 @@ public:
 		}
 	}
     bool pop(T& element) {
-        return BASETTPE::pop(element);
+        return BASETYPE::pop(element);
     }
 
 	// 继承父类的reserve
 	//void reserve(size_t);
 	//void reserve_unsafe(size_t);
 protected:
-	Store(size_t _capacity = __STORECAPACITY__s) :
+	//Store(size_t _capacity = __store_private_::STORECAPACITY) :
+	Store(size_t _capacity = 0) :
 		boost::lockfree::queue<T>(_capacity) {}
 	Store(const Store&) {}
 private:
@@ -277,7 +299,7 @@ class Store<T, boost::lockfree::stack<T> > :
 public:
     //using boost::lockfree::stack<T>::push;
     //using boost::lockfree::stack<T>::pop;
-    typedef boost::lockfree::stack<T> BASETTPE;
+    typedef boost::lockfree::stack<T> BASETYPE;
 
     static Store& get_mutable_instance(void) {
         static Store __store;
@@ -297,7 +319,7 @@ public:
         }
     }
     bool push(const T& element) {
-        return BASETTPE::push(element);
+        return BASETYPE::push(element);
     }
 
     bool pop(T* element_ptr) {
@@ -309,14 +331,15 @@ public:
         }
     }
     bool pop(T& element) {
-        return BASETTPE::pop(element);
+        return BASETYPE::pop(element);
     }
 
     // 继承父类的reserve
     //void reserve(size_t);
     //void reserve_unsafe(size_t);
 protected:
-    Store(size_t _capacity = __STORECAPACITY__s) :
+    //Store(size_t _capacity = __store_private_::STORECAPACITY) :
+    Store(size_t _capacity = 0) :
         boost::lockfree::stack<T>(_capacity) {}
     Store(const Store&) {}
 private:

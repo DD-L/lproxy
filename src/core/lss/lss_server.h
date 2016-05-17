@@ -41,17 +41,29 @@ public:
     }
 
     void run(const sdata_t& bind_addr, const uint16_t bind_port) {
-        tcp::acceptor acceptor(io_service_left(),
-            { ip::address::from_string(bind_addr), bind_port} );
+        try {
+            //tcp::acceptor acceptor(io_service_left(),
+            //    { ip::address::from_string(bind_addr), bind_port} );
 
-        { // 复用 acceptor_
-            boost::system::error_code ec;
-            acceptor_.cancel(ec);
-            if (ec) {}
-            acceptor_.close(ec);
-            if (ec) {}
+            { // 复用 acceptor_
+                boost::system::error_code ec;
+                acceptor_.cancel(ec);
+                if (ec) {}
+                acceptor_.close(ec);
+                if (ec) {}
+            }
+            //acceptor_ = std::move(acceptor);
+
+            ip::tcp::endpoint endpoint(ip::address::from_string(bind_addr), bind_port);
+            acceptor_.open(endpoint.protocol());
+            acceptor_.set_option(socket_base::reuse_address(true));
+            acceptor_.bind(endpoint);
+            acceptor_.listen();
         }
-        acceptor_ = std::move(acceptor);
+        catch (boost::system::system_error const& e) {
+            logerror(e.what());
+            return;
+        }
 
         loginfo("bind addr: " << bind_addr << " bind port: " << bind_port);
 
@@ -62,11 +74,18 @@ public:
                        std::ref(io_service_right())));
         // 复用 thread_right
         try {
-            this->thread_right.detach();
+            if (this->thread_right.joinable()) {
+                this->thread_right.join();
+            }
+            else {
+                this->thread_right.detach();
+            }
         }
         catch (const std::system_error& e) {
             lsslogdebug(e.what());
         }
+        catch (...) {}
+
         this->thread_right = std::move(thread_right);
 
         io_service_left().reset(); // 复用 io_service
@@ -90,12 +109,21 @@ public:
     void stop(void) {
         io_service_right().stop();
         loginfo("Stopping io_service_right...");
-        if (this->thread_right.joinable()) {
-            this->thread_right.join();
+        try {
+            if (this->thread_right.joinable()) {
+                this->thread_right.join();
+            }
+            else {
+                this->thread_right.detach();
+            }
+            while (! io_service_right().stopped()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
         }
-        while (! io_service_right().stopped()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        catch (const std::system_error& e) {
+            lsslogdebug(e.what());
         }
+
         io_service_left().stop();
         loginfo("Stopping io_service_left...");
         while (! io_service_left().stopped()) {

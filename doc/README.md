@@ -93,6 +93,7 @@
    * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
    * ~~`lss` 暂未提供在 Windows/MinGW 环境下编译支持。~~ 现已支持
    * 想要编译一个 Windows/MinGW 平台的 `lproxy` ？ *注意，在 MinGW 上编译 lproxy ，目前还没能做到非常简便的操作* ，可以参考这里 [MinGW-Builds](./mingwbuilds.md) 得到 **Windows 平台的 lproxy** 二进制程序。
+   * Android 平台的 local 端项目： [https://github.com/DD-L/lproxy-local-android](https://github.com/DD-L/lproxy-local-android)
    * 想直接获取二进制程序？:point_right: [Releases](#releases)
    * 强烈不推荐使用 Cygwin 平台的 `lproxy`，该平台下的 `lproxy` 的问题较多 （这与 boost.asio 在 Cygwin 上的实现有关）。
 
@@ -161,7 +162,20 @@
 
 包含 `Docker 镜像` 和 `Windows 平台的二进制程序`。
 
+*`Android 平台的 lproxy-local` 二进制程序请移步 [https://github.com/DD-L/lproxy-local-android/releases](https://github.com/DD-L/lproxy-local-android/releases)*
+
 > **lproxy 版本号命名规范，及各版本间兼容情况说明：[VersionNumber](./VersionNumber.md)**
+
+* **[v0.2.2](https://github.com/DD-L/lproxy/releases/tag/0.2.2)**
+
+	此次修订，除了部分优化外，主要为 Android 平台的移植扫清了底层障碍。Android 项目链接：[lproxy-local-android](https://github.com/DD-L/lproxy-local-android/releases)
+
+	* 优化调用接口，为以后提供 API 做准备。
+	* 优化加解密底层库。在 linux 平台下，release 二进制程序总体积（文件大小）被缩减到原来的 20%；满载时 CPU 占用率也大大降低 （*[相关链接](./lss/LoadTesting.md)）*。
+	* 修复 Windows 平台的程序在关闭退出时短暂的假死现象。
+	* 去除 local 端无必要的重复加密指令。
+	* 修复 bug [#166](https://github.com/DD-L/lproxy/issues/166)。
+	* *`v0.2.x` 与 `v0.1.x` 互不兼容。*
 
 * **[v0.2.1](https://github.com/DD-L/lproxy/releases/tag/0.2.1)**
 
