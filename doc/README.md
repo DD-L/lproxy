@@ -93,6 +93,7 @@
    * 如果你想一切都从零开始：配置编译环境、编译 lproxy 以及运行各个组件的 test 等等，那么 [CI 脚本](../.travis.yml) 有可能会帮助到你。
    * ~~`lss` 暂未提供在 Windows/MinGW 环境下编译支持。~~ 现已支持
    * 想要编译一个 Windows/MinGW 平台的 `lproxy` ？ *注意，在 MinGW 上编译 lproxy ，目前还没能做到非常简便的操作* ，可以参考这里 [MinGW-Builds](./mingwbuilds.md) 得到 **Windows 平台的 lproxy** 二进制程序。
+   * Android 平台的 local 端项目： [https://github.com/DD-L/lproxy-local-android](https://github.com/DD-L/lproxy-local-android)
    * 想直接获取二进制程序？:point_right: [Releases](#releases)
    * 强烈不推荐使用 Cygwin 平台的 `lproxy`，该平台下的 `lproxy` 的问题较多 （这与 boost.asio 在 Cygwin 上的实现有关）。
 
