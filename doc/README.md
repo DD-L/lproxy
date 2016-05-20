@@ -174,7 +174,7 @@
 	* 优化加解密底层库。在 linux 平台下，release 二进制程序总体积（文件大小）被缩减到原来的 20%；满载时 CPU 占用率也大大降低 （*[相关链接](./lss/LoadTesting.md)）*。
 	* 修复 Windows 平台的程序在关闭退出时短暂的假死现象。
 	* 去除 local 端无必要的重复加密指令。
-	* 修复 bug [#166](https://github.com/DD-L/lproxy/issues/166)。
+	* 修复 Android (ARM) 平台下的一个 bug [#166](https://github.com/DD-L/lproxy/issues/166)。
 	* *`v0.2.x` 与 `v0.1.x` 互不兼容。*
 
 * **[v0.2.1](https://github.com/DD-L/lproxy/releases/tag/0.2.1)**
