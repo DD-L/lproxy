@@ -68,11 +68,11 @@ CRYPTO_DYNAMIC_LIB = $(CRYPTO_SRC)/lib/libcrypto.so
 LOCAL  = $(BIN)/lsslocal.exe 
 SERVER = $(BIN)/lssserver.exe
 KEEP   = $(BIN)/lkeep.exe
-test_clinet = $(BIN)/test_client.exe
+test_client = $(BIN)/test_client.exe
 
 all: init target
 
-target: $(LOCAL) $(SERVER) $(KEEP) $(test_clinet) 
+target: $(LOCAL) $(SERVER) $(KEEP) $(test_client) 
 
 
 init:
@@ -86,7 +86,7 @@ ifneq ('$(LIBCRYPTOPPEXIST)', 'exist')
 	cd $(CRYPTOPP_SRC); $(MAKE) libcryptopp.a -j 4
 endif
 
-$(test_clinet): test_client.cpp $(BOOSTLINK)
+$(test_client): test/test_client.cpp $(BOOSTLINK)
 	$(CXX) $(CXXFLAGS) $(STDLIB) $(INCPATH) $^ -o $@  $(LIBS)
 
 $(LOCAL): $(LOCAL_LINK)
