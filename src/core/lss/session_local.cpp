@@ -571,6 +571,33 @@ void session::left_read_handler(const boost::system::error_code& error,
                 //<< std::endl
                 << _debug_format_data(*data_left, int(), ' ', std::hex));
 
+        if (this->first_check_socks5_udp_mode) {
+            // 确保只检查一次
+            this->first_check_socks5_udp_mode = false;
+
+            // 检查 data_left 是不是以 5 3 0 开头
+            //  1. 如果是：
+            //     进入 socks5_udp_mode 模式
+            //     this->is_socks5_udp_mode = true;
+            //     
+            //     1.1 检查 是否是 全 0 ip
+            //         如果不是 中断服务 “暂时不支持”
+            //         如果是： 
+            //            建立一个 udp server
+            //            返回 5 0 0 1 ipv4 udp_port, 并 return, 
+            //            之后关闭 socks_left
+            //
+            //
+            //  2. 如果不是，什么也不做
+            
+        }
+
+        // 封包
+        if (this->is_socks5_udp_mode) {
+            
+        }
+        // else {}
+
         // 封包
         // 发送至服务端
         auto&& data_request = make_shared_request(
