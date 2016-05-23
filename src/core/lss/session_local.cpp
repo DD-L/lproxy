@@ -594,6 +594,8 @@ void session::left_read_handler(const boost::system::error_code& error,
 
         // 封包
         if (this->is_socks5_udp_mode) {
+            // RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA
+            // 将 
             
         }
         // else {}
