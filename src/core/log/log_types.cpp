@@ -50,7 +50,7 @@ namespace log_tools {
 
 	void print_s(std::ostringstream&& oss, 
 			std::ostream& os/* = std::cout*/) {
-		assert(os == std::cout || os == std::cerr);
+		assert(&os == &std::cout || &os == &std::cerr);
 		boost::mutex::scoped_lock lock(log_tools::print_lock());
 		os << oss.str();
 	}
