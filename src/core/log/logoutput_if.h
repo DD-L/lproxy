@@ -54,7 +54,7 @@ protected:
 	typedef std::function<std::string(const std::shared_ptr<LogVal>&)> Format_t;
 protected:
 	inline static bool is_std_outerr(const std::ostream& os) {
-		return (os == std::cout or os == std::cerr);
+		return (&os == &std::cout or &os == &std::cerr);
 	}
 	inline static boost::mutex* new_lock(const std::ostream& os) {
 		return is_std_outerr(os) ? (&log_tools::print_lock()) 
